@@ -222,7 +222,7 @@ export default function Email() {
         {live && (
           <div className="seg">
             <button aria-pressed={tab === 'inbox'} onClick={() => { setTab('inbox'); setOpen(null) }}>Inbox</button>
-            <button aria-pressed={tab === 'outbox'} onClick={() => { setTab('outbox'); setOpen(null) }}>Outbox{drafts?.length ? ` ${drafts.length}` : ''}</button>
+            <button aria-pressed={tab === 'outbox'} onClick={() => { setTab('outbox'); setOpen(null) }}>Drafts{drafts?.length ? ` ${drafts.length}` : ''}</button>
           </div>
         )}
         {tab === 'inbox' && (
@@ -282,7 +282,7 @@ export default function Email() {
               </li>
             )
           })}
-          {drafts && drafts.length === 0 && <li className="empty">Outbox is empty.</li>}
+          {drafts && drafts.length === 0 && <li className="empty">No drafts.</li>}
         </ul>
       )}
     </div>
