@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { supabase } from './supabase.js'
 import Sidebar from './components/Sidebar.jsx'
+import AskClaude from './components/AskClaude.jsx'
 import Login from './pages/Login.jsx'
 import Today from './pages/Today.jsx'
 import Inbox from './pages/Inbox.jsx'
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="*" element={<Today />} />
         </Routes>
       </main>
+      <AskClaude />
     </div>
   )
 }

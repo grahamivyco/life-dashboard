@@ -23,9 +23,11 @@ const fixtures = {
     { id: 'e2', title: 'Bailaqueer', starts_at: new Date(now + 864e5 * 3).toISOString(), location: 'Pati Llimona' },
   ],
   claude_requests: [
-    { id: 'r1', item_id: 'i1', status: 'needs_approval', summary: 'Drafted a message to Emma', approval_ask: 'Send this email to Emma?', result: 'Hi Emma, Tess’s wedding is set for…', links: [], item: { title: 'Tell Emma about Tess’s wedding' }, updated_at: iso(1) },
-    { id: 'r2', item_id: 'i2', status: 'done', summary: '3 outfit options under €150', result: '1. Linen suit…', links: [], item: { title: 'Get an outfit for the wedding' }, updated_at: iso(1) },
-    { id: 'r3', item_id: 'i5', status: 'queued', item: { title: 'Mic button on Mac and iPhone' }, updated_at: iso(1) },
+    { id: 'r1', action: 'auto', item_id: 'i1', status: 'needs_approval', summary: 'Drafted a message to Emma', approval_ask: 'Send this email to Emma?', result: 'Hi Emma, Tess’s wedding is set for…', links: [], item: { title: 'Tell Emma about Tess’s wedding' }, updated_at: iso(1) },
+    { id: 'r2', action: 'auto', item_id: 'i2', status: 'done', summary: '3 outfit options under €150', result: '1. Linen suit…', links: [], item: { title: 'Get an outfit for the wedding' }, updated_at: iso(1) },
+    { id: 'a2', action: 'ask', note: 'Remind me to call the landlord about the heating on Friday', status: 'queued', created_at: iso(0.3), updated_at: iso(0.3) },
+    { id: 'a1', action: 'ask', note: 'What should I wear to Tess’s wedding in Sitges?', status: 'done', summary: 'Light linen, no tie', result: 'Beach ceremony at 6pm, so a light linen suit or chinos with a linen shirt. Loafers, no socks.', links: [], created_at: iso(3), updated_at: iso(2) },
+    { id: 'r3', action: 'auto', item_id: 'i5', status: 'queued', item: { title: 'Mic button on Mac and iPhone' }, updated_at: iso(1) },
   ],
   section_snapshots: [
     { section: 'email', synced_at: iso(0.2), payload: { unread: 3, threads: [

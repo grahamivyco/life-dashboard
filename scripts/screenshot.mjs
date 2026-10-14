@@ -21,7 +21,7 @@ const sizes = [{ tag: 'desktop', width: 1280, height: 860, scale: 2 }, { tag: 'p
 const urls = []
 try {
   for (const route of paths) {
-    const slug = route === '/' ? 'today' : route.replace(/^\//, '').replace(/\//g, '-')
+    const slug = route === '/' ? 'today' : route.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '')
     for (const s of sizes) {
       const page = await browser.newPage()
       await page.setViewport({ width: s.width, height: s.height, deviceScaleFactor: s.scale })
