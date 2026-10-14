@@ -92,7 +92,8 @@ export default function ClaudeQueue() {
     }
   }
 
-  const shown = reqs.filter((r) => ['needs_approval', 'done', 'failed'].includes(r.status))
+  // Instant chat answers stay in the Ask Claude panel; only worker results show here.
+  const shown = reqs.filter((r) => ['needs_approval', 'done', 'failed'].includes(r.status) && !(r.action === 'ask' && !r.result && !r.summary))
   const working = reqs.filter((r) => ['queued', 'working', 'approved'].includes(r.status)).length
 
   return (

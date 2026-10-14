@@ -3,17 +3,20 @@ import { useLocation } from 'react-router-dom'
 import { Mic, ArrowUp, X } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import { ago } from '../lib.js'
+import { askClaude } from '../askClaude.js'
 
 const Speech = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)
 
-// Floating ✦ button, bottom right on every page. Messages go into claude_requests
-// (action 'ask'); the hourly worker answers them and the reply shows here.
+// Floating ✦ button, bottom right on every page. Messages go to the ask-claude
+// edge function for an instant reply (saved in claude_requests, action 'ask').
+// Bigger jobs it hands off show the worker's result and an Approve button later.
 export default function AskClaude() {
   const { search } = useLocation()
   const [open, setOpen] = useState(() => search.includes('ask=1'))
   const [msgs, setMsgs] = useState([])
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
+  const [pending, setPending] = useState('')
   const [err, setErr] = useState('')
   const [listening, setListening] = useState(false)
   const rec = useRef(null)
@@ -33,7 +36,7 @@ export default function AskClaude() {
     return () => clearInterval(t)
   }, [open, load])
 
-  useEffect(() => { end.current?.scrollIntoView({ block: 'end' }) }, [msgs, open])
+  useEffect(() => { end.current?.scrollIntoView({ block: 'end' }) }, [msgs, open, pending])
   useEffect(() => () => rec.current?.stop(), [])
 
   function toggleMic() {
@@ -60,12 +63,15 @@ export default function AskClaude() {
     const note = text.trim()
     if (!note) return
     rec.current?.stop()
-    setBusy(true); setErr('')
-    const { error } = await supabase.from('claude_requests').insert({ action: 'ask', note })
-    setBusy(false)
-    if (error) return setErr(error.message)
-    setText('')
-    load()
+    setBusy(true); setErr(''); setPending(note); setText('')
+    try {
+      const res = await askClaude(note)
+      if (res?.queued) setErr('Instant replies are off until the API key is added. Queued for the next sync.')
+    } catch (e) {
+      setErr(e.message); setText(note)
+    }
+    await load()
+    setBusy(false); setPending('')
   }
 
   async function approve(id) {
@@ -82,11 +88,12 @@ export default function AskClaude() {
             <button className="icon-btn" onClick={() => setOpen(false)} aria-label="Close"><X size={16} /></button>
           </div>
           <div className="ask-log">
-            {msgs.length === 0 && <p className="empty">Ask a question or ask for a change to the dashboard. Claude replies here within the hour.</p>}
+            {msgs.length === 0 && <p className="empty">Ask a question or ask for a change to the dashboard.</p>}
             {msgs.map((m) => (
               <div key={m.id} className="ask-pair">
                 <p className="bubble me">{m.note}</p>
-                {m.result || m.summary ? (
+                {m.reply && <p className="bubble">{m.reply}</p>}
+                {(m.result || m.summary) && (
                   <div className="bubble">
                     {m.summary && <p><b>{m.summary}</b></p>}
                     {m.result && <p className="dump-text">{m.result}</p>}
@@ -102,13 +109,20 @@ export default function AskClaude() {
                         <button className="btn primary" onClick={() => approve(m.id)}>Approve</button>
                       </div>
                     )}
-                    {m.status === 'approved' && <p className="meta">Approved. Doing it at the next sync.</p>}
                   </div>
-                ) : (
-                  <p className="meta ask-wait">{m.status === 'working' ? 'Claude is on it' : `Sent ${ago(m.created_at)}. Reply at the next sync.`}</p>
+                )}
+                {m.status === 'approved' && <p className="meta ask-wait">Approved. Doing it at the next sync.</p>}
+                {['queued', 'working'].includes(m.status) && (
+                  <p className="meta ask-wait">{m.status === 'working' ? 'Working on it now' : m.reply ? 'Working on it at the next sync' : `Sent ${ago(m.created_at)}. Reply at the next sync.`}</p>
                 )}
               </div>
             ))}
+            {pending && (
+              <div className="ask-pair">
+                <p className="bubble me">{pending}</p>
+                <p className="meta ask-wait">Thinking…</p>
+              </div>
+            )}
             <div ref={end} />
           </div>
           <div className="ask-input">
