@@ -7,9 +7,9 @@ import { askClaude } from '../askClaude.js'
 
 const Speech = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)
 
-// Floating ✦ button, bottom right on every page. Messages go to the ask-claude
-// edge function for an instant reply (saved in claude_requests, action 'ask').
-// Bigger jobs it hands off show the worker's result and an Approve button later.
+// Floating ✦ button, bottom right on every page. Messages go into the Claude
+// queue (claude_requests, action 'ask'); the hourly worker answers them here,
+// with an Approve button for anything that needs an OK.
 export default function AskClaude() {
   const { search } = useLocation()
   const [open, setOpen] = useState(() => search.includes('ask=1'))
@@ -65,8 +65,7 @@ export default function AskClaude() {
     rec.current?.stop()
     setBusy(true); setErr(''); setPending(note); setText('')
     try {
-      const res = await askClaude(note)
-      if (res?.queued) setErr('Instant replies are off until the API key is added. Queued for the next sync.')
+      await askClaude(note)
     } catch (e) {
       setErr(e.message); setText(note)
     }
@@ -88,7 +87,7 @@ export default function AskClaude() {
             <button className="icon-btn" onClick={() => setOpen(false)} aria-label="Close"><X size={16} /></button>
           </div>
           <div className="ask-log">
-            {msgs.length === 0 && <p className="empty">Ask a question or ask for a change to the dashboard.</p>}
+            {msgs.length === 0 && <p className="empty">Ask a question or ask for a change to the dashboard. Claude replies here at the next hourly sync.</p>}
             {msgs.map((m) => (
               <div key={m.id} className="ask-pair">
                 <p className="bubble me">{m.note}</p>
@@ -120,7 +119,7 @@ export default function AskClaude() {
             {pending && (
               <div className="ask-pair">
                 <p className="bubble me">{pending}</p>
-                <p className="meta ask-wait">Thinking…</p>
+                <p className="meta ask-wait">Sending…</p>
               </div>
             )}
             <div ref={end} />

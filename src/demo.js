@@ -25,9 +25,9 @@ const fixtures = {
   claude_requests: [
     { id: 'r1', action: 'auto', item_id: 'i1', status: 'needs_approval', summary: 'Drafted a message to Emma', approval_ask: 'Send this email to Emma?', result: 'Hi Emma, Tess’s wedding is set for…', links: [], item: { title: 'Tell Emma about Tess’s wedding' }, updated_at: iso(1) },
     { id: 'r2', action: 'auto', item_id: 'i2', status: 'done', summary: '3 outfit options under €150', result: '1. Linen suit…', links: [], item: { title: 'Get an outfit for the wedding' }, updated_at: iso(1) },
-    { id: 'a2', action: 'ask', note: 'Remind me to call the landlord about the heating on Friday', status: 'done', reply: 'Added for Friday: call the landlord about the heating.', created_at: iso(0.3), updated_at: iso(0.3) },
-    { id: 'a3', action: 'ask', note: 'Make the week tile show the next 14 days', reply: 'On it. I’ll build it and send you a preview to approve.', status: 'needs_approval', summary: 'Week tile now covers 14 days', result: 'Renamed it to Next two weeks and grouped events by week.', approval_ask: 'Ship this to the app?', links: [{ title: 'Preview', url: 'previews/baseline/finances-desktop.png', image: true }], created_at: iso(0.5), updated_at: iso(0.4) },
-    { id: 'a1', action: 'ask', note: 'What should I wear to Tess’s wedding in Sitges?', status: 'done', reply: 'Beach ceremony at 6pm, so a light linen suit or chinos with a linen shirt. Loafers, no socks.', links: [], created_at: iso(3), updated_at: iso(2) },
+    { id: 'a2', action: 'ask', note: 'Remind me to call the landlord about the heating on Friday', status: 'done', result: 'Added for Friday: call the landlord about the heating.', created_at: iso(0.3), updated_at: iso(0.3) },
+    { id: 'a3', action: 'ask', note: 'Make the week tile show the next 14 days', status: 'needs_approval', summary: 'Week tile now covers 14 days', result: 'Renamed it to Next two weeks and grouped events by week.', approval_ask: 'Ship this to the app?', links: [{ title: 'Preview', url: 'previews/baseline/finances-desktop.png', image: true }], created_at: iso(0.5), updated_at: iso(0.4) },
+    { id: 'a1', action: 'ask', note: 'What should I wear to Tess’s wedding in Sitges?', status: 'done', result: 'Beach ceremony at 6pm, so a light linen suit or chinos with a linen shirt. Loafers, no socks.', links: [], created_at: iso(3), updated_at: iso(2) },
     { id: 'r3', action: 'auto', item_id: 'i5', status: 'queued', item: { title: 'Mic button on Mac and iPhone' }, updated_at: iso(1) },
   ],
   section_snapshots: [

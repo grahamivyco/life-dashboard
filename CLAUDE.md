@@ -24,7 +24,7 @@ Graham Ivy's personal app. Live at https://grahamivyco.github.io/life-dashboard/
 - `brain_dumps` → sorted by Claude into `items` (task/goal/idea/note) and `events`; set `processed_at`
 - `items` insert trigger auto-queues tasks and ideas into `claude_requests`
 - `claude_requests`: queued → working → needs_approval → approved → done/failed/dismissed. `links` is `[{title,url,image?}]`; `image: true` renders as a thumbnail on Today.
-- Ask Claude (floating ✦ panel, `src/askClaude.js`): calls the `ask-claude` edge function (`supabase/functions/ask-claude`, secret `ANTHROPIC_API_KEY`) for an instant reply, saved as a `claude_requests` row with `action='ask'`, `reply`. Bigger jobs it hands off get `task` + `status='queued'` for the hourly worker.
+- Ask Claude (floating ✦ panel, `src/askClaude.js`): inserts a `claude_requests` row with `action='ask'`; the hourly worker answers in `result`. `supabase/functions/ask-claude` (instant replies via the Claude API) is deployed but unused, since Graham chose the queue.
 - `section_snapshots`: latest payload per section (`email`, `finances`, …) written by the hourly sync
 
 ## Pages
