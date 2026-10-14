@@ -8,12 +8,13 @@ import Inbox from './pages/Inbox.jsx'
 import BrainDump from './pages/BrainDump.jsx'
 import Goals from './pages/Goals.jsx'
 import Timeline from './pages/Timeline.jsx'
+import Finances from './pages/Finances.jsx'
 import Events from './pages/Events.jsx'
 import Placeholder from './pages/Placeholder.jsx'
 import SettingsPage from './pages/Settings.jsx'
 import { sections } from './sections.js'
 
-const legacy = sections.filter((s) => s.legacy && s.path !== '/events')
+const legacy = sections.filter((s) => s.legacy)
 
 export default function App() {
   const [session, setSession] = useState(undefined)
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/brain-dump" element={<BrainDump />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/timeline" element={<Timeline />} />
+          <Route path="/finances" element={<Finances />} />
           <Route path="/events" element={<Events />} />
           {legacy.map((s) => (
             <Route key={s.path} path={s.path} element={<Placeholder section={s} />} />

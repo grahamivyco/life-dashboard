@@ -26,18 +26,19 @@ function Item({ s, onNavigate, count }) {
 // Icon rail. Expands to show labels on hover (desktop) or when the mark is tapped (touch).
 export default function Sidebar() {
   const [open, setOpen] = useState(false)
-  const [inboxCount, setInboxCount] = useState(0)
+  const [counts, setCounts] = useState({ claude: 0, email: 0 })
   const location = useLocation()
   const close = () => setOpen(false)
 
   useEffect(() => {
     let alive = true
     const load = async () => {
-      const [a, b] = await Promise.all([
+      const [a, b, m] = await Promise.all([
         supabase.from('claude_requests').select('id', { count: 'exact', head: true }).eq('status', 'needs_approval'),
         supabase.from('claude_requests').select('id', { count: 'exact', head: true }).eq('status', 'done').is('seen_at', null),
+        supabase.from('section_snapshots').select('payload->unread').eq('section', 'email').order('synced_at', { ascending: false }).limit(1),
       ])
-      if (alive) setInboxCount((a.count || 0) + (b.count || 0))
+      if (alive) setCounts({ claude: (a.count || 0) + (b.count || 0), email: Number(m.data?.[0]?.unread || 0) })
     }
     load()
     const t = setInterval(load, 60000)
@@ -53,7 +54,7 @@ export default function Sidebar() {
           <span className="nav-label brand">Open Frame</span>
         </button>
         <div className="rail-items">
-          {sections.map((s) => <Item key={s.path} s={s} onNavigate={close} count={s.badge ? inboxCount : 0} />)}
+          {sections.map((s) => <Item key={s.path} s={s} onNavigate={close} count={s.badge ? counts[s.badge] : 0} />)}
         </div>
         <div className="rail-bottom">
           <Item s={settingsSection} onNavigate={close} />

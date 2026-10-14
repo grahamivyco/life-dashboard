@@ -5,6 +5,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import DumpBox from '../components/DumpBox.jsx'
 import { fmtTime, fmtDay, greeting, ago } from '../lib.js'
 import ClaudeStatus, { loadStatuses } from '../components/ClaudeStatus.jsx'
+import ClaudeQueue from '../components/ClaudeQueue.jsx'
 
 export default function Today() {
   const [tasks, setTasks] = useState([])
@@ -42,6 +43,8 @@ export default function Today() {
       <PageHeader eyebrow={today} title={greeting()} />
 
       <DumpBox compact onSaved={load} />
+
+      <ClaudeQueue />
 
       <div className="grid two">
         <section className="tile">

@@ -13,7 +13,7 @@ const text = {
 export default function ClaudeStatus({ status }) {
   if (!status || status === 'dismissed') return null
   return (
-    <Link to="/inbox" className={'pill claude ' + status}>
+    <Link to="/" className={'pill claude ' + status}>
       <span className="spark">✦</span>{text[status]}
     </Link>
   )

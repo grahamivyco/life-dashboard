@@ -1,118 +1,89 @@
-import { useCallback, useEffect, useState } from 'react'
-import { ChevronRight, Check, X, ExternalLink } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ChevronRight, ExternalLink, Sparkles } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import PageHeader from '../components/PageHeader.jsx'
-import { ago } from '../lib.js'
+import { ago, fmtTime, fmtDay } from '../lib.js'
 
-const label = { queued: 'Queued', working: 'Working', approved: 'Approved, running next' }
+const filters = [
+  { k: 'all', label: 'All' },
+  { k: 'unread', label: 'Unread' },
+  { k: 'important', label: 'Important' },
+]
 
-function Links({ links }) {
-  if (!links?.length) return null
-  return (
-    <ul className="links">
-      {links.map((l, i) => (
-        <li key={i}><a href={l.url} target="_blank" rel="noreferrer">{l.title || l.url}<ExternalLink size={12} /></a></li>
-      ))}
-    </ul>
-  )
-}
-
-function Card({ r, open, onToggle, children }) {
-  const unread = r.status === 'done' && !r.seen_at
-  return (
-    <article className={'tile dump' + (open ? ' open' : '')}>
-      <div className="dump-head">
-        <button className="dump-toggle" onClick={onToggle} aria-expanded={open}>
-          <ChevronRight size={15} className="chev" />
-          {unread && <span className="unread" />}
-          <span className="grow clamp">{r.item?.title || 'Request'}</span>
-          <span className="meta">{ago(r.updated_at)}</span>
-        </button>
-        {children}
-      </div>
-      {open && (
-        <div className="dump-body">
-          {r.summary && <p><b>{r.summary}</b></p>}
-          {r.approval_ask && <p className="ask">{r.approval_ask}</p>}
-          {r.result && <p className="dump-text">{r.result}</p>}
-          <Links links={r.links} />
-        </div>
-      )}
-    </article>
-  )
+const when = (d) => {
+  const x = new Date(d)
+  return x.toDateString() === new Date().toDateString() ? fmtTime(d) : fmtDay(d)
 }
 
 export default function Inbox() {
-  const [reqs, setReqs] = useState([])
+  const [snap, setSnap] = useState(null)
+  const [filter, setFilter] = useState('all')
   const [open, setOpen] = useState(null)
+  const [asked, setAsked] = useState({})
 
-  const load = useCallback(async () => {
-    const { data } = await supabase
-      .from('claude_requests')
-      .select('*, item:items(title, kind)')
-      .not('status', 'in', '(dismissed)')
-      .order('updated_at', { ascending: false })
-      .limit(100)
-    setReqs(data || [])
+  useEffect(() => {
+    supabase.from('section_snapshots').select('*').eq('section', 'email').order('synced_at', { ascending: false }).limit(1)
+      .then(({ data }) => setSnap(data?.[0] || null))
+    supabase.from('claude_requests').select('note').is('item_id', null).like('note', 'email:%')
+      .then(({ data }) => {
+        const m = {}
+        for (const r of data || []) m[r.note.split('|')[0].slice(6)] = true
+        setAsked(m)
+      })
   }, [])
 
-  useEffect(() => { load() }, [load])
-
-  async function setStatus(id, status) {
-    await supabase.from('claude_requests').update({ status }).eq('id', id)
-    load()
+  async function draftReply(t) {
+    setAsked((a) => ({ ...a, [t.id]: true }))
+    await supabase.from('claude_requests').insert({
+      action: 'draft',
+      note: `email:${t.id}| Draft a reply to "${t.subject}" from ${t.from}`,
+    })
   }
 
-  async function toggle(r) {
-    const next = open === r.id ? null : r.id
-    setOpen(next)
-    if (next && r.status === 'done' && !r.seen_at) {
-      await supabase.from('claude_requests').update({ seen_at: new Date().toISOString() }).eq('id', r.id)
-      setReqs((xs) => xs.map((x) => (x.id === r.id ? { ...x, seen_at: new Date().toISOString() } : x)))
-    }
-  }
-
-  const needs = reqs.filter((r) => r.status === 'needs_approval')
-  const done = reqs.filter((r) => r.status === 'done' || r.status === 'failed')
-  const working = reqs.filter((r) => ['queued', 'working', 'approved'].includes(r.status))
+  const threads = (snap?.payload?.threads || []).filter((t) =>
+    filter === 'unread' ? t.unread : filter === 'important' ? t.important : true
+  )
 
   return (
     <div className="page">
-      <PageHeader eyebrow="Claude works through your tasks and ideas every hour" title="Inbox" />
-
-      <section className="stack">
-        <h2 className="sec-title">Needs you <span className="count">{needs.length}</span></h2>
-        {needs.length === 0 && <p className="empty">Nothing waiting on you.</p>}
-        {needs.map((r) => (
-          <Card key={r.id} r={r} open={open === r.id} onToggle={() => toggle(r)}>
-            <button className="icon-btn ok" onClick={() => setStatus(r.id, 'approved')} aria-label="Approve" title="Approve"><Check size={16} /></button>
-            <button className="icon-btn" onClick={() => setStatus(r.id, 'dismissed')} aria-label="Dismiss" title="Dismiss"><X size={16} /></button>
-          </Card>
-        ))}
-      </section>
-
-      <section className="stack">
-        <h2 className="sec-title">Done</h2>
-        {done.length === 0 && <p className="empty">Finished work shows up here.</p>}
-        {done.map((r) => (
-          <Card key={r.id} r={r} open={open === r.id} onToggle={() => toggle(r)}>
-            <button className="icon-btn" onClick={() => setStatus(r.id, 'dismissed')} aria-label="Clear" title="Clear"><X size={16} /></button>
-          </Card>
-        ))}
-      </section>
-
-      <section className="stack">
-        <h2 className="sec-title">In progress</h2>
-        {working.length === 0 && <p className="empty">Nothing queued.</p>}
-        <ul className="tile list">
-          {working.map((r) => (
-            <li key={r.id}>
-              <span className="grow clamp">{r.item?.title || 'Request'}</span>
-              <span className="pill">{label[r.status]}</span>
-            </li>
+      <PageHeader eyebrow={snap ? `Gmail · synced ${ago(snap.synced_at)}` : 'Gmail'} title="Inbox">
+        <div className="seg">
+          {filters.map((f) => (
+            <button key={f.k} aria-pressed={filter === f.k} onClick={() => setFilter(f.k)}>{f.label}</button>
           ))}
-        </ul>
-      </section>
+        </div>
+        <a className="btn" href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noreferrer">Open Gmail</a>
+      </PageHeader>
+
+      {!snap && <p className="empty">Your inbox appears here after the next sync.</p>}
+
+      <ul className="tile list mail-list">
+        {threads.map((t) => {
+          const isOpen = open === t.id
+          return (
+            <li key={t.id} className={'mail' + (t.unread ? ' unread-row' : '') + (isOpen ? ' open' : '')}>
+              <button className="mail-head" onClick={() => setOpen(isOpen ? null : t.id)} aria-expanded={isOpen}>
+                <ChevronRight size={15} className="chev" />
+                <span className="mail-from clamp">{t.from}{t.count > 1 && <span className="meta"> {t.count}</span>}</span>
+                <span className="mail-subject grow clamp">{t.subject}</span>
+                <span className="meta">{when(t.date)}</span>
+              </button>
+              {isOpen && (
+                <div className="mail-body">
+                  <p>{t.snippet}</p>
+                  <div className="row gap">
+                    <a className="btn" href={t.url} target="_blank" rel="noreferrer">Open in Gmail <ExternalLink size={12} /></a>
+                    <button className="btn" onClick={() => draftReply(t)} disabled={asked[t.id]}>
+                      <Sparkles size={13} /> {asked[t.id] ? 'Claude is drafting' : 'Draft reply with Claude'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </li>
+          )
+        })}
+        {snap && threads.length === 0 && <li className="empty">Nothing here.</li>}
+      </ul>
     </div>
   )
 }
