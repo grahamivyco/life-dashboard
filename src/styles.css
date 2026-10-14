@@ -190,6 +190,20 @@ ul.tile.list { padding-top: 6px; padding-bottom: 6px; }
 .shot { display: flex; flex-direction: column; gap: 4px; text-decoration: none; }
 .shot img { width: 100%; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); }
 .spark-head { color: var(--tomato); margin-right: 2px; }
+.approvals { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; margin: 4px 0 10px; }
+.approval { border: 1px solid var(--line); border-radius: 10px; padding: 10px 10px 10px 12px; background: var(--bg); }
+.approval-main { display: flex; align-items: center; gap: 8px; }
+.approval-main .grow { flex: 1; min-width: 0; }
+.approval .btn { flex: none; }
+@media (max-width: 640px) {
+  .approval-main { flex-wrap: wrap; }
+  .approval-main .grow { flex-basis: 100%; }
+}
+.approval-title { font-weight: 600; }
+.approval-sub { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.approval .dump-body { padding: 8px 0 0; }
+.meta.needs { color: var(--tomato); font-weight: 500; }
+.dep-approve { margin-top: 8px; }
 .q-list > li { display: block; padding: 2px 0; }
 .q-list .dump-body { padding-left: 31px; }
 
