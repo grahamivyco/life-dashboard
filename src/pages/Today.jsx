@@ -4,11 +4,13 @@ import { supabase } from '../supabase.js'
 import PageHeader from '../components/PageHeader.jsx'
 import DumpBox from '../components/DumpBox.jsx'
 import { fmtTime, fmtDay, greeting, ago } from '../lib.js'
+import ClaudeStatus, { loadStatuses } from '../components/ClaudeStatus.jsx'
 
 export default function Today() {
   const [tasks, setTasks] = useState([])
   const [events, setEvents] = useState([])
   const [syncs, setSyncs] = useState([])
+  const [statuses, setStatuses] = useState({})
 
   const load = useCallback(async () => {
     const start = new Date(); start.setHours(0, 0, 0, 0)
@@ -19,6 +21,7 @@ export default function Today() {
       supabase.from('section_snapshots').select('section,synced_at').order('synced_at', { ascending: false }).limit(30),
     ])
     setTasks(t.data || [])
+    setStatuses(await loadStatuses(supabase, (t.data || []).map((x) => x.id)))
     setEvents(e.data || [])
     const latest = {}
     for (const r of s.data || []) if (!latest[r.section]) latest[r.section] = r.synced_at
@@ -51,6 +54,7 @@ export default function Today() {
                 <li key={t.id} className="check-row">
                   <button className="check" onClick={() => done(t.id)} aria-label={`Mark ${t.title} done`} />
                   <span className="grow">{t.title}</span>
+                  <ClaudeStatus status={statuses[t.id]} />
                   {t.due_date && <span className="meta">{fmtDay(t.due_date)}</span>}
                 </li>
               ))}

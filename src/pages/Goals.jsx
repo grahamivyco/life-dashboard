@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../supabase.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { fmtDay } from '../lib.js'
+import ClaudeStatus, { loadStatuses } from '../components/ClaudeStatus.jsx'
 
 const kinds = [
   { k: 'task', label: 'Tasks' },
@@ -15,12 +16,14 @@ export default function Goals() {
   const [showDone, setShowDone] = useState(false)
   const [items, setItems] = useState([])
   const [title, setTitle] = useState('')
+  const [statuses, setStatuses] = useState({})
 
   const load = useCallback(async () => {
     let q = supabase.from('items').select('*').eq('kind', kind).order('created_at', { ascending: false })
     if (!showDone) q = q.in('status', ['open', 'doing'])
     const { data } = await q
     setItems(data || [])
+    setStatuses(await loadStatuses(supabase, (data || []).map((i) => i.id)))
   }, [kind, showDone])
 
   useEffect(() => { load() }, [load])
@@ -74,6 +77,7 @@ export default function Goals() {
                   aria-label="Progress"
                 />
               )}
+              <ClaudeStatus status={statuses[i.id]} />
               {i.due_date && <span className="meta">{fmtDay(i.due_date)}</span>}
             </li>
           ))}

@@ -168,6 +168,23 @@ textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
 .sync-list li { display: flex; align-items: center; gap: 8px; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--fg); opacity: .5; }
 
+/* claude + inbox */
+.nav-icon { position: relative; display: grid; place-items: center; flex: none; }
+.badge { position: absolute; top: -6px; right: -9px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 99px; background: var(--tomato); color: #fff; font-size: 9.5px; font-weight: 600; line-height: 15px; text-align: center; }
+.pill.claude { text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.pill.claude .spark { color: var(--muted); font-size: 10px; }
+.pill.claude.needs_approval { background: #FBE3DF; color: var(--fg); }
+.pill.claude.needs_approval .spark, .pill.claude.done .spark { color: var(--tomato); }
+.pill.claude.done { color: var(--fg); }
+.sec-title { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.count { font-size: 11px; background: var(--hover); border-radius: 99px; padding: 1px 8px; letter-spacing: 0; color: var(--fg); }
+.unread { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--tomato); }
+.ask { padding: 8px 10px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); font-size: 13px; }
+.links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.links a { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; text-underline-offset: 3px; }
+.icon-btn.ok:hover { color: var(--fg); background: var(--hover); }
+ul.tile.list { padding-top: 6px; padding-bottom: 6px; }
+
 /* timeline + events */
 .timeline { display: flex; flex-direction: column; gap: 20px; }
 .tl-day { display: flex; flex-direction: column; gap: 8px; }

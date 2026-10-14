@@ -4,6 +4,7 @@ import { supabase } from './supabase.js'
 import Sidebar from './components/Sidebar.jsx'
 import Login from './pages/Login.jsx'
 import Today from './pages/Today.jsx'
+import Inbox from './pages/Inbox.jsx'
 import BrainDump from './pages/BrainDump.jsx'
 import Goals from './pages/Goals.jsx'
 import Timeline from './pages/Timeline.jsx'
@@ -32,6 +33,7 @@ export default function App() {
       <main className="main">
         <Routes>
           <Route path="/" element={<Today />} />
+          <Route path="/inbox" element={<Inbox />} />
           <Route path="/brain-dump" element={<BrainDump />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/timeline" element={<Timeline />} />
