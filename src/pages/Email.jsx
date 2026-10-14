@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { ChevronRight, ExternalLink, Sparkles, Paperclip, Download, Archive, Trash2, Send, RefreshCw } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
+import { askClaude } from '../askClaude.js'
 import { gmail, nameOf } from '../gmail.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago, fmtTime, fmtDay } from '../lib.js'
@@ -23,17 +24,19 @@ const when = (d) => {
 }
 const kb = (n) => (n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`)
 
-// Queue a question about a thread for Claude. The worker reads the thread (and its attachments) in Gmail.
-async function askClaude(thread, question) {
+// Ask Claude about a thread through the shared Ask Claude path (shows in the ✦ panel).
+// Claude reads the thread and its attachments in Gmail by the thread id.
+async function askAboutThread(thread, question) {
   const last = thread.messages[thread.messages.length - 1]
   const files = thread.messages.flatMap((m) => m.files.map((f) => f.name))
   const context = [
+    `Gmail thread ${thread.id}`,
     `Subject: ${last.subject}`,
     `From: ${last.from}`,
     `Latest message: ${last.body.slice(0, 1500)}`,
     files.length ? `Attachments: ${files.join(', ')}` : '',
   ].filter(Boolean).join('\n')
-  return supabase.from('claude_requests').insert({ action: 'draft', note: `email:${thread.id}| ${question}\n\n${context}` })
+  return askClaude(`email:${thread.id}| ${question}\n\n${context}`)
 }
 
 function Files({ files }) {
@@ -58,9 +61,9 @@ function Files({ files }) {
 
 function AskClaude({ thread, sent, onSent }) {
   const [q, setQ] = useState('')
-  if (sent) return <p className="hint"><Sparkles size={12} /> Claude has this thread. The answer shows up on Today.</p>
+  if (sent) return <p className="hint"><Sparkles size={12} /> Sent to Claude. The answer shows up in the ✦ panel.</p>
   return (
-    <form className="ask-row" onSubmit={async (e) => { e.preventDefault(); await askClaude(thread, q.trim() || 'Draft a reply'); onSent() }}>
+    <form className="ask-row" onSubmit={async (e) => { e.preventDefault(); await askAboutThread(thread, q.trim() || 'Draft a reply'); onSent() }}>
       <input className="plain" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask Claude about this email, or leave blank for a draft reply" />
       <button className="btn" type="submit"><Sparkles size={13} /> Ask Claude</button>
     </form>
