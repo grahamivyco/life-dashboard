@@ -72,8 +72,12 @@ function builder(table) {
   return q
 }
 
+const demoChannel = { on: () => demoChannel, subscribe: () => demoChannel }
+
 export const demoClient = {
   from: builder,
+  channel: () => demoChannel,
+  removeChannel: () => {},
   auth: {
     getSession: async () => ({ data: { session: { user: { email: 'demo@example.com' } } } }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { supabase } from '../supabase.js'
+import { useState } from 'react'
+import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago, fmtDay } from '../lib.js'
 
@@ -34,13 +34,8 @@ function CashFlow({ rows }) {
 }
 
 export default function Finances() {
-  const [snap, setSnap] = useState(null)
+  const snap = useSnapshot('finances')
   const [showTransfers, setShowTransfers] = useState(false)
-
-  useEffect(() => {
-    supabase.from('section_snapshots').select('*').eq('section', 'finances').order('synced_at', { ascending: false }).limit(1)
-      .then(({ data }) => setSnap(data?.[0] || null))
-  }, [])
 
   if (!snap) {
     return (
@@ -56,7 +51,7 @@ export default function Finances() {
 
   return (
     <div className="page">
-      <PageHeader eyebrow={`${p.source} · synced ${ago(snap.synced_at)}`} title="Finances" />
+      <PageHeader eyebrow={`${p.source} · updated ${ago(snap.synced_at)}`} title="Finances" />
 
       <div className="stats">
         <div className="tile stat lead">

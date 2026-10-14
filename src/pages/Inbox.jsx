@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronRight, ExternalLink, Sparkles } from 'lucide-react'
 import { supabase } from '../supabase.js'
+import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago, fmtTime, fmtDay } from '../lib.js'
 
@@ -16,14 +17,12 @@ const when = (d) => {
 }
 
 export default function Inbox() {
-  const [snap, setSnap] = useState(null)
+  const snap = useSnapshot('email')
   const [filter, setFilter] = useState('all')
   const [open, setOpen] = useState(null)
   const [asked, setAsked] = useState({})
 
   useEffect(() => {
-    supabase.from('section_snapshots').select('*').eq('section', 'email').order('synced_at', { ascending: false }).limit(1)
-      .then(({ data }) => setSnap(data?.[0] || null))
     supabase.from('claude_requests').select('note').is('item_id', null).like('note', 'email:%')
       .then(({ data }) => {
         const m = {}
@@ -46,7 +45,7 @@ export default function Inbox() {
 
   return (
     <div className="page">
-      <PageHeader eyebrow={snap ? `Gmail · synced ${ago(snap.synced_at)}` : 'Gmail'} title="Inbox">
+      <PageHeader eyebrow={snap ? `Gmail · updated ${ago(snap.synced_at)}` : 'Gmail'} title="Inbox">
         <div className="seg">
           {filters.map((f) => (
             <button key={f.k} aria-pressed={filter === f.k} onClick={() => setFilter(f.k)}>{f.label}</button>
