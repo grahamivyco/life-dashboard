@@ -1,11 +1,11 @@
 import {
-  Sun, Inbox, Mic, Target, History, Wallet, Briefcase, Users, Home, CalendarDays, Settings,
+  Sun, Mail, Mic, Target, History, Wallet, Briefcase, Users, Home, CalendarDays, Settings,
 } from 'lucide-react'
 
 // `legacy` = existing dashboard, linked until that section moves into the app
 export const sections = [
   { path: '/', label: 'Today', icon: Sun, badge: 'claude' },
-  { path: '/inbox', label: 'Inbox', icon: Inbox, badge: 'email' },
+  { path: '/email', label: 'Email', icon: Mail, badge: 'email' },
   { path: '/brain-dump', label: 'Brain Dump', icon: Mic },
   { path: '/goals', label: 'Goals & Ideas', icon: Target },
   { path: '/timeline', label: 'Timeline', icon: History },

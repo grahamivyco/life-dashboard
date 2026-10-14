@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './supabase.js'
 import Sidebar from './components/Sidebar.jsx'
 import AskClaude from './components/AskClaude.jsx'
 import Login from './pages/Login.jsx'
 import Today from './pages/Today.jsx'
-import Inbox from './pages/Inbox.jsx'
+import Email from './pages/Email.jsx'
 import BrainDump from './pages/BrainDump.jsx'
 import Goals from './pages/Goals.jsx'
 import Timeline from './pages/Timeline.jsx'
@@ -35,7 +35,8 @@ export default function App() {
       <main className="main">
         <Routes>
           <Route path="/" element={<Today />} />
-          <Route path="/inbox" element={<Inbox />} />
+          <Route path="/email" element={<Email />} />
+          <Route path="/inbox" element={<Navigate to="/email" replace />} />
           <Route path="/brain-dump" element={<BrainDump />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/timeline" element={<Timeline />} />

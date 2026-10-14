@@ -87,3 +87,32 @@ export const demoClient = {
     signOut: async () => {}, signInWithOtp: async () => ({}),
   },
 }
+
+// Demo Gmail for the Email page
+const demoThreads = {
+  t1: { id: 't1', messages: [
+    { id: 'm1', threadId: 't1', from: 'Kym Duea <kym@example.com>', to: 'me', subject: 'Annual Meeting page has slipped a stitch', date: iso(26), labels: ['INBOX'], files: [{ name: 'screenshot.png', type: 'image/png', size: 182000, id: 'a1', messageId: 'm1' }],
+      body: 'Good evening,\n\nWhile helping a new member get oriented on the guild website, I noticed the Annual Meeting 2027 page has an issue. Screenshot attached.\n\nKym' },
+    { id: 'm2', threadId: 't1', from: 'Kym Duea <kym@example.com>', to: 'me', subject: 'Re: Annual Meeting page has slipped a stitch', date: iso(1), labels: ['INBOX', 'UNREAD'], files: [],
+      body: 'Also the registration link at the bottom goes nowhere. Thanks for taking a look!' },
+  ] },
+  t2: { id: 't2', messages: [
+    { id: 'm3', threadId: 't2', from: 'idealista <noreply@example.com>', to: 'me', subject: 'New home in your search', date: iso(4), labels: ['INBOX', 'UNREAD'], files: [], body: 'Gràcia, 1,100 €/month, 3 bedrooms, balcony.' },
+  ] },
+  t3: { id: 't3', messages: [
+    { id: 'm4', threadId: 't3', from: 'CIEE TEFL <tefl@example.com>', to: 'me', subject: 'Your TEFL certificate', date: iso(28), labels: ['INBOX'], files: [{ name: 'TEFL-certificate.pdf', type: 'application/pdf', size: 241000, id: 'a2', messageId: 'm4' }], body: 'Greetings, Graham! Please find your TEFL certificate attached.' },
+  ] },
+}
+const wait = () => new Promise((r) => setTimeout(r, 50))
+export const demoGmail = {
+  ready: () => true, connected: () => true, connect: async () => 'demo', disconnect: () => {},
+  threads: async () => { await wait(); return fixtures.section_snapshots[0].payload.threads },
+  thread: async (id) => { await wait(); return demoThreads[id] },
+  drafts: async () => { await wait(); return [
+    { id: 'd1', threadId: 't1', from: 'me', to: 'Kym Duea <kym@example.com>', subject: 'Re: Annual Meeting page has slipped a stitch', date: iso(0.5), files: [],
+      body: 'Hi Kym,\n\nThanks for catching this. I’ll fix the layout and the registration link by [day].\n\nGraham' },
+    { id: 'd2', threadId: null, from: 'me', to: 'emma@example.com', subject: 'Tess’s wedding', date: iso(2), files: [],
+      body: 'Hi Emma,\n\nTess’s wedding is on 14 November in Sitges. Want to go together?\n\nGraham' },
+  ] },
+  download: async () => {}, reply: async () => {}, sendDraft: async () => {}, deleteDraft: async () => {}, archive: async () => {}, markRead: async () => {},
+}
