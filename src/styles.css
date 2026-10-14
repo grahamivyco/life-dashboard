@@ -327,3 +327,12 @@ ul.tile.list { padding-top: 6px; padding-bottom: 6px; }
   .ask-panel { left: 12px; right: 12px; width: auto; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 64px); max-height: calc(100dvh - 140px); }
   .ask-fab { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); }
 }
+
+/* Reply options on Email */
+.reply-opts { display: flex; flex-direction: column; gap: 6px; }
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+.opt { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--fg); font: inherit; cursor: pointer; }
+.opt:hover { border-color: var(--muted); }
+.opt[aria-pressed="true"] { border-color: var(--fg); }
+.opt-text { color: var(--muted); font-size: 13px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.tag.soft { color: var(--muted); font-weight: 500; }

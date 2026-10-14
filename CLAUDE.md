@@ -26,6 +26,7 @@ Graham Ivy's personal app. Live at https://grahamivyco.github.io/life-dashboard/
 - `claude_requests`: queued → working → needs_approval → approved → done/failed/dismissed. `links` is `[{title,url,image?}]`; `image: true` renders as a thumbnail on Today.
 - Ask Claude (floating ✦ panel, `src/askClaude.js`): inserts a `claude_requests` row with `action='ask'`; the hourly worker answers in `result`. `supabase/functions/ask-claude` (instant replies via the Claude API) is deployed but unused, since Graham chose the queue.
 - `section_snapshots`: latest payload per section (`email`, `finances`, …) written by the hourly sync
+- Email reply options: the sync adds `replies: [{label, body}]` to email snapshot threads that need an answer. Picking one fills the reply box. Send goes straight through Gmail when connected, otherwise it inserts a `claude_requests` row (`action='send_reply'`, `status='approved'`, body in `result`) that the next sync sends.
 
 ## Pages
 Today (dump box, ✦ Claude tile, tasks, week, sync) · Inbox (Gmail snapshot) · Brain Dump · Goals & Ideas · Timeline · Finances · Jobs/Clients/Housing (link to old dashboards for now) · Events · Settings

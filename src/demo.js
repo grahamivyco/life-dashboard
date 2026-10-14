@@ -32,7 +32,11 @@ const fixtures = {
   ],
   section_snapshots: [
     { section: 'email', synced_at: iso(0.2), payload: { unread: 3, threads: [
-      { id: 't1', from: 'Kym Duea', subject: 'Annual Meeting page has slipped a stitch', snippet: 'I noticed an issue on the Annual Meeting page…', date: iso(1), unread: true, important: true, count: 2, url: '#' },
+      { id: 't1', from: 'Kym Duea', subject: 'Annual Meeting page has slipped a stitch', snippet: 'I noticed an issue on the Annual Meeting page…', date: iso(1), unread: true, important: true, count: 2, url: '#', replies: [
+        { label: 'On it today', body: 'Hi Kym,\n\nThanks for catching this. I’ll fix the page and the registration link today and let you know when it’s live.\n\nGraham' },
+        { label: 'This week', body: 'Hi Kym,\n\nThanks for the heads up and the screenshot. I’ll have the page and the link fixed by Friday.\n\nGraham' },
+        { label: 'Ask for details', body: 'Hi Kym,\n\nThanks for flagging this. Which browser were you using? I want to make sure I see the same thing before I fix it.\n\nGraham' },
+      ] },
       { id: 't2', from: 'idealista', subject: 'New home in your search', snippet: 'Gràcia 1,100 €/month…', date: iso(4), unread: true, important: false, count: 3, url: '#' },
       { id: 't3', from: 'CIEE TEFL', subject: 'Your TEFL certificate', snippet: 'Please find your certificate attached.', date: iso(28), unread: false, important: true, count: 2, url: '#' },
     ] } },

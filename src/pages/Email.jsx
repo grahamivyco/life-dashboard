@@ -39,6 +39,33 @@ async function askAboutThread(thread, question) {
   return askClaude(`email:${thread.id}| ${question}\n\n${context}`)
 }
 
+// Without a Gmail connection, a reply goes out through the queue: the next sync sends it.
+async function queueReply(threadId, to, body) {
+  const { error } = await supabase.from('claude_requests').insert({
+    action: 'send_reply', status: 'approved', note: `email:${threadId}| Send reply to ${to}`,
+    approval_ask: `Send this reply to ${to}?`, result: body, summary: `Reply to ${to} waiting to send`,
+  })
+  if (error) throw new Error(error.message)
+}
+
+// Reply options Claude wrote during the sync. Picking one fills the reply box.
+function ReplyOptions({ options, value, onPick }) {
+  if (!options?.length) return null
+  return (
+    <div className="reply-opts">
+      <span className="meta">Reply options</span>
+      <div className="opts">
+        {options.map((o, i) => (
+          <button key={i} className="opt" aria-pressed={value === o.body} onClick={() => onPick(o.body)}>
+            <b>{o.label}</b>
+            <span className="opt-text">{o.body.replace(/^(hi|hello|hey|hola|dear|bon dia|buenas)\b[^\n]*\n+/i, '')}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function Files({ files }) {
   const [busy, setBusy] = useState(null)
   const [err, setErr] = useState('')
@@ -87,7 +114,7 @@ function useUndoSend() {
   return { pending, send, undo }
 }
 
-function ThreadView({ id, asked, onAsked, onArchived }) {
+function ThreadView({ id, options, asked, onAsked, onArchived }) {
   const [thread, setThread] = useState(null)
   const [err, setErr] = useState('')
   const [reply, setReply] = useState('')
@@ -111,7 +138,8 @@ function ThreadView({ id, asked, onAsked, onArchived }) {
           <Files files={m.files} />
         </div>
       ))}
-      <textarea value={reply} onChange={(e) => setReply(e.target.value)} placeholder={`Reply to ${nameOf(msgs[msgs.length - 1].from)}`} rows={4} />
+      <ReplyOptions options={options} value={reply} onPick={setReply} />
+      <textarea value={reply} onChange={(e) => setReply(e.target.value)} placeholder={`Reply to ${nameOf(msgs[msgs.length - 1].from)}`} rows={reply ? 7 : 4} />
       <div className="row gap wrap">
         {pending
           ? <span className="sending">Sending… <button className="mini" onClick={undo}>Undo</button></span>
@@ -168,6 +196,29 @@ function DraftView({ d, onGone }) {
   )
 }
 
+// Synced copy of a thread when Gmail isn't connected: pick or write a reply, the queue sends it.
+function SnapshotThread({ t, queued, onQueued }) {
+  const [reply, setReply] = useState('')
+  const { pending, send, undo } = useUndoSend()
+  return (
+    <div className="mail-body">
+      <p className="msg-text">{t.snippet}</p>
+      {queued
+        ? <p className="hint"><Send size={12} /> Reply queued. It goes out on the next sync.</p>
+        : <>
+            <ReplyOptions options={t.replies} value={reply} onPick={setReply} />
+            <textarea value={reply} onChange={(e) => setReply(e.target.value)} placeholder={`Reply to ${t.from}`} rows={reply ? 7 : 4} />
+          </>}
+      <div className="row gap wrap">
+        {!queued && (pending
+          ? <span className="sending">Sending… <button className="mini" onClick={undo}>Undo</button></span>
+          : <button className="btn primary" disabled={!reply.trim()} onClick={() => send('reply', () => queueReply(t.id, t.from, reply), onQueued)}><Send size={13} /> Send</button>)}
+        <a className="btn" href={t.url} target="_blank" rel="noreferrer">Open in Gmail <ExternalLink size={12} /></a>
+      </div>
+    </div>
+  )
+}
+
 function Connect({ onConnected }) {
   const [err, setErr] = useState('')
   if (!gmail.ready()) return <p className="note">Gmail sending is waiting on a one-time Google setup. Showing the latest synced inbox until then.</p>
@@ -192,6 +243,7 @@ export default function Email() {
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const [asked, setAsked] = useState({})
+  const [queued, setQueued] = useState({})
 
   const load = useCallback(async () => {
     if (!live) return
@@ -208,15 +260,21 @@ export default function Email() {
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
-    supabase.from('claude_requests').select('note').is('item_id', null).like('note', 'email:%')
+    supabase.from('claude_requests').select('note, action, status').is('item_id', null).like('note', 'email:%')
       .then(({ data }) => {
-        const m = {}
-        for (const r of data || []) if (r.note) m[r.note.split('|')[0].slice(6)] = true
-        setAsked(m)
+        const a = {}, q = {}
+        for (const r of data || []) {
+          if (!r.note) continue
+          const id = r.note.split('|')[0].slice(6)
+          if (r.action === 'send_reply') { if (r.status === 'approved' || r.status === 'working') q[id] = true }
+          else a[id] = true
+        }
+        setAsked(a); setQueued(q)
       })
   }, [])
 
   const all = live ? threads || [] : snap?.payload?.threads || []
+  const replies = Object.fromEntries((snap?.payload?.threads || []).map((t) => [t.id, t.replies]))
   const shown = all.filter((t) => (filter === 'unread' ? t.unread : filter === 'important' ? t.important : true))
 
   return (
@@ -249,17 +307,13 @@ export default function Email() {
                   <ChevronRight size={15} className="chev" />
                   <span className="mail-from clamp">{t.from}{t.count > 1 && <span className="meta"> {t.count}</span>}</span>
                   <span className="mail-subject grow clamp">{t.subject}</span>
+                  {queued[t.id] ? <span className="tag">Sending</span> : replies[t.id]?.length > 0 && <span className="tag soft">Reply ready</span>}
                   <span className="meta">{when(t.date)}</span>
                 </button>
                 {isOpen && (live
-                  ? <ThreadView id={t.id} asked={asked[t.id]} onAsked={() => setAsked((a) => ({ ...a, [t.id]: true }))}
+                  ? <ThreadView id={t.id} options={replies[t.id]} asked={asked[t.id]} onAsked={() => setAsked((a) => ({ ...a, [t.id]: true }))}
                       onArchived={() => { setOpen(null); setThreads((ts) => ts.filter((x) => x.id !== t.id)) }} />
-                  : (
-                    <div className="mail-body">
-                      <p>{t.snippet}</p>
-                      <a className="btn" href={t.url} target="_blank" rel="noreferrer">Open in Gmail <ExternalLink size={12} /></a>
-                    </div>
-                  ))}
+                  : <SnapshotThread t={t} queued={queued[t.id]} onQueued={() => setQueued((q) => ({ ...q, [t.id]: true }))} />)}
               </li>
             )
           })}
