@@ -151,7 +151,17 @@ textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
 .chips { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font-size: 12px; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line); }
 .chip b { font-weight: 600; text-transform: capitalize; margin-right: 4px; }
-.dump-text { margin-top: 8px; white-space: pre-wrap; }
+.dump { padding: 4px 6px 4px 4px; }
+.dump-head { display: flex; align-items: center; gap: 4px; }
+.dump-toggle { flex: 1; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 8px; border: 0; background: none; border-radius: 8px; cursor: pointer; text-align: left; font-weight: 500; }
+.dump-toggle:hover { background: var(--hover); }
+.chev { color: var(--muted); transition: transform var(--ease); }
+.dump.open .chev { transform: rotate(90deg); }
+.icon-btn { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--muted); cursor: pointer; transition: background var(--ease), color var(--ease); }
+.icon-btn:hover { background: var(--hover); color: var(--tomato); }
+.dump-body { display: flex; flex-direction: column; gap: 10px; padding: 4px 12px 12px 31px; }
+.dump-body .chips { margin: 0; }
+.dump-text { white-space: pre-wrap; }
 .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .steps b { display: inline-block; min-width: 64px; font-weight: 600; }
 .sync-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; text-transform: capitalize; }
