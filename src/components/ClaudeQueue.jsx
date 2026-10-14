@@ -5,6 +5,27 @@ import { ago } from '../lib.js'
 
 function Links({ links }) {
   if (!links?.length) return null
+  const images = links.filter((l) => l.image)
+  const rest = links.filter((l) => !l.image)
+  return (
+    <>
+      {images.length > 0 && (
+        <div className="shots">
+          {images.map((l, i) => (
+            <a key={i} href={l.url} target="_blank" rel="noreferrer" className="shot">
+              <img src={l.url} alt={l.title || 'Preview'} loading="lazy" />
+              {l.title && <span className="meta">{l.title}</span>}
+            </a>
+          ))}
+        </div>
+      )}
+      <LinkList links={rest} />
+    </>
+  )
+}
+
+function LinkList({ links }) {
+  if (!links.length) return null
   return (
     <ul className="links">
       {links.map((l, i) => (

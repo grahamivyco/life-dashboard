@@ -185,6 +185,9 @@ textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
 .icon-btn.ok:hover { color: var(--fg); background: var(--hover); }
 ul.tile.list { padding-top: 6px; padding-bottom: 6px; }
 
+.shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.shot { display: flex; flex-direction: column; gap: 4px; text-decoration: none; }
+.shot img { width: 100%; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); }
 .spark-head { color: var(--tomato); margin-right: 2px; }
 .q-list > li { display: block; padding: 2px 0; }
 .q-list .dump-body { padding-left: 31px; }
