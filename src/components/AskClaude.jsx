@@ -68,6 +68,11 @@ export default function AskClaude() {
     load()
   }
 
+  async function approve(id) {
+    await supabase.from('claude_requests').update({ status: 'approved' }).eq('id', id)
+    load()
+  }
+
   return (
     <>
       {open && (
@@ -77,7 +82,7 @@ export default function AskClaude() {
             <button className="icon-btn" onClick={() => setOpen(false)} aria-label="Close"><X size={16} /></button>
           </div>
           <div className="ask-log">
-            {msgs.length === 0 && <p className="empty">Ask anything or hand off a task. Claude replies here within the hour.</p>}
+            {msgs.length === 0 && <p className="empty">Ask a question or ask for a change to the dashboard. Claude replies here within the hour.</p>}
             {msgs.map((m) => (
               <div key={m.id} className="ask-pair">
                 <p className="bubble me">{m.note}</p>
@@ -85,10 +90,19 @@ export default function AskClaude() {
                   <div className="bubble">
                     {m.summary && <p><b>{m.summary}</b></p>}
                     {m.result && <p className="dump-text">{m.result}</p>}
-                    {m.links?.map((l, i) => (
+                    {m.links?.filter((l) => !l.image).map((l, i) => (
                       <a key={i} href={l.url} target="_blank" rel="noreferrer" className="ask-link">{l.title || l.url}</a>
                     ))}
-                    {m.approval_ask && <p className="meta">{m.approval_ask} Approve on Today.</p>}
+                    {m.links?.filter((l) => l.image).map((l, i) => (
+                      <a key={'i' + i} href={l.url} target="_blank" rel="noreferrer"><img className="ask-shot" onLoad={() => end.current?.scrollIntoView({ block: "end" })} src={l.url} alt={l.title || 'Preview'} loading="lazy" /></a>
+                    ))}
+                    {m.status === 'needs_approval' && (
+                      <div className="ask-approve">
+                        <span className="meta">{m.approval_ask}</span>
+                        <button className="btn primary" onClick={() => approve(m.id)}>Approve</button>
+                      </div>
+                    )}
+                    {m.status === 'approved' && <p className="meta">Approved. Doing it at the next sync.</p>}
                   </div>
                 ) : (
                   <p className="meta ask-wait">{m.status === 'working' ? 'Claude is on it' : `Sent ${ago(m.created_at)}. Reply at the next sync.`}</p>

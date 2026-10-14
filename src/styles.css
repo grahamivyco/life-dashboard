@@ -285,12 +285,15 @@ ul.tile.list { padding-top: 6px; padding-bottom: 6px; }
 }
 .ask-panel .tile-head { align-items: center; margin-bottom: 4px; }
 .ask-log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 6px 0 10px; min-height: 120px; }
-.ask-pair { display: flex; flex-direction: column; gap: 6px; }
+.ask-pair { flex: none; display: flex; flex-direction: column; gap: 6px; }
 .bubble { max-width: 88%; padding: 8px 11px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); font-size: 13px; }
 .bubble p + p { margin-top: 4px; }
 .bubble.me { align-self: flex-end; background: var(--fg); border-color: var(--fg); color: var(--surface); white-space: pre-wrap; }
 .ask-wait { padding-left: 2px; }
 .ask-link { display: block; margin-top: 4px; font-size: 12px; color: var(--fg); text-underline-offset: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ask-shot { display: block; width: 100%; margin-top: 8px; border-radius: 8px; border: 1px solid var(--line); }
+.ask-approve { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.ask-approve .btn { height: 28px; padding: 0 12px; font-size: 12px; }
 .ask-input { display: flex; align-items: flex-end; gap: 6px; border-top: 1px solid var(--line); padding-top: 10px; }
 .ask-input textarea { min-height: 40px; max-height: 140px; resize: none; font-size: 14px; }
 .ask-input .icon-btn { width: 36px; height: 36px; }
