@@ -131,6 +131,16 @@ textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .span2 { grid-column: 1 / -1; }
 .dumpbox { display: flex; flex-direction: column; gap: 10px; }
+.dump-field { position: relative; }
+.dump-field textarea { width: 100%; }
+.dumpbox.listening textarea { border-color: #C9C4B7; background: var(--surface); }
+.dump-live { margin-top: 6px; color: var(--muted); font-style: italic; }
+.talk { flex: 1; gap: 12px; min-width: 0; overflow: hidden; }
+.mic-btn { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; transition: background var(--ease), color var(--ease), border-color var(--ease); }
+.mic-btn:hover { color: var(--tomato); }
+.mic-btn.on { border-color: var(--tomato); color: var(--tomato); }
+.wave { flex: 1; min-width: 0; display: flex; align-items: center; gap: 3px; height: 28px; overflow: hidden; }
+.wave span { flex: none; width: 3px; height: 28px; border-radius: 2px; background: var(--fg); transform-origin: center; transition: transform 90ms linear; }
 .toggle { margin-top: 10px; }
 
 /* lists */
