@@ -858,3 +858,5 @@ button.set-row:active, button.set-row:hover { background: var(--hover); }
 .view-menu-list.left { right: auto; left: 0; }
 .view-menu-list button { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: none; font: inherit; font-size: 14px; color: var(--fg); text-align: left; white-space: nowrap; cursor: pointer; }
 .view-menu-list button:hover, .view-menu-list button[aria-checked="true"] { background: var(--hover); }
+.jobs-tabs { flex-wrap: nowrap; align-items: center; min-width: 0; }
+.jobs-tabs .tabs-seg { min-width: 0; }

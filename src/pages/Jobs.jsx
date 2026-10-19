@@ -284,11 +284,10 @@ function JobRow({ j, open, onToggle, docs, act, n, tracker }) {
 function OneAtATime({ queue, docs, act }) {
   const j = queue[0]
   if (!j) return <section className="tile empty-card"><b>All caught up.</b><span className="meta">No new jobs to look at. Search for more or check the tracker.</span></section>
-  const d = j.extra?.digest
   return (
     <section key={j.slug} className="tile reply-card job-card">
       <div className="row between">
-        <span className="meta">{queue.length === 1 ? 'Last one' : `1 of ${queue.length}`}{d ? ` · digest #${d.n}` : ''}</span>
+        <span className="meta">{queue.length === 1 ? 'Last one' : `1 of ${queue.length}`}</span>
         <span className="row gap"><Due j={j} />{grade(j.score) && <span className="grade" title={`Fit score ${j.score}`}>{grade(j.score)}</span>}</span>
       </div>
       <div className="reply-from"><b>{j.role}</b><span className="clamp">{name(j)}</span></div>
@@ -367,7 +366,7 @@ function DigestTab({ jobs, snapDigest, view, docs, act, searches, startOpen }) {
           {picks.length > 0 && (
             <section className="tile">
               <div className="tile-head">
-                <h2>Top {picks.length} from {fmtDay(latest + 'T12:00:00')}</h2>
+                <h2>Top {picks.length} picks · {fmtDay(latest + 'T12:00:00')}</h2>
                 {picks[0].extra.digest.url && <a className="link" href={picks[0].extra.digest.url} target="_blank" rel="noreferrer">Open email</a>}
               </div>
               {dg?.intro && <p className="meta digest-intro">{dg.intro}</p>}
@@ -601,7 +600,7 @@ export default function Jobs() {
   }
 
   const tabs = [
-    { k: 'digest', label: 'Digest' },
+    { k: 'digest', label: 'New' },
     { k: 'tracker', label: 'Tracker', n: jobs?.filter((j) => j.needs_you && !['rejected', 'skipped'].includes(j.status)).length },
     { k: 'docs', label: 'Docs' },
     { k: 'profile', label: 'Profile' },
@@ -615,15 +614,18 @@ export default function Jobs() {
           <>
             <ViewMenu options={[{ k: 'one', label: 'One at a time', icon: <Layers size={14} /> }, { k: 'list', label: 'List', icon: <List size={14} /> }]}
               value={view} onPick={pickView} />
-            <button className="btn" onClick={() => setSearching(!searching)}><Search size={13} /> Search</button>
           </>
         )}
       </PageHeader>
 
-      <div className="seg tabs-seg">
-        {tabs.map((t) => (
-          <button key={t.k} aria-pressed={current === t.k} onClick={() => setTab(t.k)}>{t.label}{t.n ? <span className="seg-n hot"> {t.n}</span> : null}</button>
-        ))}
+      <div className="row gap jobs-tabs">
+        <div className="seg tabs-seg">
+          {tabs.map((t) => (
+            <button key={t.k} aria-pressed={current === t.k} onClick={() => setTab(t.k)}>{t.label}{t.n ? <span className="seg-n hot"> {t.n}</span> : null}</button>
+          ))}
+        </div>
+        <button className={'icon-btn fin-sync' + (searching ? ' on' : '')} aria-label="Search for jobs" title="Search for jobs"
+          onClick={() => { setTab('digest'); setSearching(!searching) }}><Search size={16} /></button>
       </div>
 
       {err && <p className="error">{err}</p>}
