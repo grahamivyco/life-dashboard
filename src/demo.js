@@ -47,6 +47,7 @@ const fixtures = {
     { id: 'c1', name: 'Riverside Quilt Club', short: 'RQC', notes: 'Website and newsletter. $200 a week, paused until we agree a plan.\nTalk to Dana about the events page first.', position: 0 },
     { id: 'c2', name: 'Northwind Apps', notes: '', position: 1 },
   ],
+  housing_profile: [{ specs: { max_price: 1600, min_beds: 3, balcony: true, exterior: true, lift: false, ac: false, areas: [] } }],
   section_snapshots: [
     { section: 'clients', synced_at: iso(0.3), payload: { clients: [
       { id: 'c1', summary: 'Dana asked to pause the weekly invoice until there’s a plan. Sam is waiting on the events page fixes.', threads: [
@@ -70,9 +71,11 @@ const fixtures = {
       search: { label: 'Homes in several areas · up to €1,600 · 3+ bedrooms · balcony', url: '#' },
       listings: [
         { id: '112847192', street: 'Calle de l’Agricultura', area: 'Sant Martí de Provençals', district: 'Sant Martí', price: 1132, beds: 3, size_m2: 75, floor: '1', exterior: true, lift: true, balcony: true, photo: room('#E9E1D3', '#B9A27F', '#BFD6E4'), url: '#', first_seen: iso(5) },
+        { id: 'f1', source: 'fotocasa', street: 'Carrer de Verdi', area: 'Vila de Gràcia', district: 'Gràcia', price: 1450, beds: 3, size_m2: 84, floor: '3', exterior: true, lift: true, balcony: true, photo: room('#EDE5D8', '#B09673', '#C9DCE6'), url: '#', first_seen: iso(20) },
+        { id: 'fb1', source: 'facebook', street: 'Carrer de Blai', area: 'El Poble-sec', district: 'Sants-Montjuïc', price: 1350, beds: 3, size_m2: 80, floor: '2', exterior: true, balcony: true, url: '#', first_seen: iso(30) },
         { id: 'h2', street: 'Calle de Fluvià', area: 'Sant Martí de Provençals', district: 'Sant Martí', price: 1280, beds: 3, size_m2: 82, floor: '4', exterior: true, lift: true, balcony: true, photo: room('#EEE8DC', '#C2AE8E', '#CADFEA'), url: '#', first_seen: iso(52) },
-        { id: 'h3', street: 'Calle de Mateu', area: 'Vila de Gràcia', district: 'Gràcia', price: 1363, beds: 3, size_m2: 78, floor: '2', exterior: true, lift: false, balcony: true, photo: room('#F0E6D6', '#A88C66', '#D2E3EC'), url: '#', first_seen: iso(125) },
-        { id: 'h4', street: 'Calle d’Alí Bei', area: 'El Fort Pienc', district: 'Eixample', price: 1200, beds: 3, size_m2: 86, floor: '3', exterior: false, lift: true, balcony: true, photo: room('#E6E2DA', '#9F8A6C', '#C5D8E2'), url: '#', first_seen: iso(76) },
+        { id: 'h3', street: 'Calle de Mateu', area: 'Vila de Gràcia', district: 'Gràcia', price: 1690, beds: 3, size_m2: 78, floor: '2', exterior: true, lift: false, balcony: true, photo: room('#F0E6D6', '#A88C66', '#D2E3EC'), url: '#', first_seen: iso(125) },
+        { id: 'h4', street: 'Calle d’Alí Bei', area: 'El Fort Pienc', district: 'Eixample', price: 1100, beds: 3, size_m2: 90, floor: '1', exterior: false, lift: true, balcony: true, photo: room('#E6E2DA', '#9F8A6C', '#C5D8E2'), url: '#', first_seen: iso(76) },
         { id: 'h5', street: 'Calle del Marquès de Campo Sagrado', area: 'Sant Antoni', district: 'Eixample', price: 1424, prev_price: 1500, beds: 3, size_m2: 106, floor: '2', exterior: true, lift: true, balcony: true, photo: room('#EFE9DF', '#B49A74', '#CFE0E8'), url: '#', first_seen: iso(100) },
         { id: 'h6', street: 'Calle de Lepant', area: 'La Sagrada Família', district: 'Eixample', price: 1081, beds: 3, size_m2: 77, floor: '7', exterior: true, lift: true, balcony: true, photo: room('#E8E4DA', '#B7A386', '#C8DCE7'), url: '#', first_seen: iso(122) },
         { id: 'h7', street: 'Doctor Letamendi', area: 'L’Antiga Esquerra de l’Eixample', district: 'Eixample', price: 1252, prev_price: 1375, beds: 1, size_m2: 70, floor: 'Mezzanine', exterior: true, balcony: false, url: '#', first_seen: iso(150), gone: true },
@@ -162,7 +165,7 @@ function builder(table) {
     gte: () => q, lt: () => q, lte: () => q, neq: () => q,
     eq: (k, v) => { rows = rows.filter((r) => r[k] === undefined || r[k] === v); return q },
     in: (k, vs) => { rows = rows.filter((r) => r[k] === undefined || vs.includes(r[k])); return q },
-    insert: () => q, update: () => q, upsert: () => q, delete: () => q,
+    insert: () => q, upsert: () => q, update: () => q, upsert: () => q, delete: () => q,
     then: (res) => res({ data: rows, count: rows.length, error: null }),
   }
   return q

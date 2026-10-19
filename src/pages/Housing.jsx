@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
-import { Star, EyeOff, Eye, Home, ExternalLink } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Star, EyeOff, Eye, Home, ChevronRight } from 'lucide-react'
+import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago } from '../lib.js'
@@ -13,6 +14,36 @@ const MARKS_KEY = 'housing-marks'
 const readMarks = () => { try { return JSON.parse(localStorage.getItem(MARKS_KEY) || '{}') } catch { return {} } }
 const writeMarks = (m) => { try { localStorage.setItem(MARKS_KEY, JSON.stringify(m)) } catch { /* ignore */ } }
 
+// Where flats come from. The hourly sync reads each site's alert emails from Gmail.
+const SOURCES = [
+  { k: 'idealista', label: 'idealista', setup: 'https://www.idealista.com/en/alquiler-viviendas/barcelona-barcelona/', how: 'Saved search with instant email alerts' },
+  { k: 'fotocasa', label: 'Fotocasa', setup: 'https://www.fotocasa.es/es/alquiler/viviendas/barcelona-capital/todas-las-zonas/l', how: 'Save the search, turn on email alerts' },
+  { k: 'habitaclia', label: 'Habitaclia', setup: 'https://www.habitaclia.com/alquiler-barcelona.htm', how: 'Create an alert from the search' },
+  { k: 'pisos', label: 'pisos.com', setup: 'https://www.pisos.com/alquiler/pisos-barcelona_capital/', how: 'Save the search with email alerts' },
+  { k: 'badi', label: 'Badi', setup: 'https://badi.com/s/barcelona--spain', how: 'Rooms and flatshares; turn on email notifications' },
+  { k: 'facebook', label: 'Facebook groups', setup: 'https://www.facebook.com/search/groups/?q=barcelona%20pisos%20alquiler', how: 'In each group: Notifications → All posts, email on' },
+]
+const sourceLabel = (k) => SOURCES.find((x) => x.k === k)?.label || k
+
+export const DEFAULT_SPECS = { max_price: 1600, min_beds: 3, balcony: true, exterior: false, lift: false, ac: false, areas: [] }
+
+// What a listing is missing against Graham's specs. Unknown details don't count against it.
+export function misses(l, s) {
+  const out = []
+  if (s.max_price && l.price > s.max_price) out.push(`Over ${eur(s.max_price)}`)
+  if (s.min_beds && l.kind === 'room') out.push('Room only')
+  else if (s.min_beds && l.beds != null && l.beds < s.min_beds) out.push(`${l.beds} bed`)
+  if (s.balcony && l.balcony !== true && l.terrace !== true && (l.balcony === false || l.terrace === false || l.outdoor === false)) out.push('No balcony')
+  if (s.exterior && l.exterior === false) out.push('Interior')
+  if (s.lift && l.lift === false) out.push('No lift')
+  if (s.ac && l.ac === false) out.push('No A/C')
+  if (s.areas?.length) {
+    const where = `${l.area || ''} ${l.district || ''}`.toLowerCase()
+    if (where.trim() && !s.areas.some((a) => where.includes(a.toLowerCase()))) out.push('Outside your areas')
+  }
+  return out
+}
+
 const median = (xs) => {
   if (!xs.length) return null
   const s = [...xs].sort((a, b) => a - b)
@@ -20,7 +51,7 @@ const median = (xs) => {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2
 }
 
-function Listing({ l, mark, onMark }) {
+function Listing({ l, mark, onMark, miss }) {
   const isNew = !l.gone && Date.now() - new Date(l.first_seen).getTime() < 2 * DAY
   const drop = l.prev_price && l.prev_price > l.price
   const facts = [
@@ -62,15 +93,90 @@ function Listing({ l, mark, onMark }) {
             {tags.map((t) => <span key={t} className="pill">{t}</span>)}
           </div>
         )}
-        <span className="meta">Seen {ago(l.first_seen)}</span>
+        {miss.length > 0 && <span className="home-miss">{miss.join(' · ')}</span>}
+        <span className="meta">{sourceLabel(l.source || 'idealista')} · seen {ago(l.first_seen)}</span>
       </div>
     </li>
   )
 }
 
+function Specs({ specs, onSave }) {
+  const [open, setOpen] = useState(false)
+  const [draft, setDraft] = useState(specs)
+  useEffect(() => setDraft(specs), [specs])
+  const set = (k, v) => setDraft((d) => ({ ...d, [k]: v }))
+  const summary = [
+    `Up to ${eur(specs.max_price)}`,
+    `${specs.min_beds}+ bed`,
+    ...['balcony', 'exterior', 'lift', 'ac'].filter((k) => specs[k]).map((k) => ({ balcony: 'Balcony', exterior: 'Exterior', lift: 'Lift', ac: 'A/C' })[k]),
+    specs.areas?.length ? specs.areas.join(', ') : 'Anywhere in Barcelona',
+  ].join(' · ')
+
+  return (
+    <section className={'tile dump specs' + (open ? ' open' : '')}>
+      <div className="dump-head">
+        <button className="dump-toggle" onClick={() => setOpen(!open)}>
+          <ChevronRight size={15} className="chev" />
+          <span>Your specs</span>
+          <span className="meta clamp grow">{summary}</span>
+        </button>
+      </div>
+      {open && (
+        <div className="dump-body specs-body">
+          <div className="form-grid">
+            <label className="field">Max rent (€/month)<input type="number" value={draft.max_price || ''} onChange={(e) => set('max_price', Number(e.target.value) || null)} /></label>
+            <label className="field">Min bedrooms<input type="number" value={draft.min_beds || ''} onChange={(e) => set('min_beds', Number(e.target.value) || null)} /></label>
+            <label className="field span2">Areas (barris or districts, comma separated, empty for anywhere)
+              <input value={(draft.areas || []).join(', ')} onChange={(e) => set('areas', e.target.value.split(',').map((x) => x.trim()).filter(Boolean))} placeholder="Gràcia, Eixample, Poblenou" />
+            </label>
+          </div>
+          <div className="row wrap gap">
+            <span className="hint">Must have</span>
+            {[['balcony', 'Balcony or terrace'], ['exterior', 'Exterior'], ['lift', 'Lift'], ['ac', 'A/C']].map(([k, label]) => (
+              <label key={k} className="chip-check"><input type="checkbox" checked={!!draft[k]} onChange={(e) => set(k, e.target.checked)} /> {label}</label>
+            ))}
+          </div>
+          <div className="row gap">
+            <button className="btn primary sm" onClick={() => { onSave(draft); setOpen(false) }}>Save</button>
+            <span className="hint">The sync uses these to pick flats from every source.</span>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function Sources({ all }) {
+  const n = (k) => all.filter((l) => (l.source || 'idealista') === k).length
+  return (
+    <section className="tile">
+      <div className="tile-head"><h2>Sources</h2><span className="meta">Read from alert emails every hour</span></div>
+      <ul className="list">
+        {SOURCES.map((x) => (
+          <li key={x.k}>
+            <span className="grow">{x.label} <span className="meta">{x.how}</span></span>
+            {n(x.k) > 0 ? <span className="meta">{n(x.k)} {n(x.k) === 1 ? "flat" : "flats"}</span> : <a className="mini" href={x.setup} target="_blank" rel="noreferrer">Set up</a>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 export default function Housing() {
   const snap = useSnapshot('housing')
-  const [view, setView] = useState('new')
+  const [view, setView] = useState('fits')
+  const [specs, setSpecs] = useState(DEFAULT_SPECS)
+
+  useEffect(() => {
+    supabase.from('housing_profile').select('specs').limit(1)
+      .then(({ data }) => { if (data?.[0]?.specs) setSpecs({ ...DEFAULT_SPECS, ...data[0].specs }) })
+  }, [])
+
+  const saveSpecs = async (next) => {
+    setSpecs(next)
+    await supabase.from('housing_profile').upsert({ specs: next, updated_at: new Date().toISOString() })
+  }
   const [sort, setSort] = useState('newest')
   const [marks, setMarks] = useState(readMarks)
 
@@ -88,6 +194,7 @@ export default function Housing() {
 
   const shown = useMemo(() => {
     let rows = all
+    if (view === 'fits') rows = rows.filter((l) => !l.gone && marks[l.id] !== 'hidden' && !misses(l, specs).length)
     if (view === 'new') rows = rows.filter((l) => !l.gone && marks[l.id] !== 'hidden' && Date.now() - new Date(l.first_seen).getTime() < 7 * DAY)
     if (view === 'all') rows = rows.filter((l) => marks[l.id] !== 'hidden')
     if (view === 'saved') rows = rows.filter((l) => marks[l.id] === 'saved')
@@ -98,30 +205,29 @@ export default function Housing() {
       size: (a, b) => (b.size_m2 || 0) - (a.size_m2 || 0),
     }[sort]
     return [...rows].sort((a, b) => (a.gone - b.gone) || by(a, b))
-  }, [all, view, sort, marks])
+  }, [all, view, sort, marks, specs])
 
   const tracker = sections.find((s) => s.path === '/housing')?.tracker
-  const actions = (
-    <>
-      {p?.search?.url && <a className="btn" href={p.search.url} target="_blank" rel="noreferrer">Open search <ExternalLink size={13} /></a>}
-      {tracker && <a className="btn" href={tracker} target="_blank" rel="noreferrer">Tracker</a>}
-    </>
-  )
+  const actions = tracker && <a className="btn" href={tracker} target="_blank" rel="noreferrer">Tracker</a>
 
   if (!p) {
     return (
       <div className="page">
         <PageHeader title="Housing">{actions}</PageHeader>
-        <p className="empty">Flats from your idealista alerts appear here after the next sync.</p>
+        <Specs specs={specs} onSave={saveSpecs} />
+        <p className="empty">Flats from your alert emails appear here after the next sync.</p>
+        <Sources all={[]} />
       </div>
     )
   }
 
   const weekNew = live.filter((l) => Date.now() - new Date(l.first_seen).getTime() < 7 * DAY)
   const prices = live.map((l) => l.price)
-  const perM2 = live.filter((l) => l.size_m2).map((l) => l.price / l.size_m2)
+  const fits = live.filter((l) => marks[l.id] !== 'hidden' && !misses(l, specs).length)
+  const used = [...new Set(all.map((l) => l.source || 'idealista'))].map(sourceLabel)
   const drops = live.filter((l) => l.prev_price && l.prev_price > l.price).length
   const count = (v) => ({
+    fits: fits.length,
     new: weekNew.filter((l) => marks[l.id] !== 'hidden').length,
     all: all.filter((l) => marks[l.id] !== 'hidden').length,
     saved: all.filter((l) => marks[l.id] === 'saved').length,
@@ -130,20 +236,20 @@ export default function Housing() {
 
   return (
     <div className="page">
-      <PageHeader eyebrow={`idealista · updated ${ago(snap.synced_at)}`} title="Housing">{actions}</PageHeader>
+      <PageHeader eyebrow={`${used.join(', ')} · updated ${ago(snap.synced_at)}`} title="Housing">{actions}</PageHeader>
 
       <div className="stats even">
+        <div className="tile stat"><span className="eyebrow">Fit your specs</span><span className="big">{fits.length}</span></div>
         <div className="tile stat"><span className="eyebrow">New this week</span><span className="big">{weekNew.length}</span></div>
         <div className="tile stat"><span className="eyebrow">Median rent</span><span className="big">{prices.length ? eur(median(prices)) : '–'}</span></div>
-        <div className="tile stat"><span className="eyebrow">Median €/m²</span><span className="big">{perM2.length ? eur(median(perM2)) : '–'}</span></div>
         <div className="tile stat"><span className="eyebrow">Price drops</span><span className="big">{drops}</span></div>
       </div>
 
-      {p.search?.label && <p className="hint">Search: {p.search.label}</p>}
+      <Specs specs={specs} onSave={saveSpecs} />
 
       <div className="row between wrap gap">
         <div className="seg">
-          {[['new', 'New'], ['all', 'All'], ['saved', 'Saved'], ['hidden', 'Hidden']].map(([k, label]) => (
+          {[['fits', 'Fits'], ['new', 'New'], ['all', 'All'], ['saved', 'Saved'], ['hidden', 'Hidden']].map(([k, label]) => (
             (k !== 'hidden' || count('hidden') > 0) && (
               <button key={k} aria-pressed={view === k} onClick={() => setView(k)}>{label} <span className="seg-n">{count(k)}</span></button>
             )
@@ -158,11 +264,13 @@ export default function Housing() {
 
       {shown.length ? (
         <ul className="homes">
-          {shown.map((l) => <Listing key={l.id} l={l} mark={marks[l.id]} onMark={onMark} />)}
+          {shown.map((l) => <Listing key={l.id} l={l} mark={marks[l.id]} onMark={onMark} miss={misses(l, specs)} />)}
         </ul>
       ) : (
-        <p className="empty">{view === 'saved' ? 'Star a flat to keep it here.' : view === 'new' ? 'Nothing new this week.' : 'Nothing here.'}</p>
+        <p className="empty">{view === 'saved' ? 'Star a flat to keep it here.' : view === 'new' ? 'Nothing new this week.' : view === 'fits' ? 'Nothing fits right now. Check All or loosen your specs.' : 'Nothing here.'}</p>
       )}
+
+      <Sources all={all} />
     </div>
   )
 }

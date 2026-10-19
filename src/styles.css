@@ -517,3 +517,9 @@ section.tile .list.jobs { padding: 0; }
 .tr-toggle { justify-self: start; align-self: flex-start; }
 .lang-seg button { padding: 0 10px; }
 .gap-s { gap: 8px; }
+.home-miss { font-size: 12px; color: var(--muted); }
+.specs .dump-toggle { min-width: 0; }
+.specs .dump-toggle > span:nth-child(2) { flex: none; }
+.specs-body { padding-left: 12px; }
+.chip-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 99px; cursor: pointer; }
+.chip-check:has(input:checked) { border-color: var(--fg); }
