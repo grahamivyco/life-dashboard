@@ -145,9 +145,10 @@ const fixtures = {
         { date: day(-2), merchant: 'Client payment', account: 'Business', amount: 400, transfer: false },
         { date: day(-3), merchant: 'Café', account: 'Card', amount: -6.5, transfer: false },
       ],
-      subscriptions: [{ name: 'Claude', amount: 100 }, { name: 'YouTube', amount: 29.19 }],
+      subscriptions: [{ name: 'Claude', amount: 100 }, { name: 'YouTube Premium', amount: 29.19 }, { name: 'Apple', amount: 21.98 }, { name: 'Google One', amount: 19.99 }, { name: 'Gym app', amount: 12 }],
     } },
   ],
+  subscription_overrides: [{ name: 'Gym app', hidden: true }, { name: 'Google One', amount: 9.99 }],
 }
 
 function builder(table) {
@@ -157,7 +158,7 @@ function builder(table) {
     gte: () => q, lt: () => q, lte: () => q, neq: () => q,
     eq: (k, v) => { rows = rows.filter((r) => r[k] === undefined || r[k] === v); return q },
     in: (k, vs) => { rows = rows.filter((r) => r[k] === undefined || vs.includes(r[k])); return q },
-    insert: () => q, update: () => q, delete: () => q,
+    insert: () => q, update: () => q, upsert: () => q, delete: () => q,
     then: (res) => res({ data: rows, count: rows.length, error: null }),
   }
   return q

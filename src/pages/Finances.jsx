@@ -1,4 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { ChevronRight, ExternalLink } from 'lucide-react'
+import { cancelGuide } from '../subscriptions.js'
+import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago, fmtDay } from '../lib.js'
@@ -30,6 +33,72 @@ function CashFlow({ rows }) {
       </div>
       <div className="legend"><span><i className="in" />In</span><span><i className="out" />Out</span></div>
     </div>
+  )
+}
+
+// Subscriptions from the sync, with Graham's own fixes on top: hide ones he doesn't pay,
+// correct an amount. Stored in subscription_overrides by name. Each row opens cancel help.
+function Subscriptions({ subs }) {
+  const [over, setOver] = useState({})
+  const [showHidden, setShowHidden] = useState(false)
+  const [open, setOpen] = useState(null)
+  const [editing, setEditing] = useState(false)
+
+  useEffect(() => {
+    supabase.from('subscription_overrides').select('name, hidden, amount')
+      .then(({ data }) => setOver(Object.fromEntries((data || []).map((o) => [o.name, o]))))
+  }, [])
+
+  const save = async (name, patch) => {
+    const next = { name, hidden: false, amount: null, ...over[name], ...patch }
+    setOver((o) => ({ ...o, [name]: next }))
+    await supabase.from('subscription_overrides').upsert({ name, hidden: next.hidden, amount: next.amount, updated_at: new Date().toISOString() }, { onConflict: 'user_id,name' })
+  }
+
+  const rows = subs.map((s) => ({ ...s, amount: Number(over[s.name]?.amount ?? s.amount), hidden: !!over[s.name]?.hidden }))
+  const active = rows.filter((s) => !s.hidden)
+  const hidden = rows.filter((s) => s.hidden)
+
+  return (
+    <section className="tile">
+      <div className="tile-head"><h2>Subscriptions</h2><span className="meta">{usd(active.reduce((t, x) => t + x.amount, 0), 2)}/mo</span></div>
+      <ul className="list">
+        {active.map((s) => {
+          const isOpen = open === s.name
+          const g = cancelGuide(s.name)
+          return (
+            <li key={s.name} className={'sub' + (isOpen ? ' open' : '')}>
+              <button className="sub-head" aria-expanded={isOpen} onClick={() => { setOpen(isOpen ? null : s.name); setEditing(false) }}>
+                <ChevronRight size={15} className="chev" />
+                <span className="grow">{s.name}</span>
+                <span className="num">{usd(s.amount, 2)}</span>
+              </button>
+              {isOpen && (
+                <div className="sub-body">
+                  <ol className="steps">{g.steps.map((st) => <li key={st}>{st}</li>)}</ol>
+                  <div className="row gap wrap">
+                    <a className="btn primary" href={g.url} target="_blank" rel="noreferrer">{g.search ? 'Find cancel page' : 'Manage or cancel'} <ExternalLink size={12} /></a>
+                    {editing
+                      ? <input className="sub-amt" type="number" step="0.01" autoFocus defaultValue={s.amount}
+                          onBlur={(e) => { setEditing(false); const v = parseFloat(e.target.value); if (!isNaN(v) && v !== s.amount) save(s.name, { amount: v }) }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') setEditing(false) }} />
+                      : <button className="btn" onClick={() => setEditing(true)}>Fix amount</button>}
+                    <button className="btn" onClick={() => { setOpen(null); save(s.name, { hidden: true }) }}>I don't pay this</button>
+                  </div>
+                </div>
+              )}
+            </li>
+          )
+        })}
+        {showHidden && hidden.map((s) => (
+          <li key={s.name} className="sub-hidden">
+            <span className="grow">{s.name}</span>
+            <button className="mini" onClick={() => save(s.name, { hidden: false })}>Show again</button>
+          </li>
+        ))}
+      </ul>
+      {hidden.length > 0 && <button className="mini more" onClick={() => setShowHidden(!showHidden)}>{showHidden ? 'Done' : `${hidden.length} hidden`}</button>}
+    </section>
   )
 }
 
@@ -91,14 +160,7 @@ export default function Finances() {
           ))}
         </section>
 
-        <section className="tile">
-          <div className="tile-head"><h2>Subscriptions</h2><span className="meta">{usd(p.subscriptions.reduce((s, x) => s + x.amount, 0), 2)}/mo</span></div>
-          <ul className="list">
-            {p.subscriptions.map((s) => (
-              <li key={s.name}><span className="grow">{s.name}</span><span className="num">{usd(s.amount, 2)}</span></li>
-            ))}
-          </ul>
-        </section>
+        <Subscriptions subs={p.subscriptions} />
       </div>
 
       <section className="tile">

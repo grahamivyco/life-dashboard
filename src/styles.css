@@ -505,3 +505,11 @@ section.tile .list.jobs { padding: 0; }
   .client-subj { order: 3; flex-basis: 100%; }
   .unread + .client-from + .client-subj { padding-left: 17px; }
 }
+.list > li.sub { display: block; padding: 0; }
+.sub-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.sub-head .chev { color: var(--muted); transition: transform var(--ease); flex: none; }
+.sub.open .sub-head .chev { transform: rotate(90deg); }
+.sub-body { padding: 0 0 14px 23px; display: grid; gap: 12px; }
+.steps { margin: 0; padding-left: 18px; list-style: decimal; display: grid; gap: 4px; color: var(--muted); font-size: 13px; }
+.sub-hidden { color: var(--muted); }
+.sub-amt { width: 96px; height: 32px; padding: 0 10px; text-align: right; font: inherit; font-size: 13px; border: 1px solid var(--line); border-radius: 99px; background: var(--surface); }

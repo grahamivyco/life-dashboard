@@ -27,6 +27,8 @@ try {
       await page.setViewport({ width: s.width, height: s.height, deviceScaleFactor: s.scale })
       await page.goto(`http://localhost:4319/life-dashboard/#${route}`, { waitUntil: 'networkidle0' })
       await new Promise((r) => setTimeout(r, 600))
+      // CLICK="<css selector>" clicks something first, e.g. to open a row
+      if (process.env.CLICK) { await page.click(process.env.CLICK); await new Promise((r) => setTimeout(r, 300)) }
       const file = `${out}/${slug}-${s.tag}.png`
       await page.screenshot({ path: file, fullPage: s.tag === 'desktop' })
       urls.push(`https://grahamivyco.github.io/life-dashboard/previews/${name}/${slug}-${s.tag}.png`)
