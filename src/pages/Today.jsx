@@ -5,26 +5,16 @@ import PageHeader from '../components/PageHeader.jsx'
 import DumpBox from '../components/DumpBox.jsx'
 import Approvals from '../components/Approvals.jsx'
 import ItemRow, { loadRequests } from '../components/ItemRow.jsx'
-import { fmtTime, greeting } from '../lib.js'
-import { useUpcoming, dayLabel } from '../events.js'
+import { greeting } from '../lib.js'
+import { useUpcoming } from '../events.js'
 import { useToReply, useJobsToApply, useHousingFits } from '../catchup.js'
 
-const SHOWN = 3
-const eur = (n) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
-
-// One catch-up tile: a count, the top few, and a link into the page. Hidden when empty.
-function Catch({ title, n, to, link = 'Open', children }) {
-  if (!n) return null
-  return (
-    <section className="tile catch">
-      <div className="tile-head">
-        <h2>{title}</h2>
-        <span className="catch-n">{n}</span>
-      </div>
-      <ul className="list">{children}</ul>
-      {to && <Link to={to} className="link catch-link">{link}</Link>}
-    </section>
-  )
+// A section tile: just the label and its number. Links into the page, or toggles a list.
+function NumTile({ label, n, to, onClick, on }) {
+  const body = <><span className="eyebrow">{label}</span><span className="big">{n}</span></>
+  return to
+    ? <Link to={to} className="tile stat num-tile">{body}</Link>
+    : <button className={'tile stat num-tile' + (on ? ' on' : '')} onClick={onClick} aria-expanded={on}>{body}</button>
 }
 const kinds = [
   { k: 'goal', label: 'Goals' },
@@ -34,7 +24,7 @@ const kinds = [
 
 export default function Today() {
   const [tasks, setTasks] = useState([])
-  const [allTasks, setAllTasks] = useState(false)
+  const [showTasks, setShowTasks] = useState(false)
   const [kind, setKind] = useState('goal')
   const [items, setItems] = useState([])
   const [title, setTitle] = useState('')
@@ -81,64 +71,29 @@ export default function Today() {
   const jobs = useJobsToApply()
   const flats = useHousingFits()
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
-  const shownTasks = allTasks ? tasks : tasks.slice(0, SHOWN)
 
   return (
     <div className="page">
       <PageHeader eyebrow={today} title={greeting()} />
 
-      <div className="catch-grid">
-        <Catch title="To reply" n={toReply.length} to="/email" link="Reply">
-          {toReply.slice(0, SHOWN).map((t) => (
-            <li key={t.id}>
-              <Link to={`/email?open=${t.id}`} className="catch-row">
-                <span className="clamp">{t.subject_en || t.subject}</span>
-                <span className="meta clamp">{t.from}</span>
-              </Link>
-            </li>
-          ))}
-        </Catch>
+      <DumpBox onSaved={() => { loadTasks(); loadItems(); reloadEvents() }} />
 
-        <Catch title="Tasks" n={tasks.length}>
-          {shownTasks.map((t) => <ItemRow key={t.id} item={t} req={reqs[t.id]} onToggle={finish} noDate />)}
-          {tasks.length > SHOWN && (
-            <li><button className="mini" onClick={() => setAllTasks((a) => !a)}>{allTasks ? 'Show fewer' : `Show all ${tasks.length}`}</button></li>
-          )}
-        </Catch>
-
-        <Catch title="This week" n={upcoming.length} to="/events" link="Events">
-          {upcoming.slice(0, SHOWN).map((e) => (
-            <li key={e.id} className="catch-row">
-              <span className="clamp">{e.title}</span>
-              <span className="meta">{dayLabel(e.start, true)}{!e.allDay && ` · ${fmtTime(e.start)}`}</span>
-            </li>
-          ))}
-        </Catch>
-
-        <Catch title="Jobs to apply for" n={jobs.length} to="/jobs" link="Jobs">
-          {jobs.slice(0, SHOWN).map((j) => (
-            <li key={j.slug}>
-              <Link to={j.needs_you ? `/jobs?tab=tracker&open=${j.slug}` : `/jobs?view=list&open=${j.slug}`} className="catch-row">
-                <span className="clamp">{j.role}</span>
-                <span className="meta clamp">{j.needs_you ? 'Needs you' : [j.short || j.org?.split(' · ')[0], j.due_text].filter(Boolean).join(' · ')}</span>
-              </Link>
-            </li>
-          ))}
-        </Catch>
-
-        <Catch title="Flats that fit" n={flats.length} to="/housing" link="Housing">
-          {flats.slice(0, SHOWN).map((l) => (
-            <li key={l.id}>
-              <a href={l.url} target="_blank" rel="noreferrer" className="catch-row">
-                <span className="clamp">{l.street || l.title}</span>
-                <span className="meta clamp">{[eur(l.price), l.beds != null && `${l.beds} bed`, l.area].filter(Boolean).join(' · ')}</span>
-              </a>
-            </li>
-          ))}
-        </Catch>
+      <div className="num-grid">
+        <NumTile label="Emails" n={toReply.length} to="/email" />
+        <NumTile label="Tasks" n={tasks.length} on={showTasks} onClick={() => setShowTasks((x) => !x)} />
+        <NumTile label="This week" n={upcoming.length} to="/events" />
+        <NumTile label="Jobs" n={jobs.length} to="/jobs" />
+        <NumTile label="Flats" n={flats.length} to="/housing" />
       </div>
 
-      <DumpBox onSaved={() => { loadTasks(); loadItems(); reloadEvents() }} />
+      {showTasks && (
+        <section className="tile">
+          <div className="tile-head"><h2>Tasks</h2></div>
+          {tasks.length === 0
+            ? <p className="empty">No open tasks. Brain dumps fill this list.</p>
+            : <ul className="list">{tasks.map((t) => <ItemRow key={t.id} item={t} req={reqs[t.id]} onToggle={finish} />)}</ul>}
+        </section>
+      )}
 
       <Approvals />
 
