@@ -2,7 +2,7 @@
 import { demoGmail } from './demo.js'
 
 // Web OAuth client from Graham's Google Cloud project "Life Dashboard". Not a secret.
-export const GOOGLE_CLIENT_ID = ''
+export const GOOGLE_CLIENT_ID = '846753187050-5jfkod5m2125geij20auqn7h1h9kahi3.apps.googleusercontent.com'
 
 const SCOPE = 'https://www.googleapis.com/auth/gmail.modify'
 const API = 'https://gmail.googleapis.com/gmail/v1/users/me/'
