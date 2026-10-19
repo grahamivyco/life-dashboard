@@ -580,6 +580,8 @@ section.tile .list.jobs { padding: 0; }
   /* the top bar names the page, so the big title only stays on Today */
   .main:not([data-home]) .page-head h1 { display: none; }
   .main:not([data-home]) .page-head .eyebrow { margin-bottom: 0; }
+  /* no eyebrow and the title lives in the top bar: drop the empty header so the controls sit right under it */
+  .main:not([data-home]) .page-head:not(:has(.eyebrow, .page-actions)) { display: none; }
   .route { animation: route-in 220ms cubic-bezier(.2, .7, .3, 1); }
 
   .m-top {
@@ -1003,8 +1005,8 @@ body[data-menu="green"] { --menu-bg: var(--green); --menu-fg: #fff; --menu-muted
   .phone-only { display: revert; }
   /* when a page's tabs moved to the bottom bar and only its round buttons are left, they sit beside the eyebrow */
   .page:has(> .controls > .controls-end:only-child:not(:has(.btn))) > .page-head { padding-right: 48px; }
-  .page > .page-head + .controls:has(> .controls-end:only-child):not(:has(.btn)) { margin-top: -46px; justify-content: flex-end; pointer-events: none; }
-  .page > .page-head + .controls:has(> .controls-end:only-child) > * { pointer-events: auto; }
+  .page > .page-head:has(.eyebrow, .page-actions) + .controls:has(> .controls-end:only-child):not(:has(.btn)) { margin-top: -46px; justify-content: flex-end; pointer-events: none; }
+  .page > .page-head:has(.eyebrow, .page-actions) + .controls:has(> .controls-end:only-child) > * { pointer-events: auto; }
 
   /* transform only, so the slide never re-lays out the page */
   .shell { transition: transform 300ms var(--push), border-radius 300ms var(--push), box-shadow 300ms var(--push); transform-origin: 0 50%; }

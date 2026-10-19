@@ -7,7 +7,7 @@ import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { fmtDay } from '../lib.js'
 import ViewMenu from '../components/ViewMenu.jsx'
-import { Controls, Empty, RoundButton, Tabs } from '../components/Controls.jsx'
+import { Controls, Empty, Tabs } from '../components/Controls.jsx'
 
 // Jobs: public.jobs (moved from the Job Hub) and public.job_profile. PDFs live in the private
 // job-docs bucket at <user id>/<doc path>. The daily digest's picks are jobs rows with extra.digest;
@@ -622,7 +622,6 @@ export default function Jobs() {
   const [params] = useSearchParams()
   const [tab, setTab] = useState(params.get('tab') || 'digest')
   const [view, setView] = useState(() => { if (params.get('view')) return params.get('view'); try { return localStorage.getItem(VIEW_KEY) || 'one' } catch { return 'one' } })
-  const [searching, setSearching] = useState(false)
   const [err, setErr] = useState('')
   const [focus, setFocus] = useState(null)
   const [flags, setFlags] = useState({}) // slug → { _busy, _note }, kept apart so realtime reloads don't wipe them
@@ -676,6 +675,7 @@ export default function Jobs() {
     { k: 'tracker', label: 'Tracker', icon: ListChecks, n: jobs?.filter((j) => j.status === 'approved' || (j.needs_you && SENT.includes(j.status))).length },
     { k: 'docs', label: 'Docs', icon: FileText },
     { k: 'profile', label: 'Profile', icon: UserRound },
+    { k: 'search', label: 'Search', icon: Search },
   ]
   const current = tabs.some((t) => t.k === tab) ? tab : 'digest'
   const shown = jobs && jobs.map((j) => (flags[j.slug] ? { ...j, ...flags[j.slug] } : j))
@@ -684,7 +684,7 @@ export default function Jobs() {
     <div className="page">
       <PageHeader title="Jobs" />
 
-      <Controls end={<RoundButton label="Search for jobs" on={searching} onClick={() => { setTab('digest'); setSearching(!searching) }}><Search size={15} /></RoundButton>}>
+      <Controls>
         <Tabs tabs={tabs} value={current} onPick={setTab} />
         {current === 'digest' && (
           <ViewMenu tight options={[{ k: 'one', label: 'One at a time', icon: <Layers size={14} /> }, { k: 'list', label: 'List', icon: <List size={14} /> }]}
@@ -695,7 +695,7 @@ export default function Jobs() {
       {err && <p className="error">{err}</p>}
       {!jobs && <p className="empty">Loading…</p>}
 
-      {jobs && current === 'digest' && searching && <SearchPanel profile={profile} setProfile={setProfile} onClose={() => setSearching(false)} onSent={reload} />}
+      {jobs && current === 'search' && <SearchPanel profile={profile} setProfile={setProfile} onClose={() => setTab('digest')} onSent={reload} />}
       {jobs && current === 'digest' && <DigestTab jobs={shown} snapDigest={snap?.payload?.digest} view={view} docs={docs} act={act} searches={searches} startOpen={params.get('open')} />}
       {jobs && current === 'tracker' && <TrackerTab key={focus} jobs={shown} docs={docs} act={act} letter={writeLetter} startOpen={focus || params.get('open')} />}
       {jobs && current === 'docs' && <DocsTab jobs={jobs} profile={profile} docs={docs} />}

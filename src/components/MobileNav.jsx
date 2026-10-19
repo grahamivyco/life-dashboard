@@ -140,9 +140,7 @@ export default function MobileNav({ counts }) {
           <Menu size={19} />
         </button>
         <span className="m-title"><span className="m-title-page">{current?.label || 'Life'}</span><span id="m-title-slot" /></span>
-        <NavLink to="/profile" aria-label="Profile" className={({ isActive }) => 'm-profile' + (isActive ? ' active' : '')}>
-          <Avatar size={30} />
-        </NavLink>
+        <span aria-hidden="true" />{/* Profile lives in the menu only (Graham, 2026-10-19); this keeps the title centered */}
       </header>
 
       <nav className="m-tabs" id="m-tabs-slot" aria-label="Sections" />
