@@ -6,8 +6,8 @@ import Avatar from './Avatar.jsx'
 import { sections, settingsSection } from '../sections.js'
 
 // Phone nav, Instagram style: compact top bar that hides on scroll down,
-// a floating rounded tab bar ending in the profile avatar, and a More sheet
-// (menu button, top right) for everything else.
+// profile avatar top right, and a floating rounded tab bar ending in More
+// (a sheet for everything else).
 const byPath = Object.fromEntries([...sections, settingsSection].map((s) => [s.path, s]))
 const tabs = ['/', '/email', '/jobs', '/events', '/housing', '/finances'].map((p) => byPath[p])
 const more = ['/clients', '/timeline', '/settings'].map((p) => byPath[p])
@@ -51,10 +51,9 @@ export default function MobileNav({ counts }) {
           <Mark size={24} />
           {pathname === '/' ? <span className="m-word">Life</span> : <span className="m-title">{current?.label || 'Life'}</span>}
         </Link>
-        <button className={'m-more' + (inMore || sheet ? ' active' : '')} onClick={() => setSheet((o) => !o)}
-          aria-label="More" aria-expanded={sheet}>
-          <Menu size={22} strokeWidth={1.75} />
-        </button>
+        <NavLink to="/profile" aria-label="Profile" className={({ isActive }) => 'm-profile' + (isActive ? ' active' : '')}>
+          <Avatar size={28} />
+        </NavLink>
       </header>
 
       <nav className="m-tabs" aria-label="Main">
@@ -72,9 +71,10 @@ export default function MobileNav({ counts }) {
             </NavLink>
           )
         })}
-        <NavLink to="/profile" aria-label="Profile" className={({ isActive }) => 'm-tab' + (isActive && !sheet ? ' active' : '')}>
-          <span className="nav-icon"><Avatar /></span>
-        </NavLink>
+        <button className={'m-tab' + (inMore || sheet ? ' active' : '')} onClick={() => setSheet((o) => !o)}
+          aria-label="More" aria-expanded={sheet}>
+          <span className="nav-icon"><Menu size={21} strokeWidth={inMore || sheet ? 2.25 : 1.6} /></span>
+        </button>
       </nav>
 
       <div className={'m-scrim' + (sheet ? ' show' : '')} onClick={() => setSheet(false)} />

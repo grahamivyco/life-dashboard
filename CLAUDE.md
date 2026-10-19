@@ -18,7 +18,7 @@ Graham Ivy's personal app. Live at https://grahamivyco.github.io/life-dashboard/
 - Cream page `#F3F1EA`, surface `#FFFDF8`, ink `#2F2C27`, muted `#77736A`, hairline `#E4E0D5`
 - Tomato `#F24333` is the only accent (active icon, badges, alerts). No colored fills or tinted cards.
 - Fraunces for page titles and big numbers, Inter 13–14px for everything else
-- Icon rail menu that expands to labels on hover / tap of the mark. On phone (≤640px) it is replaced by `src/components/MobileNav.jsx`: compact top bar (☰ More: Clients, Timeline, Settings) and a floating rounded tab bar (Today, Email, Jobs, Events, Housing, Finances, profile avatar → `#/profile`)
+- Icon rail menu that expands to labels on hover / tap of the mark. On phone (≤640px) it is replaced by `src/components/MobileNav.jsx`: compact top bar with the profile avatar top right (→ `#/profile`) and a floating rounded tab bar (Today, Email, Jobs, Events, Housing, Finances, More: Clients, Timeline, Settings)
 - Tiles: 12px radius, 1px hairline, no shadows. Lists use collapsible rows with a chevron; delete/dismiss are icon buttons.
 
 ## Data

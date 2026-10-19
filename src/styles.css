@@ -643,10 +643,9 @@ section.tile .list.jobs { padding: 0; }
   .m-tab:active { transform: scale(.88); }
   .m-tab.active { color: var(--tomato); }
   .m-tab .badge.dot { top: -1px; right: -4px; box-shadow: 0 0 0 2px var(--surface); }
-  .m-more { margin-left: auto; display: grid; place-items: center; width: 40px; height: 40px; margin-right: -8px; border: 0; background: none; color: var(--fg); cursor: pointer; border-radius: 10px; }
-  .m-more.active { color: var(--tomato); }
   .avatar { display: grid; place-items: center; border-radius: 50%; object-fit: cover; background: var(--fg); color: var(--surface); font-size: 12px; font-weight: 600; box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 2.5px var(--line); }
-  .m-tab.active .avatar { box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 3px var(--tomato); }
+  .m-profile { display: grid; place-items: center; width: 40px; height: 40px; margin-right: -6px; border-radius: 50%; }
+  .m-profile.active .avatar { box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 3px var(--tomato); }
   .m-tab.active .nav-icon::after { content: ''; position: absolute; bottom: -8px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--tomato); }
 
   .m-scrim { position: fixed; inset: 0; z-index: 32; background: rgba(47, 44, 39, .22); opacity: 0; pointer-events: none; transition: opacity 220ms ease; }
