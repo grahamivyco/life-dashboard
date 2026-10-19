@@ -54,9 +54,26 @@ export default function MobileNav({ counts }) {
       root.style.setProperty('--card-s', String(Math.max(0.8, (vh - 2 * gap) / vh)))
     }
     set()
+    // Keep the bottom bar on the bottom of what's visible: if Safari's toolbar covers part of the
+    // layout viewport, lift the bar by that much; when the keyboard is up, tuck the bar away.
+    const vv = window.visualViewport
+    const place = () => {
+      if (!vv) return
+      const covered = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop))
+      root.style.setProperty('--vv-lift', `${covered < 120 ? covered : 0}px`)
+      document.body.classList.toggle('kb-open', covered >= 120)
+    }
+    place()
+    vv?.addEventListener('resize', place)
+    vv?.addEventListener('scroll', place)
     window.addEventListener('resize', set)
     window.addEventListener('orientationchange', set)
-    return () => { window.removeEventListener('resize', set); window.removeEventListener('orientationchange', set) }
+    return () => {
+      vv?.removeEventListener('resize', place)
+      vv?.removeEventListener('scroll', place)
+      window.removeEventListener('resize', set)
+      window.removeEventListener('orientationchange', set)
+    }
   }, [])
 
   // Hide the top bar while scrolling down, bring it back on any scroll up

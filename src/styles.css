@@ -994,6 +994,9 @@ body[data-menu="green"] { --menu-bg: var(--green); }
   .m-tab.active .m-tab-label { font-weight: 600; }
   .m-tabs { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; }
   .m-tabs:empty { display: none; }
+  /* the bar sits just above the bottom of the visible viewport (--vv-lift covers Safari's toolbar) */
+  .m-tabs { bottom: calc(var(--tabs-gap) + var(--vv-lift, 0px)); }
+  body.kb-open .m-tabs { display: none; }
   /* with the menu open the card holds the bar, so it sits at the card's own bottom */
   body.drawer-lock .m-tabs { bottom: var(--tabs-gap); }
   .m-tab-word { font-size: 13px; font-weight: 500; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; }
