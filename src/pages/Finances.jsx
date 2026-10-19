@@ -450,7 +450,6 @@ function Transactions({ p, send }) {
 function Accounts({ p, send, publishedAt }) {
   const accounts = p.accounts.accounts
   const groups = GROUPS.map(([k, label]) => [label, accounts.filter((a) => a.group === k)]).filter(([, a]) => a.length)
-  const rules = p.rules.rules
 
   return (
     <>
@@ -477,8 +476,7 @@ function Accounts({ p, send, publishedAt }) {
         <p className="meta fin-moves">Link a new bank in the Money app on your Mac. Apple Card comes from YNAB.</p>
       </section>
 
-      <div className="grid two">
-        {p.holdings.length > 0 && (
+      {p.holdings.length > 0 && (
           <section className="tile">
             <div className="tile-head"><h2>Investments</h2><span className="meta">{usd(p.holdings.reduce((t, h) => t + h.value, 0))}</span></div>
             <ul className="list">
@@ -491,19 +489,6 @@ function Accounts({ p, send, publishedAt }) {
             </ul>
           </section>
         )}
-        {rules.length > 0 && <section className="tile">
-          <div className="tile-head"><h2>Sorting rules</h2><span className="meta">First match wins</span></div>
-          <ul className="list">
-            {rules.map((r) => (
-              <li key={r.line}>
-                <span className="grow clamp">{r.text}{r.op ? ` ${r.op} ${usd(r.amount)}` : ''} <span className="meta">→ {r.category}</span></span>
-                <button className="icon-btn" aria-label="Delete rule" onClick={() => send('POST', '/api/rules/delete', { line: r.line, expected: r.raw }, 'Deleting rule')}><Trash2 size={14} /></button>
-              </li>
-            ))}
-          </ul>
-          <p className="meta fin-moves">New rules come from “Always use this” on a transaction.</p>
-        </section>}
-      </div>
 
       <MacLink publishedAt={publishedAt} />
     </>
