@@ -74,9 +74,13 @@ function useJobs() {
 }
 
 // Signed links for every PDF the jobs and profile point at. Missing files come back without a url.
+// Only base docs (resumes, portfolio, references) and cover letters are stored. Tailored
+// resumes stay out of storage; Drive links (url) always show.
+const kept = (d) => !!d.url || d.path?.startsWith('docs/base/') || /cover/i.test(`${d.path} ${d.label}`)
+
 function useDocs(jobs, profile) {
   const [state, setState] = useState({ uid: null, urls: {}, ready: false })
-  const paths = [...new Set([...(profile?.base_docs || []), ...(jobs || []).flatMap((j) => j.docs || [])].map((d) => d.path).filter(Boolean))]
+  const paths = [...new Set([...(profile?.base_docs || []), ...(jobs || []).flatMap((j) => j.docs || [])].filter(kept).map((d) => d.path).filter(Boolean))]
   const key = paths.join('|')
   const load = useCallback(async () => {
     if (!paths.length) return
@@ -123,6 +127,7 @@ function Progress({ j, full }) {
 }
 
 function DocLinks({ list, docs, bare }) {
+  list = list?.filter(kept)
   if (!list?.length) return null
   return (
     <div className="job-sec">
@@ -445,7 +450,8 @@ async function uploadDocs(files, uid, paths, onStep) {
   let done = 0, failed = 0
   for (const [n, body] of items) {
     const base = n.split('/').pop()
-    const path = byName[base] || (n.includes('docs/') ? n.slice(n.indexOf('docs/')) : `docs/${base}`)
+    const path = byName[base]
+    if (!path) { onStep(++done, items.length, failed); continue }
     const { error } = await supabase.storage.from(BUCKET).upload(`${uid}/${path}`, body, { contentType: 'application/pdf', upsert: false })
     if (error && !/exists|duplicate/i.test(error.message)) failed++
     onStep(++done, items.length, failed)
@@ -459,7 +465,7 @@ function DocsTab({ jobs, profile, docs }) {
   const base = profile?.base_docs || []
   const baseSet = new Set(base.map((d) => d.path))
   const groups = [...new Set(base.map((d) => d.group))]
-  const withDocs = jobs.filter((j) => (j.docs || []).some((d) => !baseSet.has(d.path)))
+  const withDocs = jobs.filter((j) => (j.docs || []).some((d) => !baseSet.has(d.path) && kept(d)))
     .sort((a, b) => (a.status === 'new') - (b.status === 'new') || (b.decided_at || '').localeCompare(a.decided_at || ''))
   const onFiles = async (e) => {
     const files = [...e.target.files]
@@ -475,7 +481,7 @@ function DocsTab({ jobs, profile, docs }) {
       {docs.ready && missing.length > 0 && (
         <section className="tile stack">
           <div className="tile-head"><h2>{missing.length} of {docs.paths.length} documents still need uploading</h2></div>
-          <p className="meta">Pick the Job Hub docs zip, or the PDFs themselves. Each one goes to the job it belongs to.</p>
+          <p className="meta">Pick the Job Hub docs zip or the PDFs. Only your base PDFs and cover letters are kept.</p>
           <div className="row gap wrap">
             <label className="btn primary"><Upload size={13} /> Upload zip or PDFs<input type="file" accept=".zip,application/pdf,application/zip" multiple hidden onChange={onFiles} /></label>
             {msg && <span className="hint">{msg}</span>}
