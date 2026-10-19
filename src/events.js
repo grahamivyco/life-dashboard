@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { useSnapshot } from './useSnapshot.js'
 import { dayKey } from './lib.js'
+import { google } from './gmail.js'
+import { liveEvents, cachedEvents, calError } from './gcal.js'
 
 // All-day dates come as "YYYY-MM-DD". Parse them as local midnight, not UTC.
 export const toDate = (s) => new Date(/^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T00:00` : s)
@@ -19,11 +21,41 @@ const fromRow = (e) => ({
 const sameEvent = (a, b) =>
   a.title.trim().toLowerCase() === b.title.trim().toLowerCase() && Math.abs(a.start - b.start) < 60e3
 
-// Every event we know about: Google Calendar (hourly snapshot) plus rows in
+// One fetch at a time across pages; reused for 30 seconds
+let inflight = null
+const fetchLive = () => {
+  if (!inflight || Date.now() - inflight.t > 30e3) inflight = { t: Date.now(), p: liveEvents() }
+  return inflight.p
+}
+
+// Google Calendar read live when signed in with Calendar access, else null
+function useLiveCalendar() {
+  const [on, setOn] = useState(() => google.calendar())
+  const [live, setLive] = useState(() => cachedEvents())
+  const [error, setError] = useState('')
+  const refresh = useCallback(() => {
+    if (!google.calendar()) return
+    fetchLive().then((r) => { setLive(r); setError('') }).catch((e) => { inflight = null; setError(calError(e)) })
+  }, [])
+  useEffect(() => {
+    if (!on) return
+    refresh()
+    const onShow = () => document.visibilityState === 'visible' && refresh()
+    document.addEventListener('visibilitychange', onShow)
+    return () => document.removeEventListener('visibilitychange', onShow)
+  }, [on, refresh])
+  const connect = async () => {
+    try { await google.connectCalendar(); inflight = null; setOn(true) } catch (e) { setError(calError(e)) }
+  }
+  return { on, live: on ? live : null, error, connect }
+}
+
+// Every event we know about: Google Calendar (live, or the hourly snapshot) plus rows in
 // public.events (brain dumps, added here or from Explore). A series that repeats
 // 3+ times in a week (work blocks, daily habits) is flagged `routine`.
 export function useEvents() {
   const snap = useSnapshot('events')
+  const gcal = useLiveCalendar()
   const [rows, setRows] = useState([])
 
   const load = useCallback(async () => {
@@ -45,7 +77,7 @@ export function useEvents() {
   const pickSrc = snap?.payload?.picks ? snap.payload : oldPicks
 
   const from = new Date(); from.setHours(0, 0, 0, 0)
-  const cal = (snap?.payload?.events || []).map(fromCalendar)
+  const cal = (gcal.live?.events || snap?.payload?.events || []).map(fromCalendar)
   const mine = rows.map(fromRow).filter((r) => !cal.some((c) => (r.gcalId && c.id === `g-${r.gcalId}`) || sameEvent(c, r)))
   const all = [...cal, ...mine].sort((a, b) => a.start - b.start || b.allDay - a.allDay)
 
@@ -76,7 +108,7 @@ export function useEvents() {
     return data
   }
 
-  return { all, routines, picks: pickSrc?.picks || [], picksCity: pickSrc?.picks_city, syncedAt: snap?.synced_at, reload: load, remove, add }
+  return { all, routines, picks: pickSrc?.picks || [], picksCity: pickSrc?.picks_city, syncedAt: gcal.live?.at || snap?.synced_at, gcal, reload: load, remove, add }
 }
 
 // Upcoming events for the next `days` days, routines moved out so the days stay readable.

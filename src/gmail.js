@@ -4,7 +4,9 @@ import { demoGmail } from './demo.js'
 // Web OAuth client from Graham's Google Cloud project "Life Dashboard". Not a secret.
 export const GOOGLE_CLIENT_ID = '846753187050-5jfkod5m2125geij20auqn7h1h9kahi3.apps.googleusercontent.com'
 
-const SCOPE = 'https://www.googleapis.com/auth/gmail.modify'
+// One Google sign-in for Gmail (Email page) and Calendar (Events page, read only)
+const SCOPE = 'https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/calendar.readonly'
+const CAL_SCOPE = 'calendar.readonly'
 const API = 'https://gmail.googleapis.com/gmail/v1/users/me/'
 const KEY = 'gmail-token'
 
@@ -44,7 +46,7 @@ async function token(interactive) {
         callback: (r) => {
           pending = null
           if (r.error) return reject(Object.assign(new Error(r.error_description || r.error), { code: 'signed_out' }))
-          localStorage.setItem(KEY, JSON.stringify({ token: r.access_token, exp: Date.now() + r.expires_in * 1000 }))
+          localStorage.setItem(KEY, JSON.stringify({ token: r.access_token, exp: Date.now() + r.expires_in * 1000, scope: r.scope || '' }))
           resolve(r.access_token)
         },
         error_callback: (e) => { pending = null; reject(Object.assign(new Error(e.message || 'Sign-in closed'), { code: 'signed_out' })) },
@@ -73,23 +75,26 @@ function friendly(status, text) {
   return `Gmail error ${status}. Try again.`
 }
 
-async function api(path, opts = {}, retry = true) {
+const api = (path, opts) => call(API + path, opts)
+
+async function call(url, opts = {}, retry = true) {
   const t = await token(false)
   for (let attempt = 0; ; attempt++) {
-    const res = await slot(() => fetch(API + path, {
+    const res = await slot(() => fetch(url, {
       ...opts,
       headers: { Authorization: `Bearer ${t}`, ...(opts.body ? { 'Content-Type': 'application/json' } : {}) },
     }))
     if (res.status === 401 && retry) {
       const old = JSON.parse(localStorage.getItem(KEY) || '{}')
       localStorage.setItem(KEY, JSON.stringify({ ...old, exp: 0 }))
-      return api(path, opts, false)
+      return call(url, opts, false)
     }
     if (res.ok) return res.status === 204 ? null : res.json()
     const text = await res.text()
     const limited = res.status === 429 || (res.status === 403 && /rateLimit/i.test(text)) || res.status >= 500
     if (limited && attempt < 4) { await sleep(500 * 2 ** attempt + Math.random() * 300); continue }
-    console.warn('Gmail', res.status, text.slice(0, 300))
+    console.warn('Google', res.status, text.slice(0, 300))
+    if (!url.startsWith(API)) throw Object.assign(new Error(text.slice(0, 300)), { status: res.status })
     throw new Error(friendly(res.status, text))
   }
 }
@@ -221,3 +226,17 @@ const real = {
 }
 
 export const gmail = import.meta.env.MODE === 'demo' ? demoGmail : real
+
+const scopeOf = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}').scope || '' } catch { return '' } }
+
+// Same sign-in, for other Google APIs (Calendar). Demo mode never signs in.
+export const google = {
+  // Signed in with Calendar access (older Gmail-only sign-ins return false until reconnected)
+  calendar: () => import.meta.env.MODE !== 'demo' && Boolean(GOOGLE_CLIENT_ID) && scopeOf().includes(CAL_SCOPE),
+  // Asks again when the saved sign-in is missing Calendar access. Must come from a tap.
+  connectCalendar: () => {
+    if (!scopeOf().includes(CAL_SCOPE)) localStorage.removeItem(KEY)
+    return token(true)
+  },
+  get: (url) => call(url),
+}

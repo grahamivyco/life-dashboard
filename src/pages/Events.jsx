@@ -286,7 +286,7 @@ function Explore({ picks, city = 'Barcelona', all, add }) {
 
 export default function Events() {
   const phone = useIsPhone()
-  const { all, picks, picksCity, syncedAt, remove, add } = useEvents()
+  const { all, picks, picksCity, syncedAt, gcal, remove, add } = useEvents()
   const [params, setParams] = useSearchParams()
   const tab = params.get('tab') === 'explore' ? 'explore' : 'calendar'
   const setTab = (t) => setParams((p) => { p.set('tab', t); return p }, { replace: true })
@@ -307,7 +307,7 @@ export default function Events() {
 
   return (
     <div className="page">
-      <PageHeader eyebrow={syncedAt ? `Google Calendar · updated ${ago(syncedAt)}` : 'Google Calendar syncs hourly'} title="Events" />
+      <PageHeader eyebrow={gcal.live ? 'Google Calendar · live' : syncedAt ? `Google Calendar · updated ${ago(syncedAt)}` : 'Google Calendar syncs hourly'} title="Events" />
 
       <Controls end={phone
         ? <RoundButton label={adding ? 'Cancel' : 'Add event'} on={adding} onClick={() => setAdding((a) => !a)}>{adding ? <X size={16} /> : <Plus size={16} />}</RoundButton>
@@ -327,6 +327,13 @@ export default function Events() {
 
       {tab === 'calendar' ? (
         <>
+          {!gcal.on && (
+            <section className="tile row between wrap gap">
+              <span>Connect Google Calendar to see changes right away.</span>
+              <button className="btn primary" onClick={gcal.connect}>Connect</button>
+            </section>
+          )}
+          {gcal.error && <p className="error">{gcal.error}</p>}
           <NextUp e={next} />
           <Calendar all={all} remove={remove} />
         </>
