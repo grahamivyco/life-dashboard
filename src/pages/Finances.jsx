@@ -121,9 +121,8 @@ function Overview({ p, go }) {
         <section className="tile">
           <div className="tile-head">
             <h2>Net worth</h2>
-            <div className="seg">
-              {RANGES.map(([k]) => <button key={k} aria-pressed={range === k} onClick={() => setRange(k)}>{k.toUpperCase()}</button>)}
-            </div>
+            <ViewMenu label="Range" value={range} onPick={setRange}
+              options={RANGES.map(([k]) => ({ k, label: { '1m': '1 month', '3m': '3 months', '6m': '6 months', '1y': '1 year' }[k] || k.toUpperCase() }))} />
           </div>
           <Line values={hist.map((h) => h.value)} labels={hist.map((h) => day(h.date, { weekday: 'short', month: 'short', day: 'numeric' }))} />
           <div className="row between meta"><span>{hist[0] && day(hist[0].date)}</span><span>Today</span></div>
