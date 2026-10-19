@@ -18,7 +18,7 @@ export default function Login() {
     const redirect = window.location.origin + window.location.pathname
     const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect, shouldCreateUser: false } })
     setBusy(false)
-    if (error) setErr(error.message)
+    if (error) setErr(/rate limit/i.test(error.message) ? 'Too many sign-in emails in the last hour. Use the code from your last email, or try again in an hour.' : error.message)
     else setSent(true)
   }
 
@@ -59,6 +59,7 @@ export default function Login() {
           </label>
           <button className="btn primary" disabled={busy}>{busy ? 'Sending…' : 'Email me a code'}</button>
           {err && <p className="error">{err}</p>}
+          <button type="button" className="mini" onClick={() => { if (email) { localStorage.setItem('login-email', email); setSent(true); setErr('') } }}>I already have a code</button>
         </form>
       )}
     </div>
