@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronRight, ExternalLink, Sparkles, Paperclip, Download, Archive, Trash2, Send, RefreshCw, Mic, Square, SkipForward, Layers, List, LoaderCircle } from 'lucide-react'
+import { ChevronRight, ExternalLink, Sparkles, Paperclip, Download, Archive, Trash2, Send, RefreshCw, Mic, Square, SkipForward, Layers, List, LoaderCircle, Reply, Inbox, Mail, Star, FilePen } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import { useDictation } from '../useDictation.js'
@@ -10,17 +10,17 @@ import { gmail, nameOf } from '../gmail.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago, fmtTime, fmtDay } from '../lib.js'
 import ViewMenu from '../components/ViewMenu.jsx'
-import { Controls, Empty, RoundButton } from '../components/Controls.jsx'
+import { Controls, Empty, RoundButton, Tabs } from '../components/Controls.jsx'
 
 const ME = 'grahamivy.co@gmail.com'
 const UNDO_MS = 5000
 const PH = /\[[^\]\n]{1,60}\]/
 
 const filters = [
-  { k: 'reply', label: 'To reply' },
-  { k: 'all', label: 'All' },
-  { k: 'unread', label: 'Unread' },
-  { k: 'important', label: 'Important' },
+  { k: 'reply', label: 'To reply', icon: Reply },
+  { k: 'all', label: 'All', icon: Inbox },
+  { k: 'unread', label: 'Unread', icon: Mail },
+  { k: 'important', label: 'Important', icon: Star },
 ]
 
 const when = (d) => {
@@ -492,6 +492,8 @@ export default function Email() {
   const tab = live && filter === 'drafts' ? 'outbox' : view
   const pick = (k) => { setFilter(k); setOpen(null) }
 
+  const showOptions = [...filters, ...(live ? [{ k: 'drafts', label: 'Drafts', icon: FilePen }] : [])]
+
   return (
     <div className="page">
       <PageHeader eyebrow={live ? 'Gmail · live' : snap ? `Gmail · updated ${ago(snap.synced_at)}` : 'Gmail'} title="Email" />
@@ -499,8 +501,9 @@ export default function Email() {
       <Controls end={live && <RoundButton label="Refresh" onClick={load} disabled={busy}><RefreshCw size={15} className={busy ? 'spin' : ''} /></RoundButton>}>
         <ViewMenu options={[{ k: 'reply', label: 'One at a time', icon: <Layers size={14} /> }, { k: 'inbox', label: 'List', icon: <List size={14} /> }]}
           value={tab === 'outbox' ? 'inbox' : tab} onPick={(k) => { setView(k); if (filter === 'drafts') setFilter('all'); setOpen(null) }} />
-        <ViewMenu label="Show" options={[...filters, ...(live ? [{ k: 'drafts', label: 'Drafts' }] : [])]} value={filter} onPick={pick} />
+        <span className="desk-only"><ViewMenu label="Show" options={showOptions} value={filter} onPick={pick} /></span>
       </Controls>
+      <Tabs phoneOnly tabs={showOptions} value={filter} onPick={pick} />
 
       {!live && tab !== 'reply' && <Connect onConnected={() => setLive(true)} />}
       {err && <p className="error">{err}</p>}

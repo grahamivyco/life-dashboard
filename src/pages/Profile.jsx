@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Camera, ChevronRight, FileText, Plus, Trash2, Upload, X } from 'lucide-react'
+import { Camera, ChevronRight, FileText, Plus, Trash2, Upload, X, UserRound, Briefcase, Home, CalendarDays, Settings } from 'lucide-react'
+import { Tabs } from '../components/Controls.jsx'
 import { supabase } from '../supabase.js'
 import PageHeader from '../components/PageHeader.jsx'
 import Avatar from '../components/Avatar.jsx'
@@ -255,6 +256,7 @@ export default function Profile() {
   const p = useProfile()
   const { hash } = useLocation()
   const [open, setOpen] = useState(null)
+  const [at, setAt] = useState('me')
   const [job, setJob] = useState(null)
   const [specs, setSpecs] = useState(DEFAULT_SPECS)
 
@@ -277,9 +279,22 @@ export default function Profile() {
   const jobSummary = [picks.roles?.slice(0, 3).join(', '), picks.where?.[0], picks.pay?.[0]].filter(Boolean).join(' · ') || 'Nothing set'
   const cats = (p?.events?.cats || []).map((c) => CATS[c]).filter(Boolean)
 
+  // Phone bottom bar: jump to a section (and open it)
+  const jump = (k) => {
+    setAt(k)
+    if (['jobs', 'housing', 'events'].includes(k)) setOpen(k)
+    if (k === 'me') return window.scrollTo({ top: 0, behavior: 'smooth' })
+    setTimeout(() => document.getElementById(k)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50)
+  }
+
   return (
     <div className="page">
       <PageHeader title="Profile" />
+      <Tabs phoneOnly value={at} onPick={jump} tabs={[
+        { k: 'me', label: 'You', icon: UserRound }, { k: 'jobs', label: 'Jobs', icon: Briefcase },
+        { k: 'housing', label: 'Housing', icon: Home }, { k: 'events', label: 'Events', icon: CalendarDays },
+        { k: 'documents', label: 'Documents', icon: FileText }, { k: 'settings', label: 'Settings', icon: Settings },
+      ]} />
       <Head />
       <Section id="jobs" title="Jobs" summary={jobSummary} open={open === 'jobs'} setOpen={setOpen}>
         {job ? <JobPrefs job={job} setJob={setJob} /> : <p className="empty">Loading…</p>}

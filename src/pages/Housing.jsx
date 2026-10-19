@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Star, EyeOff, Eye, Home, MessageCircle, Send } from 'lucide-react'
+import { Star, EyeOff, Eye, Home, MessageCircle, Send, Check, Sparkles, LayoutGrid } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago } from '../lib.js'
 import ViewMenu from '../components/ViewMenu.jsx'
-import { Controls, Empty } from '../components/Controls.jsx'
+import { Controls, Empty, Tabs } from '../components/Controls.jsx'
 
 const eur = (n) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
 const DAY = 864e5
@@ -250,6 +250,8 @@ export default function Housing() {
     saved: all.filter((l) => marks[l.id] === 'saved').length,
     hidden: all.filter((l) => marks[l.id] === 'hidden').length,
   })[v]
+  const shows = [['fits', 'Fits', Check], ['new', 'New', Sparkles], ['all', 'All', LayoutGrid], ['saved', 'Saved', Star], ['hidden', 'Hidden', EyeOff]]
+    .filter(([k]) => k !== 'hidden' || count('hidden') > 0).map(([k, label, icon]) => ({ k, label, icon, n: count(k) }))
 
   return (
     <div className="page">
@@ -266,10 +268,9 @@ export default function Housing() {
 
       <Controls end={<ViewMenu label="Sort" value={sort} onPick={setSort}
         options={[['newest', 'Newest'], ['cheapest', 'Cheapest'], ['size', 'Biggest']].map(([k, label]) => ({ k, label }))} />}>
-        <ViewMenu label="Show" value={view} onPick={setView}
-          options={[['fits', 'Fits'], ['new', 'New'], ['all', 'All'], ['saved', 'Saved'], ['hidden', 'Hidden']]
-            .filter(([k]) => k !== 'hidden' || count('hidden') > 0).map(([k, label]) => ({ k, label, n: count(k) }))} />
+        <span className="desk-only"><ViewMenu label="Show" value={view} onPick={setView} options={shows} /></span>
       </Controls>
+      <Tabs phoneOnly tabs={shows.map((o) => ({ ...o, n: 0 }))} value={view} onPick={setView} />
 
       {shown.length ? (
         <ul className="homes">

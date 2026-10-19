@@ -9,6 +9,8 @@ import { greeting } from '../lib.js'
 import { useUpcoming } from '../events.js'
 import { useToReply, useJobsToApply, useHousingFits } from '../catchup.js'
 import ViewMenu from '../components/ViewMenu.jsx'
+import { Tabs } from '../components/Controls.jsx'
+import { Target, Lightbulb, StickyNote } from 'lucide-react'
 
 // A section tile: just the label and its number. Links into the page, or toggles a list.
 function NumTile({ label, n, to, onClick, on }) {
@@ -18,9 +20,9 @@ function NumTile({ label, n, to, onClick, on }) {
     : <button className={'tile stat num-tile' + (on ? ' on' : '')} onClick={onClick} aria-expanded={on}>{body}</button>
 }
 const kinds = [
-  { k: 'goal', label: 'Goals' },
-  { k: 'idea', label: 'Ideas' },
-  { k: 'note', label: 'Notes' },
+  { k: 'goal', label: 'Goals', icon: Target },
+  { k: 'idea', label: 'Ideas', icon: Lightbulb },
+  { k: 'note', label: 'Notes', icon: StickyNote },
 ]
 
 export default function Today() {
@@ -100,8 +102,10 @@ export default function Today() {
 
       <section className="tile">
         <div className="tile-head">
-          <ViewMenu label="Show" options={kinds} value={kind} onPick={setKind} />
+          <span className="desk-only"><ViewMenu label="Show" options={kinds} value={kind} onPick={setKind} /></span>
+          <h2 className="phone-only">{kinds.find((x) => x.k === kind).label}</h2>
         </div>
+        <Tabs phoneOnly tabs={kinds} value={kind} onPick={setKind} />
         <ul className="list">
           {items.map((i) => (
             <ItemRow key={i.id} item={i} req={reqs[i.id]} onToggle={finish}>

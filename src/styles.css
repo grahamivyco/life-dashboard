@@ -858,7 +858,7 @@ button.set-row:active, button.set-row:hover { background: var(--hover); }
 
 /* ================= one control system (Graham, 2026-10-19) =================
    Page: header (eyebrow + title) -> one .controls row -> content.
-   .controls: [Tabs] [ViewMenus] ... [RoundButtons] [one primary .btn]. Everything 32px tall.
+   .controls: [Tabs] [ViewMenus] ... [RoundButtons] [one primary .btn]. Everything 36px tall (--ctl).
    Inside the page, a range row uses the same .controls: [‹ title ›] ... [ViewMenu].
    Empty view: <Empty> card. Empty list inside a tile: .empty line. */
 .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
@@ -925,3 +925,90 @@ button.set-row:active, button.set-row:hover { background: var(--hover); }
 .num-tile.on { background: var(--blue-soft); }
 .fin-legend i { border-top-color: var(--blue); }
 .fin-legend i.ghost { border-top-color: var(--muted); }
+
+/* ================= airy controls (Graham, 2026-10-19, after Muse) =================
+   Every control is a 36px soft pill on the surface: barely-there border, a light lifted shadow,
+   fully round. Menus and popovers are big soft cards. */
+:root {
+  --ctl: 36px;
+  --ctl-line: rgba(47, 44, 39, .07);
+  --ctl-shadow: 0 1px 2px rgba(47, 44, 39, .04), 0 4px 14px rgba(47, 44, 39, .05);
+  --pop-shadow: 0 2px 6px rgba(47, 44, 39, .05), 0 16px 40px rgba(47, 44, 39, .12);
+  --soft: rgba(47, 44, 39, .06);
+}
+.btn { height: var(--ctl); padding: 0 16px; border-color: var(--ctl-line); box-shadow: var(--ctl-shadow); }
+.btn.primary { box-shadow: 0 4px 14px rgba(47, 44, 39, .18); }
+.btn.sm { height: 30px; padding: 0 13px; box-shadow: none; }
+.round-btn { width: var(--ctl); height: var(--ctl); border-color: var(--ctl-line); box-shadow: var(--ctl-shadow); }
+.icon-btn { border-radius: 99px; }
+.seg { border-color: var(--ctl-line); box-shadow: var(--ctl-shadow); }
+.seg.tabs-seg { padding: 3px; }
+.seg.tabs-seg button { height: calc(var(--ctl) - 8px); padding: 0 16px; }
+.view-menu-list { top: calc(100% + 8px); min-width: 190px; padding: 6px; border-color: var(--ctl-line); border-radius: 20px; box-shadow: var(--pop-shadow); }
+.view-menu-list button { height: 40px; padding: 0 12px; border-radius: 14px; }
+.range-nav .icon-btn { width: var(--ctl); height: var(--ctl); }
+textarea, .plain, .field input { border-color: var(--ctl-line); border-radius: 18px; background: var(--surface); box-shadow: var(--ctl-shadow); }
+.field input, input.plain { border-radius: 99px; }
+.ex-date, .sub-amt { height: var(--ctl); border-color: var(--ctl-line); border-radius: 99px; box-shadow: var(--ctl-shadow); }
+.mic-btn { width: 44px; height: 44px; border-color: var(--ctl-line); box-shadow: var(--ctl-shadow); }
+.compose .mic { border-color: var(--ctl-line); box-shadow: var(--ctl-shadow); }
+.chip-check, .ex-cats .chip { padding: 6px 12px; border-color: var(--ctl-line); }
+@media (hover: none) {
+  .btn:hover, .round-btn:hover { background: var(--surface); }
+  .btn.primary:hover { background: var(--fg); }
+}
+
+/* phone: round menu button + title + avatar on top, frosted floating tab bar with the main pages,
+   side drawer with every page that pushes the page aside (after Muse) */
+.m-drawer, .m-shade, .phone-only { display: none; }
+@media (max-width: 640px) {
+  :root { --tabs: 64px; --drawer: min(300px, 80vw); --push: cubic-bezier(.32, .72, 0, 1); }
+  .m-top { display: grid; grid-template-columns: 40px 1fr 40px; gap: 10px; padding-left: 12px; padding-right: 12px; border-bottom-color: transparent; background: rgba(243, 241, 234, .8); }
+  .m-top .m-title { justify-self: center; font-size: 18px; }
+  .m-menu { width: 38px; height: 38px; }
+  .m-profile { margin-right: 0; justify-self: end; }
+  .m-tabs {
+    left: 14px; right: 14px; padding: 6px; gap: 4px; grid-template-columns: repeat(5, 1fr);
+    background: rgba(255, 253, 248, .74); -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
+    border: 1px solid rgba(255, 255, 255, .7);
+    box-shadow: 0 0 0 1px var(--ctl-line), 0 12px 34px rgba(47, 44, 39, .12);
+  }
+  .m-tab { height: 100%; border-radius: 99px; color: var(--fg); transition: background 180ms ease, transform 120ms ease; }
+  .m-tab.active { color: var(--fg); background: var(--soft); }
+  .m-tab.active .nav-icon::after { display: none; }
+  .m-tabs { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; }
+  .m-tabs:empty { display: none; }
+  .m-tab-word { font-size: 13px; font-weight: 500; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; }
+  .m-tab .badge:not(.dot) { top: -7px; right: -11px; }
+  .desk-only { display: none !important; }
+  .phone-only { display: revert; }
+  /* when a page's tabs moved to the bottom bar and only its round buttons are left, they sit beside the eyebrow */
+  .page:has(> .controls > .controls-end:only-child) > .page-head { padding-right: 48px; }
+  .page > .page-head + .controls:has(> .controls-end:only-child) { margin-top: -46px; justify-content: flex-end; pointer-events: none; }
+  .page > .page-head + .controls:has(> .controls-end:only-child) > * { pointer-events: auto; }
+
+  .main, .m-top, .m-tabs, .rec-pill { transition: transform 420ms var(--push), border-radius 420ms var(--push); }
+  body.drawer-open { overflow: hidden; }
+  body.drawer-open .main { transform: translateX(var(--drawer)); border-radius: 28px; box-shadow: -1px 0 0 var(--ctl-line), -12px 0 40px rgba(47, 44, 39, .08); background: var(--bg); overflow: hidden; height: 100dvh; }
+  body.drawer-open .m-top, body.drawer-open .m-tabs, body.drawer-open .rec-pill { transform: translateX(var(--drawer)); }
+  .m-drawer {
+    display: flex; flex-direction: column; position: fixed; z-index: 1; inset: 0 auto 0 0; width: var(--drawer);
+    padding: calc(env(safe-area-inset-top) + 22px) 14px calc(env(safe-area-inset-bottom) + 18px);
+    background: #FBFAF6; overflow-y: auto;
+    opacity: 0; transform: translateX(-24px); visibility: hidden;
+    transition: opacity 300ms ease, transform 420ms var(--push), visibility 0s 420ms;
+  }
+  .m-drawer.show { opacity: 1; transform: none; visibility: visible; transition: opacity 300ms ease, transform 420ms var(--push); }
+  .m-drawer-title { font-family: var(--display); font-size: 28px; font-weight: 600; letter-spacing: -.01em; color: var(--fg); text-decoration: none; padding: 0 10px 18px; }
+  .m-label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 6px 12px 6px; }
+  .m-drawer hr { border: 0; border-top: 1px solid var(--line); margin: 10px 12px; }
+  .m-drawer .m-row { height: 48px; gap: 14px; padding: 0 14px; border-radius: 99px; font-size: 16px; }
+  .m-drawer .m-row .avatar { box-shadow: none; }
+  .m-row.active { background: var(--soft); }
+  .m-row.active svg:first-child { color: var(--fg); }
+  .m-drawer-foot { margin-top: auto; padding-top: 18px; display: flex; gap: 10px; align-items: center; }
+  .m-foot-btn { width: 44px; height: 44px; text-decoration: none; }
+  .m-foot-pill { flex: 1; height: 44px; justify-content: center; }
+  .m-shade { position: fixed; z-index: 45; inset: 0 0 0 var(--drawer); border: 0; padding: 0; background: transparent; }
+  body.drawer-open .m-shade { display: block; }
+}

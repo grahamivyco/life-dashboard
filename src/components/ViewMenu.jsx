@@ -1,8 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { createElement, useEffect, useRef, useState } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
 
 // Shows only the view that's on. Tapping it opens a short list of the others.
 // options: [{ k, label, icon?, n?, hot? }]
+// An icon can be an element (<Layers size={14} />) or a lucide component (Layers).
+const ico = (i) => (!i ? null : i.props ? i : createElement(i, { size: 14 }))
+
 export default function ViewMenu({ options, value, onPick, label = 'View', tight }) {
   const [open, setOpen] = useState(false)
   const [side, setSide] = useState('right')
@@ -26,13 +29,13 @@ export default function ViewMenu({ options, value, onPick, label = 'View', tight
         setSide(box.right < 190 ? 'left' : 'right')
         setOpen(!open)
       }}>
-        {on.icon}<span className="vm-label">{on.label}</span>{count(on)}<ChevronDown size={13} className="view-menu-chev" />
+        {ico(on.icon)}<span className="vm-label">{on.label}</span>{count(on)}<ChevronDown size={13} className="view-menu-chev" />
       </button>
       {open && (
         <div className={`view-menu-list ${side}`} role="menu">
           {options.map((o) => (
             <button key={o.k} role="menuitemradio" aria-checked={o.k === value} onClick={() => { setOpen(false); if (o.k !== value) onPick(o.k) }}>
-              {o.icon}<span className="grow">{o.label}</span>{count(o)}{o.k === value && <Check size={14} />}
+              {ico(o.icon)}<span className="grow">{o.label}</span>{count(o)}{o.k === value && <Check size={14} />}
             </button>
           ))}
         </div>

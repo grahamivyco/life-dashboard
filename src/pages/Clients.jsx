@@ -5,7 +5,7 @@ import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago, fmtDay } from '../lib.js'
-import { Empty } from '../components/Controls.jsx'
+import { Empty, Tabs, useIsPhone } from '../components/Controls.jsx'
 
 const usd = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: n % 1 ? 2 : 0 }).format(n)
 const statusLabel = { sent: 'Sent', paid: 'Paid', disputed: 'Pushed back', overdue: 'Overdue', paused: 'Paused' }
@@ -121,23 +121,31 @@ function ClientCard({ client, data, emailIds }) {
   )
 }
 
+// "Needlework Guild of Minnesota" fits the bottom bar as NGM
+const short = (name) => (name.length > 11 ? name.split(/\s+/).filter((w) => /^[A-Z]/.test(w)).map((w) => w[0]).join('') || name.slice(0, 10) : name)
+
 export default function Clients() {
   const snap = useSnapshot('clients')
   const email = useSnapshot('email')
   const [clients, setClients] = useState(null)
+  const [pick, setPick] = useState(null)
+  const phone = useIsPhone()
 
   useEffect(() => {
     supabase.from('clients').select('*').eq('archived', false).order('position')
       .then(({ data }) => setClients(data || []))
   }, [])
 
+  // On a phone the bottom bar picks one client at a time
+  const current = clients?.some((c) => c.id === pick) ? pick : clients?.[0]?.id
   const byId = Object.fromEntries((snap?.payload?.clients || []).map((c) => [c.id, c]))
   const emailIds = new Set((email?.payload?.threads || []).map((t) => t.id))
 
   return (
     <div className="page">
       <PageHeader eyebrow={snap ? `Gmail · updated ${ago(snap.synced_at)}` : 'Gmail'} title="Clients" />
-      {clients?.map((c) => <ClientCard key={c.id} client={c} data={byId[c.id]} emailIds={emailIds} />)}
+      {clients?.length > 1 && <Tabs phoneOnly tabs={clients.map((c) => ({ k: c.id, label: short(c.name) }))} value={current} onPick={setPick} />}
+      {clients?.filter((c) => !phone || clients.length < 2 || c.id === current).map((c) => <ClientCard key={c.id} client={c} data={byId[c.id]} emailIds={emailIds} />)}
       {clients && clients.length === 0 && <Empty title="No clients yet." />}
     </div>
   )

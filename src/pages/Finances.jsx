@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ExternalLink, RefreshCw, Search, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ExternalLink, LayoutDashboard, PieChart, ReceiptText, RefreshCw, Search, Trash2 } from 'lucide-react'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago } from '../lib.js'
 import { amt, makeKey, usd, useMoney } from '../money.js'
@@ -9,8 +9,8 @@ import ViewMenu from '../components/ViewMenu.jsx'
 import { Controls, RoundButton, Tabs } from '../components/Controls.jsx'
 
 const TABS = [
-  ['overview', 'Overview'], ['spending', 'Spending'],
-  ['transactions', 'Transactions'],
+  ['overview', 'Overview', LayoutDashboard], ['spending', 'Spending', PieChart],
+  ['transactions', 'Transactions', ReceiptText],
 ]
 const GROUPS = [
   ['checking', 'Checking'], ['card', 'Cards'], ['savings', 'Savings'], ['investments', 'Investments'], ['loan', 'Loans'],
@@ -554,7 +554,7 @@ export default function Finances() {
       <PageHeader eyebrow={`From your Mac · ${ago(snap.published_at)}${waiting ? ` · ${pending[0].label}` : ''}`} title="Finances" />
 
       <Controls end={<RoundButton label="Sync banks" disabled={waiting} onClick={() => send('POST', '/api/sync', {}, 'Syncing banks')}><RefreshCw size={15} className={waiting ? 'spin' : ''} /></RoundButton>}>
-        <Tabs tabs={TABS.map(([k, label]) => ({ k, label }))} value={tab} onPick={go} />
+        <Tabs tabs={TABS.map(([k, label, icon]) => ({ k, label, icon }))} value={tab} onPick={go} />
       </Controls>
 
       {slow && <p className="note">Waiting for your Mac. It picks up changes when it's on and the Money app is running.</p>}

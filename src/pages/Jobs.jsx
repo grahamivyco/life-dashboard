@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronRight, Copy, Check, ExternalLink, Layers, List, Search, SkipForward, Download, FileText, Upload, X } from 'lucide-react'
+import { ChevronRight, Copy, Check, ExternalLink, Layers, List, Search, Sparkles, ListChecks, UserRound, SkipForward, Download, FileText, Upload, X } from 'lucide-react'
 import { unzipSync } from 'fflate'
 import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
@@ -601,10 +601,10 @@ export default function Jobs() {
   }
 
   const tabs = [
-    { k: 'digest', label: 'New' },
-    { k: 'tracker', label: 'Tracker', n: jobs?.filter((j) => j.needs_you && !['rejected', 'skipped'].includes(j.status)).length },
-    { k: 'docs', label: 'Docs' },
-    { k: 'profile', label: 'Profile' },
+    { k: 'digest', label: 'New', icon: Sparkles },
+    { k: 'tracker', label: 'Tracker', icon: ListChecks, n: jobs?.filter((j) => j.needs_you && !['rejected', 'skipped'].includes(j.status)).length },
+    { k: 'docs', label: 'Docs', icon: FileText },
+    { k: 'profile', label: 'Profile', icon: UserRound },
   ]
   const current = tabs.some((t) => t.k === tab) ? tab : 'digest'
 

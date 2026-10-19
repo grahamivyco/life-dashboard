@@ -1,30 +1,38 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
-import { Menu, ChevronRight } from 'lucide-react'
-import Mark from './Mark.jsx'
+import { Menu, Settings, PenLine } from 'lucide-react'
 import Avatar from './Avatar.jsx'
 import { sections, settingsSection } from '../sections.js'
 
-// Phone nav, Instagram style: compact top bar that hides on scroll down,
-// profile avatar top right, and a floating rounded tab bar ending in More
-// (a small card that pops up above it).
+// Phone nav, after Muse: a side drawer with every page (round menu button, top left) that slides
+// in from the left and pushes the page aside, and a frosted floating bar at the bottom that holds
+// the current page's own tabs as icons. Pages put them there through <Tabs> (Controls.jsx).
 const byPath = Object.fromEntries([...sections, settingsSection].map((s) => [s.path, s]))
-const tabs = ['/', '/email', '/jobs', '/events', '/housing', '/finances'].map((p) => byPath[p])
-const more = ['/clients', '/timeline'].map((p) => byPath[p])
+const order = ['/', '/email', '/jobs', '/housing', '/finances', '/events', '/clients', '/timeline'].map((p) => byPath[p])
 
 function Badge({ count }) {
   if (!count) return null
   return <span className="badge dot" aria-label={`${count} waiting`} />
 }
 
+function Row({ s, counts, tabIndex }) {
+  const Icon = s.icon
+  return (
+    <NavLink to={s.path} end={s.path === '/'} tabIndex={tabIndex}
+      className={({ isActive }) => 'm-row' + (isActive ? ' active' : '')}>
+      <span className="nav-icon"><Icon size={21} strokeWidth={1.7} /><Badge count={s.badge ? counts[s.badge] : 0} /></span>
+      <span className="grow">{s.label}</span>
+    </NavLink>
+  )
+}
+
 export default function MobileNav({ counts }) {
   const { pathname } = useLocation()
-  const [sheet, setSheet] = useState(false)
+  const [open, setOpen] = useState(false)
   const [hidden, setHidden] = useState(false)
   const current = pathname === '/profile' ? { label: 'Profile' } : byPath[pathname]
-  const inMore = more.some((s) => s.path === pathname)
 
-  useEffect(() => { setSheet(false); setHidden(false) }, [pathname])
+  useEffect(() => { setOpen(false); setHidden(false) }, [pathname])
 
   // Hide the top bar while scrolling down, bring it back on any scroll up
   useEffect(() => {
@@ -39,65 +47,43 @@ export default function MobileNav({ counts }) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Any tap outside More closes it, and the tap still goes through to what was tapped
   useEffect(() => {
-    if (!sheet) return
-    const onDown = (e) => { if (!e.target.closest('.m-pop, .m-more-btn')) setSheet(false) }
-    document.addEventListener('pointerdown', onDown, true)
-    return () => document.removeEventListener('pointerdown', onDown, true)
-  }, [sheet])
+    document.body.classList.toggle('drawer-open', open)
+    if (!open) return () => document.body.classList.remove('drawer-open')
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('keydown', onKey); document.body.classList.remove('drawer-open') }
+  }, [open])
 
-  useEffect(() => {
-    document.body.classList.toggle('sheet-open', sheet)
-    return () => document.body.classList.remove('sheet-open')
-  }, [sheet])
-
+  const t = open ? 0 : -1
   return (
     <div className="mnav">
-      <header className={'m-top' + (hidden ? ' hide' : '')}>
-        <Link to="/" className="m-brand" aria-label="Today">
-          <Mark size={24} />
-          {pathname === '/' ? <span className="m-word">Life</span> : <span className="m-title">{current?.label || 'Life'}</span>}
-        </Link>
+      <header className={'m-top' + (hidden && !open ? ' hide' : '')}>
+        <button className="icon-btn round-btn m-menu" onClick={() => setOpen((o) => !o)} aria-label="Menu" aria-expanded={open}>
+          <Menu size={19} />
+        </button>
+        <span className="m-title">{current?.label || 'Life'}</span>
         <NavLink to="/profile" aria-label="Profile" className={({ isActive }) => 'm-profile' + (isActive ? ' active' : '')}>
-          <Avatar size={28} />
+          <Avatar size={30} />
         </NavLink>
       </header>
 
-      <nav className="m-tabs" aria-label="Main">
-        {tabs.map((s) => {
-          const Icon = s.icon
-          return (
-            <NavLink key={s.path} to={s.path} end={s.path === '/'} aria-label={s.label}
-              className={({ isActive }) => 'm-tab' + (isActive && !sheet ? ' active' : '')}>
-              {({ isActive }) => (
-                <span className="nav-icon">
-                  <Icon size={21} strokeWidth={isActive && !sheet ? 2.25 : 1.6} />
-                  <Badge count={s.badge ? counts[s.badge] : 0} />
-                </span>
-              )}
-            </NavLink>
-          )
-        })}
-        <button className={'m-tab m-more-btn' + (inMore || sheet ? ' active' : '')} onClick={() => setSheet((o) => !o)}
-          aria-label="More" aria-expanded={sheet}>
-          <span className="nav-icon"><Menu size={21} strokeWidth={inMore || sheet ? 2.25 : 1.6} /></span>
-        </button>
-      </nav>
+      <nav className="m-tabs" id="m-tabs-slot" aria-label="Sections" />
 
-      <div className={'m-pop' + (sheet ? ' show' : '')} role="dialog" aria-label="More" aria-hidden={!sheet}>
-        {more.map((s) => {
-          const Icon = s.icon
-          return (
-            <NavLink key={s.path} to={s.path} tabIndex={sheet ? 0 : -1}
-              className={({ isActive }) => 'm-row' + (isActive ? ' active' : '')}>
-              <Icon size={20} strokeWidth={1.75} />
-              <span className="grow">{s.label}</span>
-              <ChevronRight size={16} className="chev" />
-            </NavLink>
-          )
-        })}
-      </div>
+      <aside className={'m-drawer' + (open ? ' show' : '')} aria-label="Menu" aria-hidden={!open}>
+        <Link to="/" className="m-drawer-title" tabIndex={t}>Life</Link>
+        <div className="m-label">Pages</div>
+        {order.map((s) => <Row key={s.path} s={s} counts={counts} tabIndex={t} />)}
+        <hr />
+        <NavLink to="/profile" tabIndex={t} className={({ isActive }) => 'm-row' + (isActive ? ' active' : '')}>
+          <Avatar size={22} /><span className="grow">Profile</span>
+        </NavLink>
+        <div className="m-drawer-foot">
+          <Link to="/profile#settings" className="icon-btn round-btn m-foot-btn" aria-label="Settings" tabIndex={t}><Settings size={19} /></Link>
+          <Link to="/" className="btn m-foot-pill" tabIndex={t}><PenLine size={16} />Brain dump</Link>
+        </div>
+      </aside>
+      <button className="m-shade" aria-label="Close menu" tabIndex={-1} onClick={() => setOpen(false)} />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CalendarDays, Check, ChevronLeft, ChevronRight, Columns3, ExternalLink, Grid3x3, MapPin, Plus, Search, Square, Trash2, X } from 'lucide-react'
+import { CalendarDays, Check, Compass, ChevronLeft, ChevronRight, Columns3, ExternalLink, Grid3x3, MapPin, Plus, Search, Square, Trash2, X } from 'lucide-react'
 import PageHeader from '../components/PageHeader.jsx'
 import { useEvents, toDate, CATS } from '../events.js'
 import { useProfile } from '../profile.js'
@@ -309,7 +309,7 @@ export default function Events() {
       <PageHeader eyebrow={syncedAt ? `Google Calendar · updated ${ago(syncedAt)}` : 'Google Calendar syncs hourly'} title="Events" />
 
       <Controls end={<button className={'btn' + (adding ? '' : ' primary')} onClick={() => setAdding((a) => !a)}>{adding ? 'Cancel' : <><Plus size={14} /> Add event</>}</button>}>
-        <Tabs tabs={[{ k: 'calendar', label: 'Calendar' }, { k: 'explore', label: 'Explore' }]} value={tab} onPick={setTab} />
+        <Tabs tabs={[{ k: 'calendar', label: 'Calendar', icon: CalendarDays }, { k: 'explore', label: 'Explore', icon: Compass }]} value={tab} onPick={setTab} />
       </Controls>
 
       {adding && (
