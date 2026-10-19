@@ -76,7 +76,7 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .rail-bottom { margin-top: auto; }
 
 /* ---------- page ---------- */
-.page { max-width: 1040px; display: flex; flex-direction: column; gap: 16px; }
+.page { display: flex; flex-direction: column; gap: 16px; }
 .page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .page-head h1 { font-family: var(--display); font-weight: 500; font-size: 30px; letter-spacing: -.01em; line-height: 1.1; }
 .page-actions { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -411,7 +411,7 @@ ul.tile.list { padding-top: 6px; padding-bottom: 6px; }
 .tag.soft { color: var(--muted); font-weight: 500; }
 
 /* Email: one at a time */
-.reply-card { display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; max-width: 760px; }
+.reply-card { display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; }
 .reply-from { display: flex; flex-direction: column; gap: 2px; }
 .reply-from b { font-size: 15px; }
 .reply-msg { color: var(--fg); padding: 12px 14px; background: var(--bg); border-radius: 10px; max-height: 320px; overflow: auto; }
@@ -419,7 +419,7 @@ ul.tile.list { padding-top: 6px; padding-bottom: 6px; }
 .compose textarea { width: 100%; padding-right: 52px; color: var(--fg); }
 .compose .mic { position: absolute; right: 10px; bottom: 12px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--fg); display: grid; place-items: center; cursor: pointer; }
 .compose.listening .mic { background: var(--tomato); border-color: var(--tomato); color: var(--surface); }
-.empty-card { display: flex; flex-direction: column; gap: 4px; padding: 28px 20px; max-width: 760px; }
+.empty-card { display: flex; flex-direction: column; gap: 4px; padding: 28px 20px; }
 
 /* ---------- today: items with inline Claude results ---------- */
 .list > li.item-row { display: block; padding: 0; }
@@ -665,7 +665,6 @@ a.catch-row:hover .clamp:first-child { text-decoration: underline; text-underlin
 .list > li.doc-job { display: grid; grid-template-columns: minmax(140px, 220px) minmax(0, 1fr); align-items: start; gap: 16px; padding: 10px 0; }
 .ask-field { color: var(--fg); font-size: 13px; }
 .ask-field textarea { margin-top: 4px; }
-.search-panel { max-width: 760px; }
 .search-panel .tile-head { align-items: center; margin-bottom: 0; }
 .filter-row { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
 .filter-row .chips { margin: 0; }
