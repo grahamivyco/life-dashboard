@@ -909,7 +909,7 @@ button.set-row:active, button.set-row:hover { background: var(--hover); }
 .help-steps input { accent-color: var(--green); }
 .pill.s-paid, .pill.s-offer, .pill.s-accepted, .pill.s-interview { background: var(--green-soft); color: var(--green-ink); }
 /* Gold: waiting on someone */
-.pill.s-pending, .pill.s-sent, .pill.s-applied, .pill.s-approved, .pill.s-paused { background: var(--gold-soft); color: var(--gold-ink); }
+.pill.s-pending, .pill.s-sent, .pill.s-applied, .pill.s-paused { background: var(--gold-soft); color: var(--gold-ink); }
 /* Tomato: needs you */
 .pill.alert, .pill.s-disputed, .pill.s-overdue { background: var(--tomato-soft); color: #B52A1C; }
 .pill.claude.needs_approval { background: var(--tomato-soft); }
@@ -1071,3 +1071,8 @@ body[data-menu="green"] { --menu-bg: var(--green); --menu-fg: #fff; --menu-muted
 @media (max-width: 640px) {
   input:not(.code-input), textarea, select { font-size: 16px !important; }
 }
+
+/* Jobs: last step on an approved job */
+.send-it { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+.tile-hint { margin: -4px 0 6px; }
+.pill.s-approved { background: transparent; color: var(--tomato); border: 1px solid var(--tomato); }

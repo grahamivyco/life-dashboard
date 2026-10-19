@@ -12,10 +12,13 @@ import { Controls, Empty, RoundButton, Tabs } from '../components/Controls.jsx'
 // Jobs: public.jobs (moved from the Job Hub) and public.job_profile. PDFs live in the private
 // job-docs bucket at <user id>/<doc path>. The daily digest's picks are jobs rows with extra.digest;
 // its "closing soon" and "also open" links come from the 'jobs' snapshot.
-// Apply / Skip / answers update the row and insert an approved claude_requests row
-// (action 'job', note 'job:<slug>| …'); a search inserts note 'search| …'. The hourly sync does the work.
+// Apply happens here: the row gets the base resume and standard form answers at once, and the
+// job-apply edge function adds a cover letter (PDF in job-docs) and tailored answers. Graham sends
+// the form himself and taps "I sent it"; only that marks a job applied. If the function is off,
+// Apply also queues claude_requests (action 'job', note 'job:<slug>| …') so the hourly sync writes
+// the letter. Skip queues the same way; a search inserts note 'search| …'.
 
-const LABEL = { new: 'New', approved: 'Getting submitted', applied: 'Applied', interview: 'Interview', offer: 'Offer', accepted: 'Hired', rejected: 'Denied', skipped: 'Skipped' }
+const LABEL = { new: 'New', approved: 'Not sent', applied: 'Applied', interview: 'Interview', offer: 'Offer', accepted: 'Hired', rejected: 'Denied', skipped: 'Skipped' }
 const SENT = ['applied', 'interview', 'offer', 'accepted']
 const HEARD = ['interview', 'offer', 'accepted', 'rejected']
 const STEPS = ['Approved', 'Docs ready', 'Form filled', 'Submitted', 'Confirmed', 'Followed up', 'Heard back']
@@ -29,6 +32,31 @@ const name = (j) => j.short || j.org?.split(' · ')[0]
 const title = (j) => `${j.role} at ${name(j)}`
 const isOpen = (j) => !j.due || daysLeft(j.due) >= 0
 const now = () => new Date().toISOString()
+
+const RESUME = { design: 'ux-ui', marketing: 'marketing-comms', ai: 'marketing-comms', education: 'education', admin: 'admin-ops' }
+const formUrl = (j) => j.finish_url || j.actions?.find((a) => a.primary)?.href || j.url
+
+// What Apply can fill in right away, without waiting on Claude: base resume and the usual form answers.
+function basicPacket(j, profile) {
+  const base = profile?.base_docs || []
+  const resume = base.find((d) => d.path.includes(`/${RESUME[j.field] || 'design'}-resume`)) || base.find((d) => d.group === 'Resumes')
+  const folio = j.field === 'design' && base.find((d) => d.group === 'Portfolio')
+  const info = Object.fromEntries((profile?.info || []).map(([k, v]) => [k.toLowerCase(), v]))
+  const pick = (k) => Object.entries(info).find(([key]) => key.startsWith(k))?.[1]
+  const paste = [
+    ['Location', 'Barcelona, Spain. Remote, available for US-morning overlap.'],
+    ['Work authorization', pick('work authorization')],
+    ['Salary', pick('salary')],
+    ['Start date', pick('availability')],
+    ['Portfolio', pick('portfolio')],
+    ['LinkedIn', pick('linkedin')],
+    ['Phone', pick('phone')],
+  ].filter(([, t]) => t).map(([title, text]) => ({ title, text }))
+  return {
+    docs: j.docs?.length ? j.docs : [resume, folio].filter(Boolean).map((d) => ({ label: d.group === 'Resumes' ? `Resume (${d.label})` : d.label, path: d.path, save: d.save })),
+    paste: j.paste?.length ? j.paste : paste,
+  }
+}
 
 function dueLabel(j) {
   if (!j.due) return j.due_text
@@ -158,7 +186,7 @@ function Asks({ j, act }) {
     const missing = j.asks.findIndex((q, i) => !q.optional && !(mine[i] || '').trim())
     if (missing >= 0) { setMsg('Answer every question first.'); return }
     setMsg('Sending…')
-    setMsg((await act(j, 'answers', mine)) ? 'Saved. Claude adds them to your form answers.' : 'Couldn’t save. Try again.')
+    setMsg((await act(j, 'answers', mine)) ? 'Saved. Updating your answers.' : 'Couldn’t save. Try again.')
   }
   return (
     <div className="job-sec">
@@ -207,15 +235,36 @@ function Decide({ j, act }) {
   )
 }
 
-function JobDetail({ j, docs, act, card }) {
+// The last step on an approved job: open the form, send it, say so.
+function SendIt({ j, act, letter }) {
+  const [sure, setSure] = useState(false)
+  const hasLetter = j.docs?.some((d) => /cover/i.test(`${d.path} ${d.label}`))
+  return (
+    <div className="send-it">
+      <div className="row gap wrap">
+        {formUrl(j) && <a className="btn primary" href={formUrl(j)} target="_blank" rel="noreferrer">Open the form <ExternalLink size={12} /></a>}
+        {sure
+          ? <><button className="btn primary" onClick={() => act(j, 'sent')}><Check size={13} /> Yes, it went through</button><button className="btn" onClick={() => setSure(false)}>Not yet</button></>
+          : <button className="btn" onClick={() => setSure(true)}><Check size={13} /> I sent it</button>}
+        {!hasLetter && !j._busy && <button className="mini" onClick={() => letter(j)}>Write cover letter</button>}
+      </div>
+      {sure && <p className="meta">Only tap yes if you saw the site's confirmation or got their email.</p>}
+    </div>
+  )
+}
+
+function JobDetail({ j, docs, act, letter, card }) {
   const sent = SENT.includes(j.status)
   const updates = [...(j.updates || [])].sort((x, y) => (y.date || '').localeCompare(x.date || ''))
-  const links = [...(j.finish_url ? [{ label: 'Finish application', href: j.finish_url, primary: true }] : []), ...(j.actions || [])]
+  const links = [...(j.finish_url && j.status !== 'approved' ? [{ label: 'Finish application', href: j.finish_url, primary: true }] : []), ...(j.actions || [])].filter((x) => j.status !== 'approved' || x.href !== formUrl(j))
   return (
     <>
       {[j.org !== j.short && j.org, card && j.pay, j.extra?.where].some(Boolean) && <p className="meta">{[j.org !== j.short && j.org, card && j.pay, j.extra?.where].filter(Boolean).join(' · ')}</p>}
       {j.status !== 'new' && j.status !== 'skipped' && <Progress j={j} full />}
-      {j.waiting_on && <p className={j.needs_you ? 'job-next' : ''}>{j.needs_you && <span className="spark-head">✦</span>}{j.waiting_on}</p>}
+      {(j._busy || j.waiting_on) && <p className={j.needs_you || j._busy ? 'job-next' : ''}>{(j.needs_you || j._busy) && <span className="spark-head">✦</span>}{j._busy || j.waiting_on}</p>}
+      {j._note && <p className="note">{j._note}</p>}
+      {j.status === 'approved' && letter && <SendIt j={j} act={act} letter={letter} />}
+      {j.status === 'approved' && j.extra?.lead && <p className="note">{j.extra.lead}</p>}
       {(j.status === 'new' || !j.waiting_on) && j.why && <p>{j.why}</p>}
       {j.todo && !sent && j.status !== 'skipped' && <p className="note">{j.todo}</p>}
       {j.needs_you && j.asks?.length > 0 && <Asks j={j} act={act} />}
@@ -257,7 +306,7 @@ function JobDetail({ j, docs, act, card }) {
   )
 }
 
-function JobRow({ j, open, onToggle, docs, act, n, tracker }) {
+function JobRow({ j, open, onToggle, docs, act, letter, n, tracker }) {
   return (
     <li className={'job' + (open ? ' open' : '')}>
       <button className="job-head" onClick={onToggle} aria-expanded={open}>
@@ -267,14 +316,15 @@ function JobRow({ j, open, onToggle, docs, act, n, tracker }) {
           <span className="job-role">{j.role}</span>
           <span className="meta clamp">{[name(j), j.pay].filter(Boolean).join(' · ')}</span>
         </span>
-        {j.needs_you && <span className="tag">Needs you</span>}
+        {j.needs_you && j.status !== 'approved' && <span className="tag">Needs you</span>}
+        {tracker && SENT.includes(j.status) && j.applied_at && <span className="meta">Sent {shortDay(j.applied_at)}</span>}
         {tracker ? <><span className={'pill s-' + j.status}>{LABEL[j.status]}</span><Progress j={j} /></>
           : j.status === 'new' ? <Due j={j} /> : <span className={'pill s-' + j.status}>{LABEL[j.status]}</span>}
         {!tracker && grade(j.score) && <span className="grade" title={`Fit score ${j.score}`}>{grade(j.score)}</span>}
       </button>
       {open && (
         <div className="job-body">
-          <JobDetail j={j} docs={docs} act={act} />
+          <JobDetail j={j} docs={docs} act={act} letter={letter} />
           {j.status === 'new' && <Decide j={j} act={act} />}
         </div>
       )}
@@ -409,15 +459,15 @@ function DigestTab({ jobs, snapDigest, view, docs, act, searches, startOpen }) {
   )
 }
 
-function TrackerTab({ jobs, docs, act, startOpen }) {
+function TrackerTab({ jobs, docs, act, letter, startOpen }) {
   const [open, setOpen] = useState(startOpen)
   const [showClosed, setShowClosed] = useState(false)
   const toggle = (k) => setOpen((o) => (o === k ? null : k))
   const recent = (a, b) => (b.applied_at || b.decided_at || '').localeCompare(a.applied_at || a.decided_at || '')
+  // Only "I sent it" (or a confirmation email) moves a job to Sent, so nothing reads as applied unless it went out.
   const groups = [
-    { k: 'you', title: 'Needs you', rows: jobs.filter((j) => j.needs_you && !['rejected', 'skipped'].includes(j.status)) },
-    { k: 'progress', title: 'In progress', rows: jobs.filter((j) => j.status === 'approved' && !j.needs_you) },
-    { k: 'applied', title: 'Applied', rows: jobs.filter((j) => SENT.includes(j.status) && !j.needs_you).sort((a, b) => HEARD.includes(b.status) - HEARD.includes(a.status) || recent(a, b)) },
+    { k: 'unsent', title: 'Not sent yet', rows: jobs.filter((j) => j.status === 'approved').sort(recent), hint: 'Open each one, send the form, then tap I sent it.' },
+    { k: 'sent', title: 'Sent', rows: jobs.filter((j) => SENT.includes(j.status)).sort((a, b) => b.needs_you - a.needs_you || HEARD.includes(b.status) - HEARD.includes(a.status) || recent(a, b)) },
   ]
   const closed = jobs.filter((j) => ['rejected', 'skipped'].includes(j.status)).sort(recent)
   return (
@@ -425,7 +475,8 @@ function TrackerTab({ jobs, docs, act, startOpen }) {
       {groups.map((g) => g.rows.length > 0 && (
         <section key={g.k} className="tile">
           <div className="tile-head"><h2>{g.title}</h2><span className="meta">{g.rows.length}</span></div>
-          <ul className="list jobs">{g.rows.map((j) => <JobRow key={j.slug} j={j} tracker open={open === j.slug} onToggle={() => toggle(j.slug)} docs={docs} act={act} />)}</ul>
+          {g.hint && <p className="meta tile-hint">{g.hint}</p>}
+          <ul className="list jobs">{g.rows.map((j) => <JobRow key={j.slug} j={j} tracker open={open === j.slug} onToggle={() => toggle(j.slug)} docs={docs} act={act} letter={letter} />)}</ul>
         </section>
       ))}
       {groups.every((g) => !g.rows.length) && <Empty title="Nothing in progress.">Apply to something in New.</Empty>}
@@ -573,40 +624,61 @@ export default function Jobs() {
   const [view, setView] = useState(() => { if (params.get('view')) return params.get('view'); try { return localStorage.getItem(VIEW_KEY) || 'one' } catch { return 'one' } })
   const [searching, setSearching] = useState(false)
   const [err, setErr] = useState('')
+  const [focus, setFocus] = useState(null)
+  const [flags, setFlags] = useState({}) // slug → { _busy, _note }, kept apart so realtime reloads don't wipe them
+  const flag = (slug, f) => setFlags((x) => ({ ...x, [slug]: { ...x[slug], ...f } }))
 
   const pickView = (v) => { setView(v); try { localStorage.setItem(VIEW_KEY, v) } catch { /* ignore */ } }
 
-  // Apply, skip or send answers: update the row right away, then queue Claude to do the work.
+  const patchLocal = (slug, patch) => setJobs((js) => js.map((x) => (x.slug === slug ? { ...x, ...patch } : x)))
+  const queue = (j, verb) => supabase.from('claude_requests').insert({ action: 'job', status: 'approved', note: `job:${j.slug}| ${verb}: ${title(j)}`, summary: `${verb}: ${title(j)}`, approval_ask: `${verb} ${title(j)}?` })
+
+  // Cover letter and tailored answers from the job-apply function. If it's off, the hourly sync writes them.
+  async function writeLetter(j, verb = 'Apply') {
+    flag(j.slug, { _busy: 'Writing your cover letter and answers…', _note: null })
+    const { data, error } = await supabase.functions.invoke('job-apply', { body: { slug: j.slug } })
+    if (data?.job) { flag(j.slug, { _busy: null }); setJobs((js) => js.map((x) => (x.slug === j.slug ? data.job : x))); return true }
+    flag(j.slug, { _busy: null })
+    const { error: e2 } = await queue(j, verb)
+    if (!e2) flag(j.slug, { _note: 'Claude writes the cover letter within the hour. You can send with the resume and answers now.' })
+    else setErr('Couldn’t start the cover letter. Try again.')
+    return !error
+  }
+
+  // Apply, skip, send answers, or mark sent. The row updates right away.
   async function act(j, kind, answers) {
     const at = now()
+    const log = (text) => [...(j.updates || []), { date: at, text }]
     const patch = kind === 'apply'
-      ? { status: 'approved', decided_at: at, needs_you: false, waiting_on: 'Claude is making your resume, cover letter and form answers.', updates: [...(j.updates || []), { date: at, text: 'You approved it.' }] }
+      ? { ...basicPacket(j, profile), status: 'approved', decided_at: at, needs_you: true, finish_url: formUrl(j), waiting_on: 'Not sent yet. Open the form, attach the files, paste the answers, then tap I sent it.', updates: log('You approved it.') }
       : kind === 'skip'
-        ? { status: 'skipped', decided_at: at, needs_you: false, updates: [...(j.updates || []), { date: at, text: 'You skipped it.' }] }
-        : { my_answers: answers, needs_you: false, waiting_on: 'Your answers are in. Claude adds them to the form answers.', updates: [...(j.updates || []), { date: at, text: 'You sent your answers.' }] }
-    const verb = { apply: 'Apply', skip: 'Skip', answers: 'Answers' }[kind]
+        ? { status: 'skipped', decided_at: at, needs_you: false, updates: log('You skipped it.') }
+        : kind === 'sent'
+          ? { status: 'applied', applied_at: at, filling_at: j.filling_at || at, needs_you: false, waiting_on: 'Sent. Waiting to hear back.', updates: log('You sent the application.') }
+          : { my_answers: answers, updates: log('You sent your answers.') }
     const before = j
-    setJobs((js) => js.map((x) => (x.slug === j.slug ? { ...x, ...patch } : x)))
-    const [{ error: e1 }, { error: e2 }] = await Promise.all([
-      supabase.from('jobs').update(patch).eq('slug', j.slug),
-      supabase.from('claude_requests').insert({ action: 'job', status: 'approved', note: `job:${j.slug}| ${verb}: ${title(j)}`, summary: `${verb}: ${title(j)}`, approval_ask: `${verb} ${title(j)}?` }),
-    ])
-    if (e1 || e2) {
+    patchLocal(j.slug, patch)
+    const { error } = await supabase.from('jobs').update(patch).eq('slug', j.slug)
+    if (error) {
       setJobs((js) => js.map((x) => (x.slug === j.slug ? before : x)))
       setErr('Couldn’t save that. Try again.')
       return false
     }
     setErr('')
+    if (kind === 'skip') queue(j, 'Skip')
+    if (kind === 'apply') { setFocus(j.slug); setTab('tracker'); writeLetter({ ...j, ...patch }) }
+    if (kind === 'answers') writeLetter({ ...j, ...patch }, 'Answers')
     return true
   }
 
   const tabs = [
     { k: 'digest', label: 'New', icon: Sparkles },
-    { k: 'tracker', label: 'Tracker', icon: ListChecks, n: jobs?.filter((j) => j.needs_you && !['rejected', 'skipped'].includes(j.status)).length },
+    { k: 'tracker', label: 'Tracker', icon: ListChecks, n: jobs?.filter((j) => j.status === 'approved' || (j.needs_you && SENT.includes(j.status))).length },
     { k: 'docs', label: 'Docs', icon: FileText },
     { k: 'profile', label: 'Profile', icon: UserRound },
   ]
   const current = tabs.some((t) => t.k === tab) ? tab : 'digest'
+  const shown = jobs && jobs.map((j) => (flags[j.slug] ? { ...j, ...flags[j.slug] } : j))
 
   return (
     <div className="page">
@@ -624,8 +696,8 @@ export default function Jobs() {
       {!jobs && <p className="empty">Loading…</p>}
 
       {jobs && current === 'digest' && searching && <SearchPanel profile={profile} setProfile={setProfile} onClose={() => setSearching(false)} onSent={reload} />}
-      {jobs && current === 'digest' && <DigestTab jobs={jobs} snapDigest={snap?.payload?.digest} view={view} docs={docs} act={act} searches={searches} startOpen={params.get('open')} />}
-      {jobs && current === 'tracker' && <TrackerTab jobs={jobs} docs={docs} act={act} startOpen={params.get('open')} />}
+      {jobs && current === 'digest' && <DigestTab jobs={shown} snapDigest={snap?.payload?.digest} view={view} docs={docs} act={act} searches={searches} startOpen={params.get('open')} />}
+      {jobs && current === 'tracker' && <TrackerTab key={focus} jobs={shown} docs={docs} act={act} letter={writeLetter} startOpen={focus || params.get('open')} />}
       {jobs && current === 'docs' && <DocsTab jobs={jobs} profile={profile} docs={docs} />}
       {jobs && current === 'profile' && <ProfileTab profile={profile} />}
     </div>
