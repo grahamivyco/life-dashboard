@@ -11,7 +11,7 @@ import time
 import webbrowser
 from pathlib import Path
 
-from . import bridge, plaid_client, db, demo, importer, sync, ynab
+from . import bridge, plaid_client, db, demo, importer, rules, sync, ynab
 from .server import App, serve
 
 EXAMPLE_RULES = Path(__file__).parent.parent / "rules.example.txt"
@@ -62,6 +62,8 @@ def main() -> None:
         return
     if not rules_path.exists():
         shutil.copy(EXAMPLE_RULES, rules_path)
+    else:
+        rules.drop_starter_rules(rules_path)
     rules_path.chmod(0o600)  # older copies were made readable by everyone on this Mac
     if args.demo:
         demo.fill(conn)

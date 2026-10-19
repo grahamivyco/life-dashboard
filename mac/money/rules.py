@@ -145,3 +145,15 @@ def add_rule(path: Path, text: str, category: str) -> None:
         insert_at += 1
     lines.insert(insert_at, f"{text} -> {category}")
     path.write_text("\n".join(lines) + "\n")
+
+
+# The rules the original repo shipped with. They were Malcolm's, so they come out of an existing file.
+STARTER_RULES = {"Costco > 300 -> Household", "Costco -> Groceries", "Trader Joe -> Groceries",
+                 "Whole Foods -> Groceries", "Robinhood -> Transfer"}
+
+
+def drop_starter_rules(path: Path) -> None:
+    lines = path.read_text().splitlines()
+    kept = [line for line in lines if line.strip() not in STARTER_RULES]
+    if len(kept) != len(lines):
+        path.write_text("\n".join(kept).rstrip() + "\n")

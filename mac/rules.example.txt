@@ -7,9 +7,3 @@
 # Store names ignore upper/lower case and match any part of the name.
 # Two special categories don't count as spending: Transfer and Income.
 # Anything no rule catches falls back to Plaid's best guess.
-
-Costco > 300 -> Household
-Costco -> Groceries
-Trader Joe -> Groceries
-Whole Foods -> Groceries
-Robinhood -> Transfer

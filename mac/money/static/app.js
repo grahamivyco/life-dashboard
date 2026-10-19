@@ -171,7 +171,10 @@ const CATEGORY_STYLE = {
   "Uncategorized": ["question", "#5876e0"],
 };
 
-const EXTRA_COLORS = ["#d9467a", "#2a9d8f", "#e76f51", "#7b61ff", "#3a86ff", "#8d6e63", "#ef476f", "#118ab2"];
+// Life Dashboard look: ink tones only, no brand colors. Tomato is kept for alerts.
+const INK = ["#2F2C27", "#5F5A51", "#8E897E", "#4A463F", "#A5A094", "#77736A", "#BDB8AC", "#3B3832"];
+Object.keys(CATEGORY_STYLE).forEach((name, i) => { CATEGORY_STYLE[name][1] = INK[i % INK.length]; });
+const EXTRA_COLORS = INK;
 
 function hashText(text) {
   let hash = 0;
@@ -195,11 +198,11 @@ const BRAND_COLORS = {
   shell: "#f4b400", cvs: "#cc0000", delta: "#003366", "pg&e": "#0f6cb6",
 };
 
-const AVATAR_COLORS = ["#b5525c", "#c2553a", "#3f7f5f", "#5864c4", "#8b5cf6", "#0f766e", "#b45309", "#be185d"];
+const AVATAR_COLORS = ["#2F2C27", "#4A463F", "#5F5A51", "#77736A"];
 
 function avatar(name) {
   const clean = (name || "?").replace(/^(SQ|TST|SP|PP)\s*\*\s*/i, "").trim();
-  const color = BRAND_COLORS[clean.toLowerCase()] || AVATAR_COLORS[hashText(clean.toLowerCase()) % AVATAR_COLORS.length];
+  const color = AVATAR_COLORS[hashText(clean.toLowerCase()) % AVATAR_COLORS.length];
   return `<span class="bubble letter" style="background:${color}">${escapeHtml(clean.charAt(0).toUpperCase())}</span>`;
 }
 

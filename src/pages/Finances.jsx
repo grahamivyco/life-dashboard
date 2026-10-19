@@ -22,19 +22,42 @@ const when = (iso) => {
 }
 
 // A line chart in ink. `dashed` draws a second series (last month) in the muted tone.
-function Line({ values, dashed, height = 120, max, fromZero }) {
+// Hover (or drag on a phone) shows the date and amount under the pointer.
+function Line({ values, dashed, labels = [], height = 120, max, fromZero, dashedName = 'Last month' }) {
+  const [at, setAt] = useState(null)
   const w = 600
   const top = max ?? Math.max(...values, ...(dashed || []), 1)
   const low = Math.min(...values, ...(dashed || []))
   const bottom = fromZero ? Math.min(0, low) : low - (top - low) * 0.15
   const n = Math.max(values.length, dashed?.length || 0, 2)
-  const pts = (vs) => vs.map((v, i) => `${(i / (n - 1)) * w},${height - ((v - bottom) / (top - bottom || 1)) * (height - 6) - 3}`).join(' ')
+  const x = (i) => (i / (n - 1)) * w
+  const y = (v) => height - ((v - bottom) / (top - bottom || 1)) * (height - 6) - 3
+  const pts = (vs) => vs.map((v, i) => `${x(i)},${y(v)}`).join(' ')
+  const move = (e) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    setAt(Math.max(0, Math.min(n - 1, Math.round(((e.clientX - r.left) / r.width) * (n - 1)))))
+  }
+  const v = at != null ? values[at] : null
+  const d = at != null && dashed ? dashed[at] : null
   return (
-    <svg className="fin-line" viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none" aria-hidden="true">
-      {dashed && <polyline points={pts(dashed)} className="fin-line-ghost" />}
-      <polygon points={`0,${height} ${pts(values)} ${((values.length - 1) / (n - 1)) * w},${height}`} className="fin-line-fill" />
-      <polyline points={pts(values)} className="fin-line-ink" />
-    </svg>
+    <div className="fin-chart" onPointerMove={move} onPointerDown={move} onPointerLeave={() => setAt(null)}>
+      <svg className="fin-line" viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none" aria-hidden="true">
+        {dashed && <polyline points={pts(dashed)} className="fin-line-ghost" />}
+        <polygon points={`0,${height} ${pts(values)} ${x(values.length - 1)},${height}`} className="fin-line-fill" />
+        <polyline points={pts(values)} className="fin-line-ink" />
+        {at != null && <line x1={x(at)} x2={x(at)} y1="0" y2={height} className="fin-line-cursor" />}
+      </svg>
+      {at != null && (v != null || d != null) && (
+        <>
+          {v != null && <span className="fin-dot" style={{ left: `${(at / (n - 1)) * 100}%`, top: y(v) }} />}
+          <div className={'fin-tip' + (at > (n - 1) / 2 ? ' left' : '')} style={{ left: `${(at / (n - 1)) * 100}%` }}>
+            <span className="meta">{labels[at] || ''}</span>
+            {v != null && <b>{usd(v)}</b>}
+            {d != null && <span className="meta">{dashedName} {usd(d)}</span>}
+          </div>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -101,13 +124,14 @@ function Overview({ p, go }) {
               {RANGES.map(([k]) => <button key={k} aria-pressed={range === k} onClick={() => setRange(k)}>{k.toUpperCase()}</button>)}
             </div>
           </div>
-          <Line values={hist.map((h) => h.value)} />
+          <Line values={hist.map((h) => h.value)} labels={hist.map((h) => day(h.date, { weekday: 'short', month: 'short', day: 'numeric' }))} />
           <div className="row between meta"><span>{hist[0] && day(hist[0].date)}</span><span>Today</span></div>
         </section>
 
         <section className="tile">
           <div className="tile-head"><h2>Spending pace</h2><span className="meta">This month vs last</span></div>
-          <Line values={d.pace.this_month} dashed={d.pace.last_month} fromZero />
+          <Line values={d.pace.this_month} dashed={d.pace.last_month} fromZero dashedName="Last month by then"
+            labels={Array.from({ length: d.pace.days_in_month }, (_, i) => `${new Date().toLocaleDateString('en-US', { month: 'short' })} ${i + 1}`)} />
           <div className="row gap meta fin-legend"><span><i className="ink" />This month</span><span><i className="ghost" />Last month</span></div>
         </section>
       </div>
