@@ -397,3 +397,31 @@ button.pill.claude { border: 0; cursor: pointer; font-family: inherit; }
 .btn.sm { height: 28px; padding: 0 12px; font-size: 12px; flex: none; }
 .result.flush { margin-left: 0; }
 .seg.icons button { padding: 0 10px; display: grid; place-items: center; }
+
+/* ---------- housing ---------- */
+.homes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.home { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.home.gone { opacity: .55; }
+.home-photo { position: relative; display: grid; place-items: center; aspect-ratio: 16 / 10; background: var(--hover); color: var(--muted); border-bottom: 1px solid var(--line); }
+.home-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.home-flag { position: absolute; top: 10px; left: 10px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--surface); color: var(--tomato); }
+.home-flag.muted-flag { color: var(--muted); }
+.home-body { display: flex; flex-direction: column; gap: 3px; padding: 10px 10px 12px 14px; min-width: 0; }
+.home-price { display: flex; align-items: baseline; gap: 4px; }
+.home-price .big { font-family: var(--display); font-size: 22px; font-weight: 500; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.home-price .was { margin-left: 6px; font-size: 12px; color: var(--muted); text-decoration: line-through; }
+.home-title { font-weight: 500; text-decoration: none; }
+.home-title:hover { text-decoration: underline; text-underline-offset: 3px; }
+.home-facts { font-size: 13px; }
+.home-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 2px; }
+.icon-btn.on { color: var(--tomato); }
+.seg-n { color: var(--muted); font-variant-numeric: tabular-nums; margin-left: 2px; }
+@media (max-width: 640px) {
+  .homes { grid-template-columns: 1fr; }
+}
+.stats.even { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 760px) {
+  .stats.even { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stats.even .stat { padding: 10px 12px; }
+  .stats.even .big { font-size: 20px; }
+}

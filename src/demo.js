@@ -5,6 +5,11 @@ const now = Date.now()
 const iso = (h) => new Date(now - h * 3600e3).toISOString()
 const day = (d) => new Date(now + d * 864e5).toISOString().slice(0, 10)
 
+
+// Simple drawn "room" pictures for listing photos (no network in previews)
+const room = (wall, floor, sky) => 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="${wall}"/><rect y="150" width="320" height="50" fill="${floor}"/><rect x="190" y="34" width="86" height="104" rx="2" fill="${sky}"/><rect x="231" y="34" width="4" height="104" fill="${wall}"/><rect x="190" y="84" width="86" height="4" fill="${wall}"/><rect x="36" y="118" width="110" height="34" rx="6" fill="#8C8577"/><rect x="40" y="104" width="30" height="20" rx="5" fill="#A49D8F"/></svg>`)
+
 const fixtures = {
   items: [
     { id: 'i1', kind: 'task', title: 'Tell Emma about Tess’s wedding', status: 'open', due_date: day(1), created_at: iso(2) },
@@ -33,6 +38,19 @@ const fixtures = {
     { id: 'r3', action: 'auto', item_id: 'i5', status: 'queued', item: { title: 'Mic button on Mac and iPhone' }, updated_at: iso(1) },
   ],
   section_snapshots: [
+    { section: 'housing', synced_at: iso(0.4), payload: {
+      source: 'idealista',
+      search: { label: 'Homes in several areas · up to €1,600 · 3+ bedrooms · balcony', url: '#' },
+      listings: [
+        { id: '112847192', street: 'Calle de l’Agricultura', area: 'Sant Martí de Provençals', district: 'Sant Martí', price: 1132, beds: 3, size_m2: 75, floor: '1', exterior: true, lift: true, balcony: true, photo: room('#E9E1D3', '#B9A27F', '#BFD6E4'), url: '#', first_seen: iso(5) },
+        { id: 'h2', street: 'Calle de Fluvià', area: 'Sant Martí de Provençals', district: 'Sant Martí', price: 1280, beds: 3, size_m2: 82, floor: '4', exterior: true, lift: true, balcony: true, photo: room('#EEE8DC', '#C2AE8E', '#CADFEA'), url: '#', first_seen: iso(52) },
+        { id: 'h3', street: 'Calle de Mateu', area: 'Vila de Gràcia', district: 'Gràcia', price: 1363, beds: 3, size_m2: 78, floor: '2', exterior: true, lift: false, balcony: true, photo: room('#F0E6D6', '#A88C66', '#D2E3EC'), url: '#', first_seen: iso(125) },
+        { id: 'h4', street: 'Calle d’Alí Bei', area: 'El Fort Pienc', district: 'Eixample', price: 1200, beds: 3, size_m2: 86, floor: '3', exterior: false, lift: true, balcony: true, photo: room('#E6E2DA', '#9F8A6C', '#C5D8E2'), url: '#', first_seen: iso(76) },
+        { id: 'h5', street: 'Calle del Marquès de Campo Sagrado', area: 'Sant Antoni', district: 'Eixample', price: 1424, prev_price: 1500, beds: 3, size_m2: 106, floor: '2', exterior: true, lift: true, balcony: true, photo: room('#EFE9DF', '#B49A74', '#CFE0E8'), url: '#', first_seen: iso(100) },
+        { id: 'h6', street: 'Calle de Lepant', area: 'La Sagrada Família', district: 'Eixample', price: 1081, beds: 3, size_m2: 77, floor: '7', exterior: true, lift: true, balcony: true, photo: room('#E8E4DA', '#B7A386', '#C8DCE7'), url: '#', first_seen: iso(122) },
+        { id: 'h7', street: 'Doctor Letamendi', area: 'L’Antiga Esquerra de l’Eixample', district: 'Eixample', price: 1252, prev_price: 1375, beds: 1, size_m2: 70, floor: 'Mezzanine', exterior: true, balcony: false, url: '#', first_seen: iso(150), gone: true },
+      ],
+    } },
     { section: 'email', synced_at: iso(0.2), payload: { unread: 3, threads: [
       { id: 't1', from: 'Kym Duea', subject: 'Annual Meeting page has slipped a stitch', snippet: 'I noticed an issue on the Annual Meeting page…', message: 'Also the registration link at the bottom goes nowhere. Thanks for taking a look!\n\nKym', date: iso(1), unread: true, important: true, count: 2, url: '#', replies: [
         { label: 'On it today', body: 'Hi Kym,\n\nThanks for catching this. I’ll fix the page and the registration link today and let you know when it’s live.\n\nGraham' },
