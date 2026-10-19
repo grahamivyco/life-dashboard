@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="token" content="__TOKEN__">
+  <title>Money</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="hero">
+    <div class="topbar">
+      <div class="brand"><span class="brand-mark" data-icon="arrow-up"></span><span id="brand-name">Money</span></div>
+      <nav>
+        <button data-tab="dashboard" class="active"><span data-icon="dashboard"></span>Dashboard</button>
+        <button data-tab="recurring"><span data-icon="recurring"></span>Recurring</button>
+        <button data-tab="spending"><span data-icon="spending"></span>Spending</button>
+        <button data-tab="transactions"><span data-icon="search"></span>Transactions</button>
+        <button data-tab="investments" class="desktop-only"><span data-icon="investments"></span>Investments</button>
+        <button data-tab="accounts" class="desktop-only"><span data-icon="bank"></span>Accounts</button>
+        <button data-tab="rules" class="desktop-only"><span data-icon="rules"></span>Rules</button>
+        <button class="phone-only" id="more-button" aria-expanded="false"><span data-icon="more"></span>More</button>
+      </nav>
+      <div class="controls">
+        <select id="owner" hidden aria-label="Whose money"></select>
+        <span id="updated" class="updated"></span>
+        <button id="sync" class="ghost" aria-label="Sync"><span data-icon="sync"></span><span class="label">Sync</span></button>
+      </div>
+    </div>
+    <h1 id="page-title"></h1>
+    <div id="hero-extra"></div>
+  </header>
+
+  <div id="banner" hidden></div>
+
+  <main>
+    <section id="dashboard">
+      <button id="attention" class="attention" hidden></button>
+      <div class="hero-cards">
+        <article class="card chart-card" id="net-worth-card"></article>
+        <article class="card chart-card" id="pace-card"></article>
+        <article class="card chart-card" id="forecast-card"></article>
+      </div>
+      <div class="carousel-dots" id="carousel-dots"><i class="on"></i><i></i><i></i></div>
+      <div class="columns even">
+        <div>
+          <div class="section-head"><h2>Accounts</h2><button class="link" data-goto="accounts">Add account</button></div>
+          <div class="card list" id="account-groups"></div>
+        </div>
+        <div>
+          <div class="section-head"><h2>Coming up</h2><button class="link" data-goto="recurring">See all</button></div>
+          <div class="card list" id="dash-upcoming"></div>
+        </div>
+      </div>
+      <div class="section-head"><h2>Recent transactions</h2><button class="link" data-goto="transactions">See all</button></div>
+      <div class="card list" id="dash-recent"></div>
+    </section>
+
+    <section id="recurring" hidden>
+      <article class="card" id="add-recurring" hidden></article>
+      <div id="recurring-upcoming">
+        <article class="card" id="coming-up"></article>
+        <article class="card payday">
+          <div class="row-between">
+            <div>
+              <h3>Payday View</h3>
+              <p class="muted">See what is safe to spend based on when your next paycheck comes.</p>
+            </div>
+            <label class="switch"><input type="checkbox" id="payday-toggle"><span></span></label>
+          </div>
+          <div id="payday-body" hidden></div>
+        </article>
+        <div class="section-head"><h2>Coming soon</h2></div>
+        <div class="stack" id="coming-soon"></div>
+      </div>
+      <div id="recurring-all" hidden></div>
+    </section>
+
+    <section id="spending" hidden>
+      <article class="card list" id="spend-totals"></article>
+      <div class="section-head"><h2>Your budget</h2></div>
+      <article class="card list" id="budget-card"></article>
+      <div class="section-head"><h2>Breakdown</h2></div>
+      <article class="card" id="breakdown"></article>
+      <div id="needs-sorting-block"></div>
+      <div class="section-head"><h2>Non-spending</h2></div>
+      <article class="card list" id="non-spending"></article>
+    </section>
+
+    <section id="transactions" hidden>
+      <div class="month-strip">
+        <button class="icon-button" id="prev-month" aria-label="Previous month"><span data-icon="chevron-left"></span></button>
+        <strong id="month-label"></strong>
+        <button class="icon-button" id="next-month" aria-label="Next month"><span data-icon="chevron-right"></span></button>
+        <span class="muted" id="month-total"></span>
+      </div>
+      <div class="filters">
+        <select id="category-filter" aria-label="Category"><option value="">All categories</option></select>
+        <label class="check"><input type="checkbox" id="needs-sorting"> Needs a category</label>
+        <button class="secondary small" id="select-mode">Select</button>
+      </div>
+      <div class="bulk-bar" id="bulk-bar" hidden>
+        <strong id="bulk-count">0 selected</strong>
+        <select id="bulk-category" class="pill-select" aria-label="Set category"><option value="">Set category…</option></select>
+        <button class="secondary small" data-bulk="hide">Hide from spending</button>
+        <button class="secondary small" data-bulk="unhide">Show in spending</button>
+        <button class="secondary small" data-bulk="tax-deductible">Tag tax deductible</button>
+        <button class="secondary small" data-bulk="reimbursable">Tag reimbursable</button>
+      </div>
+      <div class="card list" id="txn-list"></div>
+    </section>
+
+    <section id="networth" hidden>
+      <article class="card chart-card" id="net-worth-detail"></article>
+      <div class="columns even">
+        <div><div class="section-head"><h2>Assets</h2><span class="muted" id="assets-total"></span></div>
+          <div class="card list" id="assets-list"></div></div>
+        <div><div class="section-head"><h2>Debts</h2><span class="muted" id="debts-total"></span></div>
+          <div class="card list" id="debts-list"></div></div>
+      </div>
+    </section>
+
+    <section id="investments" hidden>
+      <article class="card" id="allocation"></article>
+      <div class="section-head"><h2>Holdings</h2></div>
+      <article class="card list" id="holdings-list"></article>
+    </section>
+
+    <section id="accounts" hidden>
+      <div class="card list" id="accounts-list"></div>
+      <div class="section-head"><h2>People</h2></div>
+      <article class="card">
+        <p class="muted">Add a partner or a shared bucket, then pick an owner for each account.</p>
+        <div id="owners-list" class="chips"></div>
+        <form id="add-owner" class="toolbar">
+          <input id="owner-name" placeholder="Name, e.g. Shared">
+          <button type="submit" class="primary">Add</button>
+        </form>
+      </article>
+    </section>
+
+    <section id="rules" hidden>
+      <article class="card list" id="rules-list"></article>
+      <details class="raw">
+        <summary>Edit all rules as text</summary>
+        <article class="card">
+          <p class="muted">One rule per line, like <code>Costco &gt; 300 -&gt; Household</code>. Lines starting with # are notes.</p>
+          <textarea id="rules-text" spellcheck="false"></textarea>
+          <div class="toolbar">
+            <button id="save-rules" class="primary">Save rules</button>
+            <span id="rules-status" class="muted"></span>
+          </div>
+        </article>
+      </details>
+    </section>
+  </main>
+
+  <div id="more-menu" hidden>
+    <button data-tab="investments"><span data-icon="investments"></span>Investments</button>
+    <button data-tab="accounts"><span data-icon="bank"></span>Accounts</button>
+    <button data-tab="rules"><span data-icon="rules"></span>Sorting rules</button>
+  </div>
+  <div id="drawer-backdrop" hidden></div>
+  <aside id="drawer" hidden aria-label="Transaction details"></aside>
+</body>
+</html>
