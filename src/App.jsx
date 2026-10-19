@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { supabase } from './supabase.js'
 import Sidebar from './components/Sidebar.jsx'
+import MobileNav from './components/MobileNav.jsx'
+import { useNavCounts } from './navCounts.js'
 import AskClaude from './components/AskClaude.jsx'
 import RecordingPill from './components/RecordingPill.jsx'
 import Login from './pages/Login.jsx'
@@ -30,11 +32,19 @@ export default function App() {
 
   if (session === undefined) return <div className="boot" />
   if (!session) return <Login />
+  return <Shell session={session} />
+}
+
+function Shell({ session }) {
+  const counts = useNavCounts()
+  const { pathname } = useLocation()
 
   return (
     <div className="shell">
-      <Sidebar />
-      <main className="main">
+      <Sidebar counts={counts} />
+      <MobileNav counts={counts} />
+      <main className="main" data-home={pathname === '/' || undefined}>
+        <div className="route" key={pathname}>
         <Routes>
           <Route path="/" element={<Today />} />
           <Route path="/email" element={<Email />} />
@@ -53,6 +63,7 @@ export default function App() {
           <Route path="/settings" element={<SettingsPage session={session} />} />
           <Route path="*" element={<Today />} />
         </Routes>
+        </div>
       </main>
       <RecordingPill />
       <AskClaude />
