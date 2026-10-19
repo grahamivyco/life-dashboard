@@ -23,7 +23,7 @@ const sameEvent = (a, b) =>
 // rows in public.events (brain dumps, added here). A series that repeats 3+ times
 // in a week (work blocks, daily habits) moves to `routines` so the days stay readable.
 export function useUpcoming(days) {
-  const snap = useSnapshot('calendar')
+  const snap = useSnapshot('events')
   const [rows, setRows] = useState([])
 
   const load = useCallback(async () => {

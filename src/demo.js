@@ -119,7 +119,7 @@ const fixtures = {
         { slug: 'f', role: 'AI Tutor, Design', short: 'Model Lab', org: 'Model Lab · contract', pay: 'Hourly', score: 62, grade: 'C', actions: [], docs: [], paste: [], app: { status: 'approved', needsYou: false, waitingOn: 'Claude is filling the form.' } },
       ],
     } },
-    { section: 'calendar', synced_at: iso(0.3), payload: { events: [
+    { section: 'events', synced_at: iso(0.3), payload: { events: [
       ...workBlocks,
       { id: 'c1', title: 'Coffee with Emma', start: at(0, 18), end: at(0, 19), location: 'Satan’s Coffee Corner', calendar: 'Friends', url: gcal },
       { id: 'c2', title: 'Nude yoga to wake up', start: at(2, 9, 45), end: at(2, 10, 45), location: 'Prakasa', calendar: 'Graham', url: gcal },
