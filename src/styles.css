@@ -961,10 +961,12 @@ textarea, .plain, .field input { border-color: var(--ctl-line); border-radius: 1
 /* phone: round menu button + title + avatar on top, frosted floating tab bar with the main pages,
    side drawer with every page that pushes the page aside (after Muse) */
 .m-drawer, .m-shade, .phone-only { display: none; }
-/* phone menu color: blue by default; data-menu on body picks gold or green */
-body { --menu-bg: var(--blue); --menu-fg: #fff; --menu-muted: rgba(255, 255, 255, .7); --menu-line: rgba(255, 255, 255, .25); --menu-active: rgba(255, 255, 255, .2); --menu-active-fg: #fff; }
+/* phone menu color: cream by default so it runs into the iPhone status bar (Graham, 2026-10-19);
+   data-menu on body picks blue, gold or green */
+body { --menu-bg: var(--bg); --menu-fg: var(--fg); --menu-muted: var(--muted); --menu-line: var(--line); --menu-active: var(--blue-soft); --menu-active-fg: var(--blue-ink); }
+body[data-menu="blue"] { --menu-bg: var(--blue); --menu-fg: #fff; --menu-muted: rgba(255, 255, 255, .7); --menu-line: rgba(255, 255, 255, .25); --menu-active: rgba(255, 255, 255, .2); --menu-active-fg: #fff; }
 body[data-menu="gold"] { --menu-bg: var(--gold); --menu-fg: #2F2C27; --menu-muted: rgba(47, 44, 39, .6); --menu-line: rgba(47, 44, 39, .15); --menu-active: rgba(255, 255, 255, .45); --menu-active-fg: #2F2C27; }
-body[data-menu="green"] { --menu-bg: var(--green); }
+body[data-menu="green"] { --menu-bg: var(--green); --menu-fg: #fff; --menu-muted: rgba(255, 255, 255, .7); --menu-line: rgba(255, 255, 255, .25); --menu-active: rgba(255, 255, 255, .2); --menu-active-fg: #fff; }
 @media (max-width: 640px) {
   :root { --tabs: 64px; --drawer: min(300px, 80vw); --push: cubic-bezier(.2, .8, .2, 1); }
   .m-top { display: grid; grid-template-columns: 40px 1fr 40px; gap: 10px; padding-left: 12px; padding-right: 12px; border-bottom-color: transparent; background: rgba(243, 241, 234, .8); }
@@ -1009,7 +1011,7 @@ body[data-menu="green"] { --menu-bg: var(--green); }
   .page > .page-head + .controls:has(> .controls-end:only-child) > * { pointer-events: auto; }
 
   /* transform only, so the slide never re-lays out the page */
-  .shell { transition: transform 300ms var(--push), border-radius 300ms var(--push), box-shadow 300ms var(--push); transform-origin: 0 50%; will-change: transform; }
+  .shell { transition: transform 300ms var(--push), border-radius 300ms var(--push), box-shadow 300ms var(--push); transform-origin: 0 50%; }
   html:has(body.drawer-lock), body.drawer-lock { overflow: hidden; overscroll-behavior: none; }
   /* the card: fixed size from the real screen height, same gap above and below, so it sits centered */
   :root { --card-y: calc(env(safe-area-inset-top) + 12px); }
