@@ -8,7 +8,7 @@ import { cancelGuide } from '../subscriptions.js'
 
 const TABS = [
   ['overview', 'Overview'], ['spending', 'Spending'], ['recurring', 'Recurring'],
-  ['transactions', 'Transactions'], ['accounts', 'Accounts'],
+  ['transactions', 'Transactions', 'Activity'], ['accounts', 'Accounts'],
 ]
 const GROUPS = [
   ['checking', 'Checking'], ['card', 'Cards'], ['savings', 'Savings'], ['investments', 'Investments'], ['loan', 'Loans'],
@@ -183,15 +183,15 @@ function Spending({ p, send }) {
 
   return (
     <>
-      <div className="row between wrap gap">
-        <div className="seg">
-          {PERIODS.map(([k, label]) => <button key={k} aria-pressed={period === k} onClick={() => { setPeriod(k); setOffset(0) }}>{label}</button>)}
-        </div>
+      <div className="row between gap fin-periodbar">
         <div className="row gap">
           <button className="icon-btn" aria-label="Earlier" disabled={!older} onClick={() => setOffset(offset + 1)}><ChevronLeft size={16} /></button>
           <span className="fin-period">{s.title}</span>
           <button className="icon-btn" aria-label="Later" disabled={offset === 0} onClick={() => setOffset(offset - 1)}><ChevronRight size={16} /></button>
         </div>
+        <select className="fin-select" aria-label="Period" value={period} onChange={(e) => { setPeriod(e.target.value); setOffset(0) }}>
+          {PERIODS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+        </select>
       </div>
 
       <div className="stats even fin-stats">
@@ -576,7 +576,11 @@ export default function Finances() {
       </PageHeader>
 
       <div className="seg tabs-seg fin-tabs">
-        {TABS.map(([k, label]) => <button key={k} aria-pressed={tab === k} onClick={() => go(k)}>{label}</button>)}
+        {TABS.map(([k, label, short]) => (
+          <button key={k} aria-pressed={tab === k} onClick={() => go(k)}>
+            {short ? <><span className="fin-long">{label}</span><span className="fin-short">{short}</span></> : label}
+          </button>
+        ))}
       </div>
 
       {slow && <p className="note">Waiting for your Mac. It picks up changes when it's on and the Money app is running.</p>}
