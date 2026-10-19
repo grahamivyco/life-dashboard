@@ -73,11 +73,13 @@ export default function MobileNav({ counts }) {
   }, [])
 
   // Open: the whole app becomes a card pushed to the right (kept at its scroll spot), the drawer sits behind it.
-  // Close: the card slides back, then the page unlocks and scrolls to where it was.
+  // Close: the card slides back, then the page unlocks and scrolls to where it was,
+  // or to the top when a different page was picked.
   useEffect(() => {
     const body = document.body
     if (!open) return
     const y = window.scrollY
+    const from = window.location.hash
     body.style.setProperty('--sy', `${-y}px`)
     body.classList.add('drawer-lock', 'drawer-open')
     // Keep swipes on the card from scrolling or stretching the page underneath
@@ -91,12 +93,14 @@ export default function MobileNav({ counts }) {
     return () => {
       document.removeEventListener('keydown', onKey)
       document.removeEventListener('touchmove', stop)
+      const moved = window.location.hash !== from
+      if (moved) body.style.setProperty('--sy', '0px') // the new page slides in from its top
       body.classList.remove('drawer-open')
       if (meta) meta.content = before
       setTimeout(() => {
         if (body.classList.contains('drawer-open')) return
         body.classList.remove('drawer-lock')
-        window.scrollTo(0, y)
+        window.scrollTo(0, moved ? 0 : y)
       }, 300)
     }
   }, [open])

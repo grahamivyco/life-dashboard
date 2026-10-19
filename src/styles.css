@@ -590,7 +590,7 @@ section.tile .list.jobs { padding: 0; }
     border-bottom: 1px solid var(--line);
     transition: transform 220ms cubic-bezier(.2, .7, .3, 1);
   }
-  .m-top.hide { transform: translateY(-100%); }
+  /* the top bar stays put while scrolling (it used to slide away, which iOS left half on screen) */
   .m-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--fg); }
   .m-word { font-family: var(--display); font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
   .m-title { font-family: var(--display); font-size: 20px; font-weight: 500; letter-spacing: -.01em; }
