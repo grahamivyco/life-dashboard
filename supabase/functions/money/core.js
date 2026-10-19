@@ -449,7 +449,10 @@ function budgetStatus(s, all, today) {
   }
 }
 
-function netWorthHistory(s, today, days = 180) {
+// Walks back from today's balances. Money moved between your own accounts (transfers, card payments,
+// investing) is left out: when only one side of a move is linked it made fake drops and jumps.
+function netWorthHistory(s, today, all = [], days = 180) {
+  const moves = new Set(all.filter((t) => MOVE_CATEGORIES.has(t.category)).map((t) => t.transaction_id))
   const vis = visibleAccounts(s)
   const acc = Object.fromEntries(vis.map((a) => [a.account_id, a]))
   const firstDay = addDays(today, -days)
@@ -457,7 +460,7 @@ function netWorthHistory(s, today, days = 180) {
   for (const t of s.transactions) {
     const a = acc[t.account_id]
     if (!a || a.type === 'investment' || a.current_balance == null || !(t.date > firstDay)) continue
-    if ((t.plaid_category || '').toUpperCase().endsWith('INVESTMENT_AND_RETIREMENT_FUNDS')) continue
+    if ((t.plaid_category || '').toUpperCase().endsWith('INVESTMENT_AND_RETIREMENT_FUNDS') || moves.has(t.transaction_id)) continue
     daily[t.date] = (daily[t.date] || 0) + t.amount
   }
   const accountCount = vis.filter((a) => a.current_balance != null).length
@@ -601,7 +604,7 @@ export function buildPayload(s, today) {
     demo: false,
     dashboard: {
       balances: balances(s, today),
-      net_worth_history: netWorthHistory(s, today),
+      net_worth_history: netWorthHistory(s, today, all),
       pace: monthPace(all, today),
       forecast: forecast(s, all, today),
       recurring: recurring(s, all, today),
@@ -610,7 +613,7 @@ export function buildPayload(s, today) {
       accounts: visible,
       needs_attention: visible.filter((a) => a.last_error).map((a) => a.institution),
     },
-    net_worth: { history: netWorthHistory(s, today, 365), balances: balances(s, today) },
+    net_worth: { history: netWorthHistory(s, today, all, 365), balances: balances(s, today) },
     spending: spend,
     budget: budgetStatus(s, all, today),
     recurring: recurring(s, all, today, true),

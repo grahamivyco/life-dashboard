@@ -70,6 +70,20 @@ def move(conn: sqlite3.Connection, rules_path: Path) -> None:
     print("Open Finances on any device: it syncs your banks itself now. You can stop this app (Ctrl+C) and leave it off.")
 
 
+def send_ynab() -> None:
+    """Add the YNAB token to the server's Vault without moving anything else, so Apple Card syncs there."""
+    key = bridge.dashboard_key()
+    if not key:
+        raise SystemExit("Link this Mac first: make a key on the Finances page, then run python3 -m money --dashboard-key KEY")
+    try:
+        token = plaid_client.keychain_get("ynab_token")
+    except plaid_client.PlaidError:
+        raise SystemExit("No YNAB token in the Keychain yet. Save it with:\n"
+                         "  security add-generic-password -U -s money-dashboard -a ynab_token -w")
+    result = bridge.rpc("money_add_keys", key, p_secrets={"ynab_token": token})
+    print(f"Sent the YNAB token ({result}). Open Finances and Apple Card comes in on that sync.")
+
+
 def moved() -> bool:
     try:
         return plaid_client.keychain_get(MOVED_FLAG) == "yes"

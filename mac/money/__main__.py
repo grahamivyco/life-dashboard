@@ -33,6 +33,8 @@ def main() -> None:
     parser.add_argument("--move-to-cloud", action="store_true",
                         help="move your data and keys to the Life Dashboard's server once, so it syncs without this Mac")
     parser.add_argument("--ynab-check", action="store_true", help="show what YNAB has for Apple Card, then stop")
+    parser.add_argument("--send-ynab", action="store_true",
+                        help="send the YNAB token from the Keychain to the server, so Apple Card syncs there, then stop")
     args = parser.parse_args()
     os.umask(0o077)  # every file the app makes is readable by you only
 
@@ -41,6 +43,9 @@ def main() -> None:
             ynab.check()
         except Exception as error:
             raise SystemExit(f"Couldn't read YNAB: {error}")
+        return
+    if args.send_ynab:
+        cloud.send_ynab()
         return
     if args.dashboard_key:
         bridge.save_key(args.dashboard_key)
