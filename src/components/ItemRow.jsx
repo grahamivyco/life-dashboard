@@ -43,7 +43,7 @@ export async function loadRequests(ids) {
 const pillText = (r) => (!r ? null : r.status === 'done' && !r.seen_at ? 'Claude: done' : r.status === 'failed' ? 'Claude: stuck' : null)
 
 // A task, goal or idea. If Claude has a new result for it, tap the pill to read it.
-export default function ItemRow({ item, req, onToggle, children }) {
+export default function ItemRow({ item, req, onToggle, noDate, children }) {
   const [open, setOpen] = useState(false)
   const [hidden, setHidden] = useState(false)
   const r = req
@@ -75,7 +75,7 @@ export default function ItemRow({ item, req, onToggle, children }) {
         </div>
         {children}
         {pill && !open && <button className={'pill claude ' + r.status} onClick={openResult}><span className="spark">✦</span>{pill}</button>}
-        {item.due_date && <span className="meta">{fmtDay(item.due_date)}</span>}
+        {item.due_date && !noDate && <span className="meta">{fmtDay(item.due_date)}</span>}
       </div>
       {open && (
         <div className="result">

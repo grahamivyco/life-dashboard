@@ -7,9 +7,25 @@ import Approvals from '../components/Approvals.jsx'
 import ItemRow, { loadRequests } from '../components/ItemRow.jsx'
 import { fmtTime, greeting } from '../lib.js'
 import { useUpcoming, dayLabel } from '../events.js'
+import { useToReply, useJobsToApply, useHousingFits } from '../catchup.js'
 
-const TASKS_SHOWN = 8
-const WEEK_SHOWN = 8
+const SHOWN = 3
+const eur = (n) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
+
+// One catch-up tile: a count, the top few, and a link into the page. Hidden when empty.
+function Catch({ title, n, to, link = 'Open', children }) {
+  if (!n) return null
+  return (
+    <section className="tile catch">
+      <div className="tile-head">
+        <h2>{title}</h2>
+        <span className="catch-n">{n}</span>
+      </div>
+      <ul className="list">{children}</ul>
+      {to && <Link to={to} className="link catch-link">{link}</Link>}
+    </section>
+  )
+}
 const kinds = [
   { k: 'goal', label: 'Goals' },
   { k: 'idea', label: 'Ideas' },
@@ -61,50 +77,70 @@ export default function Today() {
   }
 
   const { events: upcoming, reload: reloadEvents } = useUpcoming(7)
-  const events = upcoming.slice(0, WEEK_SHOWN)
+  const toReply = useToReply()
+  const jobs = useJobsToApply()
+  const flats = useHousingFits()
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
-  const shownTasks = allTasks ? tasks : tasks.slice(0, TASKS_SHOWN)
+  const shownTasks = allTasks ? tasks : tasks.slice(0, SHOWN)
 
   return (
     <div className="page">
       <PageHeader eyebrow={today} title={greeting()} />
 
+      <div className="catch-grid">
+        <Catch title="To reply" n={toReply.length} to="/email" link="Reply">
+          {toReply.slice(0, SHOWN).map((t) => (
+            <li key={t.id}>
+              <Link to={`/email?open=${t.id}`} className="catch-row">
+                <span className="clamp">{t.subject_en || t.subject}</span>
+                <span className="meta clamp">{t.from}</span>
+              </Link>
+            </li>
+          ))}
+        </Catch>
+
+        <Catch title="Tasks" n={tasks.length}>
+          {shownTasks.map((t) => <ItemRow key={t.id} item={t} req={reqs[t.id]} onToggle={finish} noDate />)}
+          {tasks.length > SHOWN && (
+            <li><button className="mini" onClick={() => setAllTasks((a) => !a)}>{allTasks ? 'Show fewer' : `Show all ${tasks.length}`}</button></li>
+          )}
+        </Catch>
+
+        <Catch title="This week" n={upcoming.length} to="/events" link="Events">
+          {upcoming.slice(0, SHOWN).map((e) => (
+            <li key={e.id} className="catch-row">
+              <span className="clamp">{e.title}</span>
+              <span className="meta">{dayLabel(e.start, true)}{!e.allDay && ` · ${fmtTime(e.start)}`}</span>
+            </li>
+          ))}
+        </Catch>
+
+        <Catch title="Jobs to apply for" n={jobs.length} to="/jobs?tab=new" link="Jobs">
+          {jobs.slice(0, SHOWN).map((j) => (
+            <li key={j.slug}>
+              <Link to={`/jobs?tab=${j.app ? 'progress' : 'new'}&open=${j.slug}`} className="catch-row">
+                <span className="clamp">{j.role}</span>
+                <span className="meta clamp">{j.app?.needsYou ? 'Needs you' : [j.short || j.org?.split(' · ')[0], j.dueText].filter(Boolean).join(' · ')}</span>
+              </Link>
+            </li>
+          ))}
+        </Catch>
+
+        <Catch title="Flats that fit" n={flats.length} to="/housing" link="Housing">
+          {flats.slice(0, SHOWN).map((l) => (
+            <li key={l.id}>
+              <a href={l.url} target="_blank" rel="noreferrer" className="catch-row">
+                <span className="clamp">{l.street || l.title}</span>
+                <span className="meta clamp">{[eur(l.price), l.beds != null && `${l.beds} bed`, l.area].filter(Boolean).join(' · ')}</span>
+              </a>
+            </li>
+          ))}
+        </Catch>
+      </div>
+
       <DumpBox onSaved={() => { loadTasks(); loadItems(); reloadEvents() }} />
 
       <Approvals />
-
-      <div className="grid two">
-        <section className="tile">
-          <div className="tile-head"><h2>Tasks</h2><span className="meta">{tasks.length || ''}</span></div>
-          {tasks.length === 0 ? (
-            <p className="empty">No open tasks. Brain dumps fill this list.</p>
-          ) : (
-            <ul className="list">
-              {shownTasks.map((t) => <ItemRow key={t.id} item={t} req={reqs[t.id]} onToggle={finish} />)}
-            </ul>
-          )}
-          {tasks.length > TASKS_SHOWN && (
-            <button className="mini more" onClick={() => setAllTasks((a) => !a)}>{allTasks ? 'Show fewer' : `Show all ${tasks.length}`}</button>
-          )}
-        </section>
-
-        <section className="tile">
-          <div className="tile-head"><h2>This week</h2><Link to="/events" className="link">Events</Link></div>
-          {events.length === 0 ? (
-            <p className="empty">Nothing scheduled in the next 7 days.</p>
-          ) : (
-            <ul className="list week-list">
-              {events.map((e) => (
-                <li key={e.id}>
-                  <span className="meta when">{dayLabel(e.start, true)}{!e.allDay && ` · ${fmtTime(e.start)}`}</span>
-                  <span className="grow clamp">{e.title}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {upcoming.length > WEEK_SHOWN && <Link to="/events" className="mini more">{upcoming.length - WEEK_SHOWN} more this week</Link>}
-        </section>
-      </div>
 
       <section className="tile">
         <div className="tile-head">
