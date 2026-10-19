@@ -9,7 +9,7 @@ import ViewMenu from '../components/ViewMenu.jsx'
 
 const TABS = [
   ['overview', 'Overview'], ['spending', 'Spending'],
-  ['transactions', 'Transactions'], ['accounts', 'Accounts'],
+  ['transactions', 'Transactions'],
 ]
 const GROUPS = [
   ['checking', 'Checking'], ['card', 'Cards'], ['savings', 'Savings'], ['investments', 'Investments'], ['loan', 'Loans'],
@@ -78,7 +78,7 @@ function CategoryPick({ value, categories, onPick }) {
 
 const RANGES = [['1m', 30], ['3m', 90], ['6m', 180], ['1y', 365]]
 
-function Overview({ p, go }) {
+function Overview({ p, go, send, publishedAt }) {
   const [range, setRange] = useState('3m')
   const d = p.dashboard
   const b = d.balances
@@ -138,14 +138,6 @@ function Overview({ p, go }) {
 
       <div className="grid two">
         <section className="tile">
-          <div className="tile-head"><h2>Accounts</h2><button className="mini" onClick={() => go('accounts')}>All accounts</button></div>
-          <ul className="list">
-            {[['Checking', b.checking], ['Cards owed', b.card], ['Net cash', b.net_cash], ['Savings', b.savings], ['Investments', b.investments], ...(b.loan ? [['Loans', b.loan]] : [])]
-              .map(([k, v]) => <li key={k}><span className="grow">{k}</span><span className="num">{usd(v, 2)}</span></li>)}
-          </ul>
-        </section>
-
-        <section className="tile">
           <div className="tile-head"><h2>Coming up</h2><button className="mini" onClick={() => go('spending', 'fin-recurring')}>All bills</button></div>
           {upcoming.length === 0 && <p className="empty">Nothing due in the next 30 days.</p>}
           <ul className="list">
@@ -157,12 +149,16 @@ function Overview({ p, go }) {
             ))}
           </ul>
         </section>
+
+        <section className="tile">
+          <div className="tile-head"><h2>Recent</h2><button className="mini" onClick={() => go('transactions')}>All transactions</button></div>
+          <TxnList txns={d.recent} p={p} compact />
+        </section>
       </div>
 
-      <section className="tile">
-        <div className="tile-head"><h2>Recent</h2><button className="mini" onClick={() => go('transactions')}>All transactions</button></div>
-        <TxnList txns={d.recent} p={p} compact />
-      </section>
+      <div id="fin-accounts" className="fin-recurring">
+        <Accounts p={p} send={send} publishedAt={publishedAt} />
+      </div>
     </>
   )
 }
@@ -495,7 +491,7 @@ function Accounts({ p, send, publishedAt }) {
             </ul>
           </section>
         )}
-        <section className="tile">
+        {rules.length > 0 && <section className="tile">
           <div className="tile-head"><h2>Sorting rules</h2><span className="meta">First match wins</span></div>
           <ul className="list">
             {rules.map((r) => (
@@ -506,7 +502,7 @@ function Accounts({ p, send, publishedAt }) {
             ))}
           </ul>
           <p className="meta fin-moves">New rules come from “Always use this” on a transaction.</p>
-        </section>
+        </section>}
       </div>
 
       <MacLink publishedAt={publishedAt} />
@@ -546,7 +542,7 @@ function MacLink({ publishedAt, first }) {
 export default function Finances() {
   const { snap, pending, error, clearError, send } = useMoney()
   const [params, setParams] = useSearchParams()
-  const asked = params.get('tab') === 'recurring' ? 'spending' : params.get('tab')
+  const asked = { recurring: 'spending', accounts: 'overview' }[params.get('tab')] || params.get('tab')
   const tab = TABS.some(([k]) => k === asked) ? asked : 'overview'
   const go = (k, anchor) => {
     setParams(k === 'overview' ? {} : { tab: k }, { replace: true })
@@ -570,27 +566,24 @@ export default function Finances() {
 
   return (
     <div className="page">
-      <PageHeader eyebrow={`From your Mac · ${ago(snap.published_at)}`} title="Finances">
-        <button className="btn sm" disabled={waiting} onClick={() => send('POST', '/api/sync', {}, 'Syncing banks')}>
-          <RefreshCw size={13} className={waiting ? 'spin' : ''} /> {waiting ? pending[0].label : 'Sync'}
-        </button>
-      </PageHeader>
+      <PageHeader eyebrow={`From your Mac · ${ago(snap.published_at)}${waiting ? ` · ${pending[0].label}` : ''}`} title="Finances" />
 
-      <div className="seg tabs-seg fin-tabs">
-        {TABS.map(([k, label, short]) => (
-          <button key={k} aria-pressed={tab === k} onClick={() => go(k)}>
-            {short ? <><span className="fin-long">{label}</span><span className="fin-short">{short}</span></> : label}
-          </button>
-        ))}
+      <div className="row gap fin-tabbar">
+        <div className="seg tabs-seg fin-tabs">
+          {TABS.map(([k, label]) => <button key={k} aria-pressed={tab === k} onClick={() => go(k)}>{label}</button>)}
+        </div>
+        <button className="icon-btn fin-sync" aria-label="Sync banks" title="Sync banks" disabled={waiting}
+          onClick={() => send('POST', '/api/sync', {}, 'Syncing banks')}>
+          <RefreshCw size={16} className={waiting ? 'spin' : ''} />
+        </button>
       </div>
 
       {slow && <p className="note">Waiting for your Mac. It picks up changes when it's on and the Money app is running.</p>}
       {error && <p className="note fin-alert" onClick={clearError}>{error}</p>}
 
-      {tab === 'overview' && <Overview p={p} go={go} />}
+      {tab === 'overview' && <Overview p={p} go={go} send={send} publishedAt={snap.published_at} />}
       {tab === 'spending' && <Spending p={p} send={send} />}
       {tab === 'transactions' && <Transactions p={p} send={send} />}
-      {tab === 'accounts' && <Accounts p={p} send={send} publishedAt={snap.published_at} />}
     </div>
   )
 }
