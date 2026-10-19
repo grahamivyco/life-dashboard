@@ -293,7 +293,7 @@ export default function Profile() {
       <Tabs phoneOnly value={at} onPick={jump} tabs={[
         { k: 'me', label: 'You', icon: UserRound }, { k: 'jobs', label: 'Jobs', icon: Briefcase },
         { k: 'housing', label: 'Housing', icon: Home }, { k: 'events', label: 'Events', icon: CalendarDays },
-        { k: 'documents', label: 'Documents', icon: FileText }, { k: 'settings', label: 'Settings', icon: Settings },
+        { k: 'documents', label: 'Documents', short: 'Docs', icon: FileText }, { k: 'settings', label: 'Settings', icon: Settings },
       ]} />
       <Head />
       <Section id="jobs" title="Jobs" summary={jobSummary} open={open === 'jobs'} setOpen={setOpen}>

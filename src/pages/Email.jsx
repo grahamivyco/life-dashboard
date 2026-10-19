@@ -490,7 +490,8 @@ export default function Email() {
   const toReply = (snap?.payload?.threads || []).filter((t) => replyIds.has(t.id) && pass(t))
   const shown = filter === 'reply' ? all.filter((t) => replyIds.has(t.id)) : all.filter(pass)
   const tab = live && filter === 'drafts' ? 'outbox' : view
-  const pick = (k) => { setFilter(k); setOpen(null) }
+  // Any filter but To reply is a list, so picking one always shows something different
+  const pick = (k) => { setFilter(k); setOpen(null); if (k !== 'reply') setView('inbox') }
 
   const showOptions = [...filters, ...(live ? [{ k: 'drafts', label: 'Drafts', icon: FilePen }] : [])]
 

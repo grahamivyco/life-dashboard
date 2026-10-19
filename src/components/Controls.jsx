@@ -28,9 +28,10 @@ export function Tabs({ tabs, value, onPick, phoneOnly }) {
         <button key={t.k} className={'m-tab' + (on ? ' active' : '')} aria-label={t.label} title={t.label}
           aria-pressed={on} onClick={() => onPick(t.k)}>
           <span className="nav-icon">
-            {Icon?.props ? Icon : Icon ? <Icon size={22} strokeWidth={on ? 2.1 : 1.6} /> : <span className="m-tab-word">{t.label}</span>}
+            {Icon?.props ? Icon : Icon ? <Icon size={20} strokeWidth={on ? 2.2 : 1.7} /> : <span className="m-tab-word">{t.label}</span>}
             {t.n ? <span className="badge">{t.n}</span> : null}
           </span>
+          {Icon && <span className="m-tab-label">{t.short || t.label}</span>}
         </button>
       )
     }), slot)

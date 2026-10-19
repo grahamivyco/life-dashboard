@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink, Link, useLocation } from 'react-router-dom'
-import { Menu, Settings, PenLine } from 'lucide-react'
+import { Menu, Settings } from 'lucide-react'
 import Avatar from './Avatar.jsx'
 import { sections, settingsSection } from '../sections.js'
 
@@ -47,12 +48,25 @@ export default function MobileNav({ counts }) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // Open: the whole app becomes a card pushed to the right (kept at its scroll spot), the drawer sits behind it.
+  // Close: the card slides back, then the page unlocks and scrolls to where it was.
   useEffect(() => {
-    document.body.classList.toggle('drawer-open', open)
-    if (!open) return () => document.body.classList.remove('drawer-open')
+    const body = document.body
+    if (!open) return
+    const y = window.scrollY
+    body.style.setProperty('--sy', `${-y}px`)
+    body.classList.add('drawer-lock', 'drawer-open')
     const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
     document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('keydown', onKey); document.body.classList.remove('drawer-open') }
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      body.classList.remove('drawer-open')
+      setTimeout(() => {
+        if (body.classList.contains('drawer-open')) return
+        body.classList.remove('drawer-lock')
+        window.scrollTo(0, y)
+      }, 420)
+    }
   }, [open])
 
   const t = open ? 0 : -1
@@ -70,6 +84,7 @@ export default function MobileNav({ counts }) {
 
       <nav className="m-tabs" id="m-tabs-slot" aria-label="Sections" />
 
+      {createPortal(<>
       <aside className={'m-drawer' + (open ? ' show' : '')} aria-label="Menu" aria-hidden={!open}>
         <Link to="/" className="m-drawer-title" tabIndex={t}>Life</Link>
         <div className="m-label">Pages</div>
@@ -80,10 +95,10 @@ export default function MobileNav({ counts }) {
         </NavLink>
         <div className="m-drawer-foot">
           <Link to="/profile#settings" className="icon-btn round-btn m-foot-btn" aria-label="Settings" tabIndex={t}><Settings size={19} /></Link>
-          <Link to="/" className="btn m-foot-pill" tabIndex={t}><PenLine size={16} />Brain dump</Link>
         </div>
       </aside>
       <button className="m-shade" aria-label="Close menu" tabIndex={-1} onClick={() => setOpen(false)} />
+      </>, document.body)}
     </div>
   )
 }
