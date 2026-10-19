@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronRight, ExternalLink, Sparkles, Paperclip, Download, Archive, Trash2, Send, RefreshCw } from 'lucide-react'
+import { ChevronRight, ExternalLink, Sparkles, Paperclip, Download, Archive, Trash2, Send, RefreshCw, Mic, Square, SkipForward } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
+import { useDictation } from '../useDictation.js'
 import { askClaude } from '../askClaude.js'
 import { gmail, nameOf } from '../gmail.js'
 import PageHeader from '../components/PageHeader.jsx'
@@ -219,6 +220,70 @@ function SnapshotThread({ t, queued, onQueued }) {
   )
 }
 
+// Skipped emails stay skipped until a new message arrives in the thread.
+const SKIP_KEY = 'email-skipped'
+const readSkips = () => { try { return JSON.parse(localStorage.getItem(SKIP_KEY) || '{}') } catch { return {} } }
+const saveSkip = (t) => { try { localStorage.setItem(SKIP_KEY, JSON.stringify({ ...readSkips(), [t.id]: t.date })) } catch { /* ignore */ } }
+
+// One email at a time: read it, send the draft (or another option, or your own words), or skip.
+function ReplyQueue({ items, live, onDone }) {
+  const t = items[0]
+  const [text, setText] = useState('')
+  const [more, setMore] = useState(false)
+  const [thread, setThread] = useState(null)
+  const { pending, send, undo } = useUndoSend()
+  const mic = useDictation(text, setText)
+
+  useEffect(() => {
+    if (!t) return
+    setText(t.replies[0].body); setMore(false); setThread(null)
+    if (live) gmail.thread(t.id).then((th) => th && setThread(th)).catch(() => {})
+  }, [t?.id])
+
+  if (!t) return <section className="tile empty-card"><b>All caught up.</b><span className="meta">Nothing waiting on a reply.</span></section>
+
+  const last = thread?.messages.filter((m) => !m.from.toLowerCase().includes(ME)).pop()
+  const body = last?.body || t.message || t.snippet
+  const blank = PH.test(text)
+  const go = () => {
+    mic.stop()
+    send('reply', () => (live && thread ? gmail.reply(thread, text, ME) : queueReply(t.id, t.from, text)), () => onDone(t, 'sent'))
+  }
+
+  return (
+    <section className="tile reply-card">
+      <div className="row between"><span className="meta">{items.length === 1 ? 'Last one' : `1 of ${items.length}`}</span><span className="meta">{when(t.date)}</span></div>
+      <div className="reply-from"><b>{t.from}</b><span className="clamp">{t.subject}</span></div>
+      <p className="msg-text reply-msg">{body}</p>
+      {last && <Files files={last.files} />}
+      <div className="row between">
+        <span className="meta">Your reply</span>
+        {t.replies.length > 1 && <button className="mini" onClick={() => setMore(!more)}>{more ? 'Hide options' : `${t.replies.length - 1} other options`}</button>}
+      </div>
+      {more && <ReplyOptions options={t.replies} value={text} onPick={(b) => { setText(b); setMore(false) }} />}
+      <div className={'compose' + (mic.listening ? ' listening' : '')}>
+        <textarea value={text} onChange={(e) => setText(e.target.value)} rows={7} placeholder="Type or tap the mic and talk" />
+        {mic.canTalk && (
+          <button className="mic" onClick={mic.toggle} aria-label={mic.listening ? 'Stop' : 'Talk'}>
+            {mic.listening ? <Square size={14} /> : <Mic size={16} />}
+          </button>
+        )}
+      </div>
+      {blank && <p className="hint">Fill in the [brackets] before sending.</p>}
+      <div className="row gap wrap">
+        {pending
+          ? <span className="sending">Sending… <button className="mini" onClick={undo}>Undo</button></span>
+          : <>
+              <button className="btn primary" disabled={!text.trim() || blank} onClick={go}><Send size={13} /> Send</button>
+              <button className="btn" onClick={() => { mic.stop(); saveSkip(t); onDone(t, 'skipped') }}><SkipForward size={13} /> Skip</button>
+            </>}
+        <a className="btn" href={t.url} target="_blank" rel="noreferrer">Gmail <ExternalLink size={12} /></a>
+      </div>
+      {!live && <p className="hint">Sends on the next sync.</p>}
+    </section>
+  )
+}
+
 function Connect({ onConnected }) {
   const [err, setErr] = useState('')
   if (!gmail.ready()) return <p className="note">Gmail sending is waiting on a one-time Google setup. Showing the latest synced inbox until then.</p>
@@ -235,7 +300,9 @@ export default function Email() {
   const snap = useSnapshot('email')
   const [live, setLive] = useState(gmail.ready() && gmail.connected())
   const [params] = useSearchParams()
-  const [tab, setTab] = useState(params.get('tab') || 'inbox')
+  const [tab, setTab] = useState(params.get('tab') || 'reply')
+  const [skips, setSkips] = useState(readSkips)
+  const [handled, setHandled] = useState({})
   const [filter, setFilter] = useState('all')
   const [open, setOpen] = useState(params.get('open'))
   const [threads, setThreads] = useState(null)
@@ -275,17 +342,17 @@ export default function Email() {
 
   const all = live ? threads || [] : snap?.payload?.threads || []
   const replies = Object.fromEntries((snap?.payload?.threads || []).map((t) => [t.id, t.replies]))
+  const toReply = (snap?.payload?.threads || []).filter((t) => t.replies?.length && !queued[t.id] && !handled[t.id] && skips[t.id] !== t.date)
   const shown = all.filter((t) => (filter === 'unread' ? t.unread : filter === 'important' ? t.important : true))
 
   return (
     <div className="page">
       <PageHeader eyebrow={live ? 'Gmail · live' : snap ? `Gmail · updated ${ago(snap.synced_at)}` : 'Gmail'} title="Email">
-        {live && (
-          <div className="seg">
-            <button aria-pressed={tab === 'inbox'} onClick={() => { setTab('inbox'); setOpen(null) }}>Inbox</button>
-            <button aria-pressed={tab === 'outbox'} onClick={() => { setTab('outbox'); setOpen(null) }}>Drafts{drafts?.length ? ` ${drafts.length}` : ''}</button>
-          </div>
-        )}
+        <div className="seg">
+          <button aria-pressed={tab === 'reply'} onClick={() => { setTab('reply'); setOpen(null) }}>To reply{toReply.length ? ` ${toReply.length}` : ''}</button>
+          <button aria-pressed={tab === 'inbox'} onClick={() => { setTab('inbox'); setOpen(null) }}>Inbox</button>
+          {live && <button aria-pressed={tab === 'outbox'} onClick={() => { setTab('outbox'); setOpen(null) }}>Drafts{drafts?.length ? ` ${drafts.length}` : ''}</button>}
+        </div>
         {tab === 'inbox' && (
           <div className="seg">
             {filters.map((f) => <button key={f.k} aria-pressed={filter === f.k} onClick={() => setFilter(f.k)}>{f.label}</button>)}
@@ -294,8 +361,16 @@ export default function Email() {
         {live && <button className="btn" onClick={load} disabled={busy} aria-label="Refresh"><RefreshCw size={13} className={busy ? 'spin' : ''} /></button>}
       </PageHeader>
 
-      {!live && <Connect onConnected={() => setLive(true)} />}
+      {!live && tab !== 'reply' && <Connect onConnected={() => setLive(true)} />}
       {err && <p className="error">{err}</p>}
+
+      {tab === 'reply' && (
+        <ReplyQueue items={toReply} live={live} onDone={(t, how) => {
+          setHandled((h) => ({ ...h, [t.id]: true }))
+          if (how === 'skipped') setSkips(readSkips())
+          else setQueued((q) => ({ ...q, [t.id]: !live }))
+        }} />
+      )}
 
       {tab === 'inbox' && (
         <ul className="tile list mail-list">
