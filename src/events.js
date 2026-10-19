@@ -19,10 +19,10 @@ const fromRow = (e) => ({
 const sameEvent = (a, b) =>
   a.title.trim().toLowerCase() === b.title.trim().toLowerCase() && Math.abs(a.start - b.start) < 60e3
 
-// Upcoming events for the next `days` days: Google Calendar (hourly snapshot) plus
-// rows in public.events (brain dumps, added here). A series that repeats 3+ times
-// in a week (work blocks, daily habits) moves to `routines` so the days stay readable.
-export function useUpcoming(days) {
+// Every event we know about: Google Calendar (hourly snapshot) plus rows in
+// public.events (brain dumps, added here or from Explore). A series that repeats
+// 3+ times in a week (work blocks, daily habits) is flagged `routine`.
+export function useEvents() {
   const snap = useSnapshot('events')
   const [rows, setRows] = useState([])
 
@@ -34,14 +34,9 @@ export function useUpcoming(days) {
   useEffect(() => { load() }, [load])
 
   const from = new Date(); from.setHours(0, 0, 0, 0)
-  const to = new Date(from); to.setDate(to.getDate() + days)
-  const now = Date.now()
-
   const cal = (snap?.payload?.events || []).map(fromCalendar)
   const mine = rows.map(fromRow).filter((r) => !cal.some((c) => (r.gcalId && c.id === `g-${r.gcalId}`) || sameEvent(c, r)))
-  const all = [...cal, ...mine]
-    .filter((e) => e.start < to && (e.end ? e.end > now : e.start >= from))
-    .sort((a, b) => a.start - b.start || a.allDay - b.allDay)
+  const all = [...cal, ...mine].sort((a, b) => a.start - b.start || b.allDay - a.allDay)
 
   const bySeries = {}
   for (const e of all) if (e.series) (bySeries[e.series] ||= []).push(e)
@@ -50,6 +45,7 @@ export function useUpcoming(days) {
     for (const e of bySeries[k]) { const w = Math.floor((e.start - from) / (7 * 864e5)); weeks[w] = (weeks[w] || 0) + 1 }
     return Math.max(...Object.values(weeks)) >= 3
   }))
+  for (const e of all) e.routine = routineIds.has(e.series)
 
   const routines = [...routineIds].map((k) => {
     const xs = bySeries[k]
@@ -58,20 +54,35 @@ export function useUpcoming(days) {
     return { id: k, title: xs[0].title, when, first: xs[0] }
   })
 
-  const events = all.filter((e) => !routineIds.has(e.series))
+  async function remove(id) {
+    setRows((xs) => xs.filter((x) => x.id !== id))
+    await supabase.from('events').delete().eq('id', id)
+  }
+
+  async function add(ev) {
+    const { data } = await supabase.from('events').insert(ev).select().single()
+    if (data) setRows((xs) => [...xs, data])
+    return data
+  }
+
+  return { all, routines, picks: snap?.payload?.picks || [], picksCity: snap?.payload?.picks_city, syncedAt: snap?.synced_at, reload: load, remove, add }
+}
+
+// Upcoming events for the next `days` days, routines moved out so the days stay readable.
+export function useUpcoming(days) {
+  const { all, routines, syncedAt, reload, remove } = useEvents()
+  const from = new Date(); from.setHours(0, 0, 0, 0)
+  const to = new Date(from); to.setDate(to.getDate() + days)
+  const now = Date.now()
+  const events = all.filter((e) => !e.routine && e.start < to && (e.end ? e.end > now : e.start >= from))
+
   const groups = []
   for (const e of events) {
     const k = dayKey(e.start < from ? from : e.start)
     if (groups.at(-1)?.k !== k) groups.push({ k, at: e.start < from ? from : e.start, items: [] })
     groups.at(-1).items.push(e)
   }
-
-  async function remove(id) {
-    setRows((xs) => xs.filter((x) => x.id !== id))
-    await supabase.from('events').delete().eq('id', id)
-  }
-
-  return { events, groups, routines, syncedAt: snap?.synced_at, reload: load, remove }
+  return { events, groups, routines, syncedAt, reload, remove }
 }
 
 export const dayLabel = (d, short = false) => {

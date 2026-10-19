@@ -130,6 +130,17 @@ const fixtures = {
       { id: 'c4', title: 'Sagrada Família', start: at(6, 17), end: at(6, 18), calendar: 'Graham', url: gcal },
       { id: 'c5', title: 'La Castanyada', start: day(12), all_day: true, calendar: 'Graham', url: gcal },
       { id: 'c6', title: 'Tess’s wedding', start: day(26), all_day: true, location: 'Sitges', calendar: 'Family', url: gcal },
+      { id: 'c7', title: 'Bachata class', start: at(1, 19, 30), end: at(1, 21), location: 'Imperial Meeting Point', calendar: 'Dance & Movement', url: gcal },
+      { id: 'c8', title: 'Date night', start: at(3, 20), end: at(3, 23), calendar: 'B & G Calendar', url: gcal },
+      { id: 'c9', title: 'Therapy', start: at(4, 17), end: at(4, 18), calendar: 'Self-Care & Mental Wellness', url: gcal },
+      { id: 'c10', title: 'Contact improv jam', start: at(9, 18), end: at(9, 20), calendar: 'Dance & Movement', url: gcal },
+    ], picks_city: 'Barcelona', picks: [
+      { id: 'p1', title: 'Queer salsa class and social', cats: ['dance', 'latin'], where: 'Centre Cívic Pati Llimona', price: 'Free · register', url: 'https://example.com', note: 'Workshop, then a social. Everyone rotates lead and follow.', slots: [{ start: at(5, 11), end: at(5, 12, 30) }] },
+      { id: 'p2', title: 'Founders run club', cats: ['founders', 'move', 'net'], where: 'Barceloneta', price: null, url: 'https://example.com', note: 'Easy-pace run, then coffee.', weekly: 'Saturdays', slots: [{ start: at(5, 9, 20), end: at(5, 11) }] },
+      { id: 'p3', title: 'Friends of Figma meetup', cats: ['design', 'net'], where: 'MediaTIC, Poblenou', price: 'Free · limited spots', url: 'https://example.com', note: 'Design talk, then networking.', slots: [{ start: at(8, 18, 30), end: at(8, 20) }] },
+      { id: 'p4', title: 'Disco night', cats: ['club'], where: 'Sala Apolo', price: '€15', url: 'https://example.com', note: 'Pop room and house room.', slots: [{ start: at(5, 23, 55), end: at(6, 5) }] },
+      { id: 'p5', title: 'Food market weekend', cats: ['food'], where: 'Glòries', price: 'Free', url: 'https://example.com', note: 'Stalls and chef demos.', slots: [{ start: day(12), end: day(14), all_day: true }] },
+      { id: 'p6', title: 'Queer comedy open mic', cats: ['culture'], where: 'Comedy Clubhouse', price: 'Free', url: 'https://example.com', note: null, slots: [{ start: at(15, 21), end: at(15, 22, 45) }] },
     ] } },
     { section: 'finances', synced_at: iso(0.5), payload: {
       currency: 'USD', source: 'Era', warnings: [],
