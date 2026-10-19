@@ -14,7 +14,8 @@ const SHOW = [
 ]
 
 // Scroll back through your life day by day: brain dumps, events and finished items.
-export default function Timeline() {
+// embedded: shown as Today's History tab, so it skips its own header and bottom-bar tabs.
+export default function Timeline({ embedded }) {
   const [all, setAll] = useState([])
   const [show, setShow] = useState('all')
 
@@ -45,10 +46,10 @@ export default function Timeline() {
   }
 
   return (
-    <div className="page">
-      <PageHeader eyebrow="Last 60 days" title="Timeline" />
-      <Controls><span className="desk-only"><ViewMenu label="Show" options={SHOW} value={show} onPick={setShow} /></span></Controls>
-      <Tabs phoneOnly tabs={SHOW} value={show} onPick={setShow} />
+    <div className={embedded ? 'stack' : 'page'}>
+      {!embedded && <PageHeader eyebrow="Last 60 days" title="Timeline" />}
+      <Controls><span className={embedded ? '' : 'desk-only'}><ViewMenu label="Show" options={SHOW} value={show} onPick={setShow} /></span></Controls>
+      {!embedded && <Tabs phoneOnly tabs={SHOW} value={show} onPick={setShow} />}
       {days.length === 0 && <Empty title="Nothing yet.">Your days fill in as you add brain dumps and events.</Empty>}
       <div className="timeline">
         {days.map((g) => (

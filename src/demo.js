@@ -203,8 +203,8 @@ const fixtures = {
 function builder(table) {
   let rows = [...(fixtures[table] || [])]
   const q = {
-    select: () => q, order: () => q, limit: () => q, not: () => q, is: () => q, like: () => q,
-    gte: () => q, lt: () => q, lte: () => q, neq: () => q,
+    select: () => q, order: () => q, limit: () => q, not: (k, op, v) => { if (op === 'is' && v === null) rows = rows.filter((r) => r[k] != null); return q }, is: () => q, like: () => q,
+    gte: () => q, lt: () => q, lte: (k, v) => { rows = rows.filter((r) => r[k] === undefined || r[k] == null || String(r[k]) <= String(v)); return q }, neq: () => q,
     eq: (k, v) => { rows = rows.filter((r) => r[k] === undefined || r[k] === v); return q },
     in: (k, vs) => { rows = rows.filter((r) => r[k] === undefined || vs.includes(r[k])); return q },
     insert: () => q, upsert: () => q, update: () => q, upsert: () => q, delete: () => q,
