@@ -14,12 +14,23 @@ function BioSetting({ email }) {
     if (on) { disableBio(); setOn(false); return }
     try { await enableBio(email); setOn(true) } catch { setErr(`Couldn’t set up ${bioName()}.`) }
   }
+  const addPasskey = async () => {
+    setErr('')
+    const { error } = await supabase.auth.registerPasskey()
+    setErr(error ? `Couldn’t add it: ${error.message}` : 'Added. Next time, sign in with ' + bioName() + '.')
+  }
   return (
+    <>
     <div className="row between">
-      <span>Unlock with {bioName()} on this device</span>
-      <button className="btn" onClick={toggle}>{on ? 'Turn off' : 'Turn on'}</button>
-      {err && <p className="error">{err}</p>}
+      <span>Sign in with {bioName()}</span>
+      <button className="btn" onClick={addPasskey}>Add to this device</button>
     </div>
+    <div className="row between">
+      <span>Also ask for {bioName()} when opening the app</span>
+      <button className="btn" onClick={toggle}>{on ? 'Turn off' : 'Turn on'}</button>
+    </div>
+    {err && <p className="hint">{err}</p>}
+    </>
   )
 }
 

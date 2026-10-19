@@ -70,7 +70,7 @@ function Shell({ session }) {
       </main>
       <RecordingPill />
       <AskClaude />
-      <BioLock session={session} />
+      <BioLock />
     </div>
   )
 }

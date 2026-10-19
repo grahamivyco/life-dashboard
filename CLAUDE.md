@@ -4,7 +4,7 @@ Graham Ivy's personal app. Live at https://grahamivyco.github.io/life-dashboard/
 
 ## Stack
 - React + Vite (plain JSX), HashRouter, deployed to GitHub Pages by `.github/workflows/deploy.yml` on every push to `main`
-- Supabase project `wruevdyyhuizyydibzar` (eu-west-3). Email code login (`signInWithOtp` + `verifyOtp`, works inside the home-screen app; the email template must include `{{ .Token }}`). Optional Face ID / Touch ID unlock per device (`src/biometric.js`, `BioLock`): a WebAuthn platform passkey gating the saved session, asked on open and after 5 min away; toggle in Settings. Every table is owner-only via RLS.
+- Supabase project `wruevdyyhuizyydibzar` (eu-west-3). Sign-in is a Supabase passkey (`signInWithPasskey`, Face ID / Touch ID; RP ID grahamivyco.github.io, synced by iCloud Keychain). Fallback is the email magic link (no code: custom SMTP isn't set up, so templates can't change). After any sign-in without a passkey, `BioLock` offers once to `registerPasskey()`; Settings can add one too. Settings also has an optional local Face ID lock on open (`src/biometric.js`). The magic link uses PKCE, so it must be requested and opened in the same browser (Safari, not the home-screen app). Every table is owner-only via RLS.
 - Graham's user_id: `c2cbf3bf-95b2-4c27-bc60-c598543f4cfa`
 
 ## Working rules
