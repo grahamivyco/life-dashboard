@@ -80,7 +80,7 @@ export default function MobileNav({ counts }) {
         <button className="icon-btn round-btn m-menu" onClick={() => setOpen((o) => !o)} aria-label="Menu" aria-expanded={open}>
           <Menu size={19} />
         </button>
-        <span className="m-title">{current?.label || 'Life'}</span>
+        <span className="m-title"><span className="m-title-page">{current?.label || 'Life'}</span><span id="m-title-slot" /></span>
         <NavLink to="/profile" aria-label="Profile" className={({ isActive }) => 'm-profile' + (isActive ? ' active' : '')}>
           <Avatar size={30} />
         </NavLink>

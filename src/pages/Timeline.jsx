@@ -7,8 +7,8 @@ import ViewMenu from '../components/ViewMenu.jsx'
 import { History, PenLine, CalendarDays, CircleCheck } from 'lucide-react'
 
 const SHOW = [
-  { k: 'all', label: 'Everything', short: 'All', icon: History },
-  { k: 'dump', label: 'Brain dumps', short: 'Dumps', icon: PenLine },
+  { k: 'all', label: 'Everything', title: 'Timeline', icon: History },
+  { k: 'dump', label: 'Brain dumps', icon: PenLine },
   { k: 'event', label: 'Events', icon: CalendarDays },
   { k: 'done', label: 'Done', icon: CircleCheck },
 ]

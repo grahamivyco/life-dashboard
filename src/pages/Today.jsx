@@ -20,9 +20,9 @@ function NumTile({ label, n, to, onClick, on }) {
     : <button className={'tile stat num-tile' + (on ? ' on' : '')} onClick={onClick} aria-expanded={on}>{body}</button>
 }
 const kinds = [
-  { k: 'goal', label: 'Goals', icon: Target },
-  { k: 'idea', label: 'Ideas', icon: Lightbulb },
-  { k: 'note', label: 'Notes', icon: StickyNote },
+  { k: 'goal', label: 'Goals', title: 'Today', icon: Target },
+  { k: 'idea', label: 'Ideas', title: 'Today', icon: Lightbulb },
+  { k: 'note', label: 'Notes', title: 'Today', icon: StickyNote },
 ]
 
 export default function Today() {

@@ -21,7 +21,9 @@ export function Tabs({ tabs, value, onPick, phoneOnly }) {
   const slot = usePhoneSlot(phone)
   if (phone) {
     if (!slot) return null
-    return createPortal(tabs.map((t) => {
+    const on = tabs.find((t) => t.k === value)
+    const title = document.getElementById('m-title-slot')
+    return <>{title && on && createPortal(on.title || on.label, title)}{createPortal(tabs.map((t) => {
       const Icon = t.icon
       const on = value === t.k
       return (
@@ -31,10 +33,9 @@ export function Tabs({ tabs, value, onPick, phoneOnly }) {
             {Icon?.props ? Icon : Icon ? <Icon size={20} strokeWidth={on ? 2.2 : 1.7} /> : <span className="m-tab-word">{t.label}</span>}
             {t.n ? <span className="badge">{t.n}</span> : null}
           </span>
-          {Icon && <span className="m-tab-label">{t.short || t.label}</span>}
         </button>
       )
-    }), slot)
+    }), slot)}</>
   }
   if (phoneOnly) return null
   return (
