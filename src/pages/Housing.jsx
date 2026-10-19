@@ -5,6 +5,7 @@ import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago } from '../lib.js'
+import ViewMenu from '../components/ViewMenu.jsx'
 
 const eur = (n) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
 const DAY = 864e5
@@ -215,18 +216,11 @@ export default function Housing() {
       <Specs specs={specs} />
 
       <div className="row between wrap gap">
-        <div className="seg">
-          {[['fits', 'Fits'], ['new', 'New'], ['all', 'All'], ['saved', 'Saved'], ['hidden', 'Hidden']].map(([k, label]) => (
-            (k !== 'hidden' || count('hidden') > 0) && (
-              <button key={k} aria-pressed={view === k} onClick={() => setView(k)}>{label} <span className="seg-n">{count(k)}</span></button>
-            )
-          ))}
-        </div>
-        <div className="seg">
-          {[['newest', 'Newest'], ['cheapest', 'Cheapest'], ['size', 'Biggest']].map(([k, label]) => (
-            <button key={k} aria-pressed={sort === k} onClick={() => setSort(k)}>{label}</button>
-          ))}
-        </div>
+        <ViewMenu label="Show" value={view} onPick={setView}
+          options={[['fits', 'Fits'], ['new', 'New'], ['all', 'All'], ['saved', 'Saved'], ['hidden', 'Hidden']]
+            .filter(([k]) => k !== 'hidden' || count('hidden') > 0).map(([k, label]) => ({ k, label, n: count(k) }))} />
+        <ViewMenu label="Sort" value={sort} onPick={setSort}
+          options={[['newest', 'Newest'], ['cheapest', 'Cheapest'], ['size', 'Biggest']].map(([k, label]) => ({ k, label }))} />
       </div>
 
       {shown.length ? (

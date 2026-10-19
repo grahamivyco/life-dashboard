@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Check, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, RefreshCw, Search, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ExternalLink, RefreshCw, Search, Trash2 } from 'lucide-react'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago } from '../lib.js'
 import { amt, makeKey, usd, useMoney } from '../money.js'
 import { cancelGuide } from '../subscriptions.js'
+import ViewMenu from '../components/ViewMenu.jsx'
 
 const TABS = [
   ['overview', 'Overview'], ['spending', 'Spending'],
@@ -171,33 +172,6 @@ function Overview({ p, go }) {
 
 const PERIODS = [['week', 'Week'], ['month', 'Month'], ['quarter', 'Quarter'], ['year', 'Year']]
 
-function PeriodMenu({ value, onPick }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef(null)
-  useEffect(() => {
-    if (!open) return
-    const close = (e) => { if (!ref.current?.contains(e.target)) setOpen(false) }
-    document.addEventListener('pointerdown', close)
-    return () => document.removeEventListener('pointerdown', close)
-  }, [open])
-  return (
-    <div className="fin-menu" ref={ref}>
-      <button className="btn sm" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
-        {PERIODS.find(([k]) => k === value)[1]} <ChevronDown size={13} />
-      </button>
-      {open && (
-        <div className="fin-menu-list" role="menu">
-          {PERIODS.map(([k, label]) => (
-            <button key={k} role="menuitemradio" aria-checked={k === value} onClick={() => { setOpen(false); onPick(k) }}>
-              {label}{k === value && <Check size={14} />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
 function Spending({ p, send }) {
   const [period, setPeriod] = useState('month')
   const [offset, setOffset] = useState(0)
@@ -216,7 +190,7 @@ function Spending({ p, send }) {
           <span className="fin-period">{s.title}</span>
           <button className="icon-btn" aria-label="Later" disabled={offset === 0} onClick={() => setOffset(offset - 1)}><ChevronRight size={16} /></button>
         </div>
-        <PeriodMenu value={period} onPick={(k) => { setPeriod(k); setOffset(0) }} />
+        <ViewMenu label="Period" options={PERIODS.map(([k, label]) => ({ k, label }))} value={period} onPick={(k) => { setPeriod(k); setOffset(0) }} />
       </div>
 
       <div className="stats even fin-stats">
@@ -246,10 +220,8 @@ function Spending({ p, send }) {
         <section className="tile">
           <div className="tile-head">
             <h2>Where it went</h2>
-            <div className="seg">
-              <button aria-pressed={!byStore} onClick={() => setByStore(false)}>Category</button>
-              <button aria-pressed={byStore} onClick={() => setByStore(true)}>Store</button>
-            </div>
+            <ViewMenu label="Group by" options={[{ k: 'category', label: 'Category' }, { k: 'store', label: 'Store' }]}
+              value={byStore ? 'store' : 'category'} onPick={(k) => setByStore(k === 'store')} />
           </div>
           <ul className="list">
             {rows.map((c) => (

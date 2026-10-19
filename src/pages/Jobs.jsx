@@ -6,6 +6,7 @@ import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { fmtDay } from '../lib.js'
+import ViewMenu from '../components/ViewMenu.jsx'
 
 // Jobs: public.jobs (moved from the Job Hub) and public.job_profile. PDFs live in the private
 // job-docs bucket at <user id>/<doc path>. The daily digest's picks are jobs rows with extra.digest;
@@ -612,10 +613,8 @@ export default function Jobs() {
       <PageHeader title="Jobs">
         {current === 'digest' && (
           <>
-            <div className="seg icons">
-              <button aria-pressed={view === 'one'} onClick={() => pickView('one')} aria-label="One at a time" title="One at a time"><Layers size={14} /></button>
-              <button aria-pressed={view === 'list'} onClick={() => pickView('list')} aria-label="List" title="List"><List size={14} /></button>
-            </div>
+            <ViewMenu options={[{ k: 'one', label: 'One at a time', icon: <Layers size={14} /> }, { k: 'list', label: 'List', icon: <List size={14} /> }]}
+              value={view} onPick={pickView} />
             <button className="btn" onClick={() => setSearching(!searching)}><Search size={13} /> Search</button>
           </>
         )}

@@ -8,6 +8,7 @@ import ItemRow, { loadRequests } from '../components/ItemRow.jsx'
 import { greeting } from '../lib.js'
 import { useUpcoming } from '../events.js'
 import { useToReply, useJobsToApply, useHousingFits } from '../catchup.js'
+import ViewMenu from '../components/ViewMenu.jsx'
 
 // A section tile: just the label and its number. Links into the page, or toggles a list.
 function NumTile({ label, n, to, onClick, on }) {
@@ -99,11 +100,7 @@ export default function Today() {
 
       <section className="tile">
         <div className="tile-head">
-          <div className="seg">
-            {kinds.map((x) => (
-              <button key={x.k} aria-pressed={kind === x.k} onClick={() => setKind(x.k)}>{x.label}</button>
-            ))}
-          </div>
+          <ViewMenu label="Show" options={kinds} value={kind} onPick={setKind} />
         </div>
         <ul className="list">
           {items.map((i) => (

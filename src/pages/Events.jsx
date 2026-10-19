@@ -5,6 +5,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import { useEvents, toDate, CATS } from '../events.js'
 import { useProfile } from '../profile.js'
 import { ago, dayKey, fmtTime } from '../lib.js'
+import ViewMenu from '../components/ViewMenu.jsx'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -144,11 +145,11 @@ function Calendar({ all, remove }) {
   return (
     <>
       <div className="cal-bar">
-        <div className="seg icons">
-          <button aria-pressed={view === 'day'} onClick={() => setView('day')} aria-label="Day" title="Day"><Square size={14} /></button>
-          <button aria-pressed={view === 'week'} onClick={() => setView('week')} aria-label="Week" title="Week"><Columns3 size={14} /></button>
-          <button aria-pressed={view === 'month'} onClick={() => setView('month')} aria-label="Month" title="Month"><Grid3x3 size={14} /></button>
-        </div>
+        <ViewMenu options={[
+          { k: 'day', label: 'Day', icon: <Square size={14} /> },
+          { k: 'week', label: 'Week', icon: <Columns3 size={14} /> },
+          { k: 'month', label: 'Month', icon: <Grid3x3 size={14} /> },
+        ]} value={view} onPick={setView} />
         <div className="cal-nav">
           <button className="icon-btn" onClick={() => step(-1)} aria-label="Previous"><ChevronLeft size={16} /></button>
           <h2 className="cal-range">{rangeTitle(view, from, to)}</h2>
@@ -304,10 +305,8 @@ export default function Events() {
   return (
     <div className="page">
       <PageHeader eyebrow={syncedAt ? `Google Calendar · updated ${ago(syncedAt)}` : 'Google Calendar syncs hourly'} title="Events">
-        <div className="seg icons">
-          <button aria-pressed={tab === 'calendar'} onClick={() => setTab('calendar')} aria-label="Calendar" title="Calendar"><CalendarDays size={14} /></button>
-          <button aria-pressed={tab === 'explore'} onClick={() => setTab('explore')} aria-label="Explore" title="Explore"><Search size={14} /></button>
-        </div>
+        <ViewMenu options={[{ k: 'calendar', label: 'Calendar', icon: <CalendarDays size={14} /> }, { k: 'explore', label: 'Explore', icon: <Search size={14} /> }]}
+          value={tab} onPick={setTab} />
         <button className={'btn' + (adding ? '' : ' primary')} onClick={() => setAdding((a) => !a)}>{adding ? 'Cancel' : <><Plus size={14} /> Add event</>}</button>
       </PageHeader>
 

@@ -9,6 +9,7 @@ import { LANGS, langName, translate, detect, canTranslate } from '../translate.j
 import { gmail, nameOf } from '../gmail.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago, fmtTime, fmtDay } from '../lib.js'
+import ViewMenu from '../components/ViewMenu.jsx'
 
 const ME = 'grahamivy.co@gmail.com'
 const UNDO_MS = 5000
@@ -493,14 +494,9 @@ export default function Email() {
   return (
     <div className="page">
       <PageHeader eyebrow={live ? 'Gmail · live' : snap ? `Gmail · updated ${ago(snap.synced_at)}` : 'Gmail'} title="Email">
-        <div className="seg icons">
-          <button aria-pressed={tab === 'reply'} onClick={() => { setView('reply'); if (filter === 'drafts') setFilter('all'); setOpen(null) }} aria-label="One at a time" title="One at a time"><Layers size={14} /></button>
-          <button aria-pressed={tab === 'inbox'} onClick={() => { setView('inbox'); if (filter === 'drafts') setFilter('all'); setOpen(null) }} aria-label="List" title="List"><List size={14} /></button>
-        </div>
-        <div className="seg">
-          {filters.map((f) => <button key={f.k} aria-pressed={filter === f.k} onClick={() => pick(f.k)}>{f.label}</button>)}
-          {live && <button aria-pressed={filter === 'drafts'} onClick={() => pick('drafts')}>Drafts</button>}
-        </div>
+        <ViewMenu options={[{ k: 'reply', label: 'One at a time', icon: <Layers size={14} /> }, { k: 'inbox', label: 'List', icon: <List size={14} /> }]}
+          value={tab === 'outbox' ? 'inbox' : tab} onPick={(k) => { setView(k); if (filter === 'drafts') setFilter('all'); setOpen(null) }} />
+        <ViewMenu label="Show" options={[...filters, ...(live ? [{ k: 'drafts', label: 'Drafts' }] : [])]} value={filter} onPick={pick} />
         {live && <button className="btn" onClick={load} disabled={busy}><RefreshCw size={13} className={busy ? 'spin' : ''} /> Refresh</button>}
       </PageHeader>
 
