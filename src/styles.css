@@ -516,3 +516,4 @@ section.tile .list.jobs { padding: 0; }
 .sub-amt { width: 96px; height: 32px; padding: 0 10px; text-align: right; font: inherit; font-size: 13px; border: 1px solid var(--line); border-radius: 99px; background: var(--surface); }
 .tr-toggle { justify-self: start; align-self: flex-start; }
 .lang-seg button { padding: 0 10px; }
+.gap-s { gap: 8px; }

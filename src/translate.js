@@ -28,7 +28,10 @@ export async function translate(text, to, from) {
   const key = `${from}>${to}`
   try {
     translators[key] ||= globalThis.Translator.create({ sourceLanguage: from, targetLanguage: to })
-    return await (await translators[key]).translate(text)
+    // Line by line, so greetings, paragraphs and the signature keep their breaks
+    const t = await translators[key]
+    const lines = await Promise.all(text.split('\n').map((l) => (l.trim() ? t.translate(l) : l)))
+    return lines.join('\n')
   } catch {
     delete translators[key]
     return null

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronRight, ExternalLink, Sparkles, Paperclip, Download, Archive, Trash2, Send, RefreshCw, Mic, Square, SkipForward, Layers, List } from 'lucide-react'
+import { ChevronRight, ExternalLink, Sparkles, Paperclip, Download, Archive, Trash2, Send, RefreshCw, Mic, Square, SkipForward, Layers, List, LoaderCircle } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import { useDictation } from '../useDictation.js'
@@ -96,16 +96,18 @@ function useReplyLang(text, setText) {
   const [busy, setBusy] = useState(null)
   const [note, setNote] = useState('')
   const versions = useRef(null)
-  const reset = (body, tr, l) => { versions.current = tr || null; setText(body); setLang(l || null); setNote(''); setBusy(null) }
+  const reset = (body, tr, l) => { versions.current = tr || null; setText(body); setLang(l || 'en'); setNote(''); setBusy(null) }
   const to = async (k) => {
     if (k === lang || busy || !text.trim()) return
     setNote('')
     const pre = versions.current
     if (pre && pre[k] && Object.values(pre).includes(text)) { setText(pre[k]); setLang(k); return }
     setBusy(k)
-    const out = await translate(text, k, lang || undefined)
+    const from = lang || await detect(text)
+    const out = from ? await translate(text, k, from) : null
     setBusy(null)
-    if (out) { setText(out); setLang(k); return }
+    // Remember both versions so switching back is instant and exact
+    if (out) { versions.current = { ...(pre && Object.values(pre).includes(text) ? pre : {}), [from]: text, [k]: out }; setText(out); setLang(k); return }
     await askClaude(`Translate this email reply into ${langName(k)}. Keep the meaning and tone. Reply with only the translation.\n\n${text}`)
     setNote(`Sent to Claude. The ${langName(k)} version shows up in the ✦ panel.`)
   }
@@ -114,10 +116,13 @@ function useReplyLang(text, setText) {
 
 function LangSwitch({ rl }) {
   return (
-    <div className="seg lang-seg" aria-label="Reply language">
-      {LANGS.map((l) => (
-        <button key={l.k} aria-pressed={rl.lang === l.k} onClick={() => rl.to(l.k)}>{rl.busy === l.k ? '…' : l.label}</button>
-      ))}
+    <div className="row gap-s">
+      <div className="seg lang-seg" aria-label="Reply language">
+        {LANGS.map((l) => (
+          <button key={l.k} aria-pressed={rl.lang === l.k} onClick={() => rl.to(l.k)}>{l.label}</button>
+        ))}
+      </div>
+      {rl.busy && <LoaderCircle size={15} className="spin muted-icon" aria-label="Translating" />}
     </div>
   )
 }
