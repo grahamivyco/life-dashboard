@@ -547,6 +547,8 @@ section.tile .list.jobs { padding: 0; }
 .lang-seg button { padding: 0 10px; }
 .gap-s { gap: 8px; }
 .home-miss { font-size: 12px; color: var(--muted); }
+.home-contact { display: flex; gap: 8px; margin-top: 6px; }
+.home-contact .btn { display: inline-flex; align-items: center; gap: 6px; }
 .specs .dump-toggle { min-width: 0; }
 .specs .dump-toggle > span:nth-child(2) { flex: none; }
 .specs-body { padding-left: 12px; }

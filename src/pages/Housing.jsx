@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Star, EyeOff, Eye, Home } from 'lucide-react'
+import { Star, EyeOff, Eye, Home, MessageCircle, Send } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
@@ -27,7 +27,33 @@ const SOURCES = [
 ]
 const sourceLabel = (k) => SOURCES.find((x) => x.k === k)?.label || k
 
-export const DEFAULT_SPECS = { max_price: 1600, min_beds: 3, balcony: true, exterior: false, lift: false, ac: false, areas: [] }
+export const DEFAULT_SPECS = { max_price: 1500, min_beds: 2, balcony: true, exterior: true, lift: false, ac: false, areas: ['Eixample', 'Gràcia', 'Ciutat Vella', 'Born', 'Gòtic', 'Raval', 'Barceloneta', 'Sant Antoni'] }
+
+const fold = (t) => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+// Same flat on idealista's English and Spanish pages, or with tracking params, counts once
+const normUrl = (u) => (u || '').replace(/^https?:\/\/(www\.)?/, '').replace(/\?.*$/, '').replace(/\/(en|es|ca)\//, '/').replace(/\/$/, '')
+function dedupe(list) {
+  const seen = new Set()
+  return list.filter((l) => {
+    const k = /^https?:/.test(l.url || '') ? normUrl(l.url) : l.id
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
+}
+
+// Spanish first message to the advertiser, signed as Graham
+export const draftMessage = (l) => [
+  `Hola, buenas. Os escribo por el piso${l.street ? ` de ${l.street}` : ''}${l.area ? ` (${l.area})` : ''} de ${eur(l.price)}/mes: ${l.url}`,
+  '¿Sigue disponible? Somos dos personas y buscamos un alquiler de larga duración.',
+  '¿Me podéis confirmar que el balcón es privado y da a la calle, no a un patio interior?',
+  'Nos encantaría verlo esta semana si os va bien. Muchas gracias.',
+  'Graham',
+].join('\n\n')
+
+const benMessage = (l) => `Flat for us? ${eur(l.price)}/month, ${[l.beds != null && `${l.beds} bed`, l.street, l.area].filter(Boolean).join(', ')}. ${l.url}`
+const waNumber = (p) => (p || '').replace(/\D/g, '').replace(/^(?=[6789]\d{8}$)/, '34')
 
 export const specsSummary = (specs) => [
   specs.max_price && `Up to ${eur(specs.max_price)}`,
@@ -44,11 +70,13 @@ export function misses(l, s) {
   else if (s.min_beds && l.beds != null && l.beds < s.min_beds) out.push(`${l.beds} bed`)
   if (s.balcony && l.balcony !== true && l.terrace !== true && (l.balcony === false || l.terrace === false || l.outdoor === false)) out.push('No balcony')
   if (s.exterior && l.exterior === false) out.push('Interior')
+  if (s.balcony && l.balcony_street === false) out.push('Balcony faces inside')
+  if (s.long_term && l.long_term === false) out.push('Short-term')
   if (s.lift && l.lift === false) out.push('No lift')
   if (s.ac && l.ac === false) out.push('No A/C')
   if (s.areas?.length) {
-    const where = `${l.area || ''} ${l.district || ''}`.toLowerCase()
-    if (where.trim() && !s.areas.some((a) => where.includes(a.toLowerCase()))) out.push('Outside your areas')
+    const where = fold(`${l.area || ''} ${l.district || ''}`)
+    if (where.trim() && !s.areas.some((a) => where.includes(fold(a)))) out.push('Outside your areas')
   }
   return out
 }
@@ -69,7 +97,7 @@ function Listing({ l, mark, onMark, miss }) {
     l.floor && `Floor ${l.floor}`,
     l.size_m2 && `${eur(l.price / l.size_m2)}/m²`,
   ].filter(Boolean)
-  const tags = [l.kind === 'room' && 'Room', l.balcony && 'Balcony', l.terrace && 'Terrace', l.exterior && 'Exterior', l.lift && 'Lift', l.ac && 'A/C'].filter(Boolean)
+  const tags = [l.kind === 'room' && 'Room', l.balcony_street ? 'Street balcony' : l.balcony && 'Balcony', l.terrace && 'Terrace', l.exterior && 'Exterior', l.lift && 'Lift', l.ac && 'A/C', l.tiles && 'Tiled floors'].filter(Boolean)
 
   return (
     <li className={'tile home' + (l.gone ? ' gone' : '')}>
@@ -103,9 +131,29 @@ function Listing({ l, mark, onMark, miss }) {
           </div>
         )}
         {miss.length > 0 && <span className="home-miss">{miss.join(' · ')}</span>}
-        <span className="meta">{sourceLabel(l.source || 'idealista')} · seen {ago(l.first_seen)}</span>
+        <span className="meta">{[sourceLabel(l.source || 'idealista'), l.advertiser, `seen ${ago(l.first_seen)}`].filter(Boolean).join(' · ')}</span>
+        {!l.gone && <Contact l={l} />}
       </div>
     </li>
+  )
+}
+
+// Nothing is sent from here: each button opens WhatsApp or copies the draft for Graham to send.
+function Contact({ l }) {
+  const [copied, setCopied] = useState(false)
+  const msg = draftMessage(l)
+  const phone = waNumber(l.phone)
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(msg); setCopied(true); setTimeout(() => setCopied(false), 2500) } catch { /* ignore */ }
+    window.open(l.url, '_blank', 'noreferrer')
+  }
+  return (
+    <div className="home-contact">
+      {phone
+        ? <a className="btn sm primary" href={`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer"><MessageCircle size={14} strokeWidth={1.75} /> WhatsApp</a>
+        : <button className="btn sm primary" onClick={copy} title="Copies the Spanish message and opens the listing"><MessageCircle size={14} strokeWidth={1.75} /> {copied ? 'Copied, paste it in' : 'Copy message'}</button>}
+      <a className="btn sm" href={`https://wa.me/?text=${encodeURIComponent(benMessage(l))}`} target="_blank" rel="noreferrer"><Send size={14} strokeWidth={1.75} /> Ben</a>
+    </div>
   )
 }
 
@@ -161,7 +209,7 @@ export default function Housing() {
   }
 
   const p = snap?.payload
-  const all = p?.listings || []
+  const all = useMemo(() => dedupe(p?.listings || []), [p])
   const live = all.filter((l) => !l.gone)
 
   const shown = useMemo(() => {
