@@ -56,11 +56,15 @@ export default function MobileNav({ counts }) {
     const y = window.scrollY
     body.style.setProperty('--sy', `${-y}px`)
     body.classList.add('drawer-lock', 'drawer-open')
+    const meta = document.querySelector('meta[name=theme-color]')
+    const before = meta?.content
+    if (meta) meta.content = getComputedStyle(body).getPropertyValue('--menu-bg').trim() || before
     const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
     document.addEventListener('keydown', onKey)
     return () => {
       document.removeEventListener('keydown', onKey)
       body.classList.remove('drawer-open')
+      if (meta) meta.content = before
       setTimeout(() => {
         if (body.classList.contains('drawer-open')) return
         body.classList.remove('drawer-lock')

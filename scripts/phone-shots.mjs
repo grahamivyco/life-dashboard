@@ -17,6 +17,7 @@ try {
     await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 3 })
     await page.goto(`http://localhost:4319/life-dashboard/#${route}`, { waitUntil: 'networkidle0' })
     await new Promise((r) => setTimeout(r, 700))
+    if (process.env.EVAL) await page.evaluate(process.env.EVAL)
     if (sel) { await page.click(sel); await new Promise((r) => setTimeout(r, 700)) }
     const file = `${out}/${slug}.png`
     await page.screenshot({ path: file })
