@@ -4,7 +4,6 @@ import { supabase } from './supabase.js'
 import Sidebar from './components/Sidebar.jsx'
 import MobileNav from './components/MobileNav.jsx'
 import { useNavCounts } from './navCounts.js'
-import AskClaude from './components/AskClaude.jsx'
 import RecordingPill from './components/RecordingPill.jsx'
 import BioLock from './components/BioLock.jsx'
 import Login from './pages/Login.jsx'
@@ -69,7 +68,6 @@ function Shell({ session }) {
         </div>
       </main>
       <RecordingPill />
-      <AskClaude />
       <BioLock />
     </div>
   )
