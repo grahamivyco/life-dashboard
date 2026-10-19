@@ -11,6 +11,7 @@ import Timeline from './pages/Timeline.jsx'
 import Finances from './pages/Finances.jsx'
 import Events from './pages/Events.jsx'
 import Housing from './pages/Housing.jsx'
+import Jobs from './pages/Jobs.jsx'
 import Placeholder from './pages/Placeholder.jsx'
 import SettingsPage from './pages/Settings.jsx'
 import { sections } from './sections.js'
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/goals" element={<Navigate to="/" replace />} />
           <Route path="/timeline" element={<Timeline />} />
           <Route path="/finances" element={<Finances />} />
+          <Route path="/jobs" element={<Jobs />} />
           <Route path="/events" element={<Events />} />
           <Route path="/housing" element={<Housing />} />
           {legacy.map((s) => (
