@@ -20,7 +20,7 @@ export default function ViewMenu({ options, value, onPick, label = 'View' }) {
 
   return (
     <div className="view-menu" ref={ref}>
-      <button className="btn sm" aria-label={`${label}: ${on.label}`} aria-haspopup="menu" aria-expanded={open} onClick={() => {
+      <button className="btn" aria-label={`${label}: ${on.label}`} aria-haspopup="menu" aria-expanded={open} onClick={() => {
         // Open toward whichever side has room, so the list never runs off the screen.
         const box = ref.current.getBoundingClientRect()
         setSide(box.right < 190 ? 'left' : 'right')

@@ -497,7 +497,7 @@ export default function Email() {
         <ViewMenu options={[{ k: 'reply', label: 'One at a time', icon: <Layers size={14} /> }, { k: 'inbox', label: 'List', icon: <List size={14} /> }]}
           value={tab === 'outbox' ? 'inbox' : tab} onPick={(k) => { setView(k); if (filter === 'drafts') setFilter('all'); setOpen(null) }} />
         <ViewMenu label="Show" options={[...filters, ...(live ? [{ k: 'drafts', label: 'Drafts' }] : [])]} value={filter} onPick={pick} />
-        {live && <button className="btn" onClick={load} disabled={busy}><RefreshCw size={13} className={busy ? 'spin' : ''} /> Refresh</button>}
+        {live && <button className="icon-btn round-btn" onClick={load} disabled={busy} aria-label="Refresh" title="Refresh"><RefreshCw size={15} className={busy ? 'spin' : ''} /></button>}
       </PageHeader>
 
       {!live && tab !== 'reply' && <Connect onConnected={() => setLive(true)} />}

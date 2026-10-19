@@ -557,7 +557,7 @@ export default function Finances() {
         <div className="seg tabs-seg fin-tabs">
           {TABS.map(([k, label]) => <button key={k} aria-pressed={tab === k} onClick={() => go(k)}>{label}</button>)}
         </div>
-        <button className="icon-btn fin-sync" aria-label="Sync banks" title="Sync banks" disabled={waiting}
+        <button className="icon-btn round-btn" aria-label="Sync banks" title="Sync banks" disabled={waiting}
           onClick={() => send('POST', '/api/sync', {}, 'Syncing banks')}>
           <RefreshCw size={16} className={waiting ? 'spin' : ''} />
         </button>
