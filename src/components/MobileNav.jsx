@@ -35,15 +35,10 @@ export default function MobileNav({ counts }) {
 
   useEffect(() => { setOpen(false); setHidden(false) }, [pathname])
 
-  // iOS can misplace bottom-anchored fixed bars in the home-screen app after a scroll, so the bar and the
-  // drawer card are placed from the top using the real screen height (--vh).
+  // How much the open card shrinks so it keeps the same gap above and below (--card-s).
   useEffect(() => {
     const root = document.documentElement
     const set = () => {
-      const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches
-      const portrait = matchMedia('(orientation: portrait)').matches
-      const { width, height } = window.screen
-      const screenH = portrait ? Math.max(width, height) : Math.min(width, height)
       const measure = (h) => {
         const probe = document.createElement('div')
         probe.style.cssText = `position:fixed;visibility:hidden;height:${h}`
@@ -52,11 +47,7 @@ export default function MobileNav({ counts }) {
         probe.remove()
         return px
       }
-      // In the home-screen app, the tallest of what iOS reports, so the page never comes up short of the screen.
-      // In a browser tab, the visible height, so the bar stays above the toolbar.
-      const vh = Math.round(standalone
-        ? Math.max(window.innerHeight, document.documentElement.clientHeight, measure('100lvh'), screenH)
-        : window.innerHeight)
+      const vh = window.innerHeight
       root.style.setProperty('--vh', `${vh}px`)
       // the open card keeps the same gap above and below: (screen - 2 * gap) / screen
       const gap = measure('var(--card-y)')
