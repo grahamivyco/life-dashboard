@@ -5,9 +5,11 @@ import PageHeader from '../components/PageHeader.jsx'
 import DumpBox from '../components/DumpBox.jsx'
 import Approvals from '../components/Approvals.jsx'
 import ItemRow, { loadRequests } from '../components/ItemRow.jsx'
-import { fmtTime, fmtDay, greeting } from '../lib.js'
+import { fmtTime, greeting } from '../lib.js'
+import { useUpcoming, dayLabel } from '../events.js'
 
 const TASKS_SHOWN = 8
+const WEEK_SHOWN = 8
 const kinds = [
   { k: 'goal', label: 'Goals' },
   { k: 'idea', label: 'Ideas' },
@@ -17,21 +19,14 @@ const kinds = [
 export default function Today() {
   const [tasks, setTasks] = useState([])
   const [allTasks, setAllTasks] = useState(false)
-  const [events, setEvents] = useState([])
   const [kind, setKind] = useState('goal')
   const [items, setItems] = useState([])
   const [title, setTitle] = useState('')
   const [reqs, setReqs] = useState({})
 
   const loadTasks = useCallback(async () => {
-    const start = new Date(); start.setHours(0, 0, 0, 0)
-    const end = new Date(start); end.setDate(end.getDate() + 7)
-    const [t, e] = await Promise.all([
-      supabase.from('items').select('*').eq('kind', 'task').in('status', ['open', 'doing']).order('due_date', { ascending: true, nullsFirst: false }),
-      supabase.from('events').select('*').gte('starts_at', start.toISOString()).lt('starts_at', end.toISOString()).order('starts_at').limit(8),
-    ])
+    const t = await supabase.from('items').select('*').eq('kind', 'task').in('status', ['open', 'doing']).order('due_date', { ascending: true, nullsFirst: false })
     setTasks(t.data || [])
-    setEvents(e.data || [])
     const r = await loadRequests((t.data || []).map((x) => x.id))
     setReqs((x) => ({ ...x, ...r }))
   }, [])
@@ -65,6 +60,8 @@ export default function Today() {
     await supabase.from('items').update({ progress: v }).eq('id', i.id)
   }
 
+  const { events: upcoming, reload: reloadEvents } = useUpcoming(7)
+  const events = upcoming.slice(0, WEEK_SHOWN)
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
   const shownTasks = allTasks ? tasks : tasks.slice(0, TASKS_SHOWN)
 
@@ -72,7 +69,7 @@ export default function Today() {
     <div className="page">
       <PageHeader eyebrow={today} title={greeting()} />
 
-      <DumpBox onSaved={() => { loadTasks(); loadItems() }} />
+      <DumpBox onSaved={() => { loadTasks(); loadItems(); reloadEvents() }} />
 
       <Approvals />
 
@@ -96,15 +93,16 @@ export default function Today() {
           {events.length === 0 ? (
             <p className="empty">Nothing scheduled in the next 7 days.</p>
           ) : (
-            <ul className="list">
+            <ul className="list week-list">
               {events.map((e) => (
-                <li key={e.id} className="ev-row">
-                  <span className="meta when">{fmtDay(e.starts_at)}{!e.all_day && ` · ${fmtTime(e.starts_at)}`}</span>
-                  <span className="grow">{e.title}</span>
+                <li key={e.id}>
+                  <span className="meta when">{dayLabel(e.start, true)}{!e.allDay && ` · ${fmtTime(e.start)}`}</span>
+                  <span className="grow clamp">{e.title}</span>
                 </li>
               ))}
             </ul>
           )}
+          {upcoming.length > WEEK_SHOWN && <Link to="/events" className="mini more">{upcoming.length - WEEK_SHOWN} more this week</Link>}
         </section>
       </div>
 
