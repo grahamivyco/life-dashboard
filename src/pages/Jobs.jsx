@@ -515,7 +515,7 @@ function ProfileTab({ profile }) {
   return (
     <>
       <section className="tile">
-        <div className="tile-head"><h2>Application info</h2></div>
+        <div className="tile-head"><h2>Application info</h2><a className="link" href="#/profile">Edit in Profile</a></div>
         <ul className="list info-list">
           {(p.info || []).map(([k, v]) => (
             <li key={k}><span className="col grow"><span className="meta">{k}</span><span>{v}</span></span><CopyBtn text={v} /></li>
