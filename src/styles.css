@@ -1026,7 +1026,7 @@ body[data-menu="green"] { --menu-bg: var(--green); }
   .m-drawer .m-row { height: 48px; gap: 14px; padding: 0 14px; border-radius: 99px; font-size: 16px; color: var(--menu-fg); }
   .m-drawer .m-row.active { background: var(--menu-active); color: var(--menu-active-fg); }
   .m-drawer .m-row.active svg:first-child { color: var(--menu-active-fg); }
-  .m-drawer .badge.dot { box-shadow: 0 0 0 2px var(--menu-bg); }
+  .m-drawer .badge.dot { box-shadow: none; }
   .m-drawer .round-btn { background: var(--menu-active); border-color: transparent; color: var(--menu-active-fg); box-shadow: none; }
   body.drawer-lock { background: var(--menu-bg); }
   .m-drawer .m-row .avatar { box-shadow: none; }
