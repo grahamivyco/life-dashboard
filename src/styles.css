@@ -30,7 +30,7 @@ h1, h2, h3, p { margin: 0; }
 a { color: inherit; }
 button, input, textarea, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--tomato); outline-offset: 2px; border-radius: 6px; }
-.boot { min-height: 100vh; }
+.boot { min-height: 100vh; min-height: 100dvh; }
 
 /* ---------- shell + rail ---------- */
 .shell { min-height: 100vh; }
@@ -378,7 +378,10 @@ ul.tile.list { padding-top: 6px; padding-bottom: 6px; }
 .placeholder { display: flex; align-items: center; gap: 14px; color: var(--muted); padding: 22px 18px; }
 
 /* login */
-.login { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.login {
+  height: 100vh; height: 100dvh; overflow: hidden; display: grid; place-items: center;
+  padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
 .login-card { width: min(360px, 100%); display: flex; flex-direction: column; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 28px; }
 .login-card h1 { font-family: var(--display); font-weight: 500; font-size: 24px; }
 .login-card .btn { justify-content: center; height: 38px; }
@@ -764,3 +767,22 @@ a.catch-row:hover .clamp:first-child { text-decoration: underline; text-underlin
   img, video, iframe, table, pre { max-width: 100%; }
   pre { white-space: pre-wrap; }
 }
+
+/* sign-in code + Face ID / Touch ID */
+.code-input { font-size: 22px !important; letter-spacing: .3em; text-align: center; font-variant-numeric: tabular-nums; }
+.login-card .row .mini:disabled { opacity: .4; }
+.lock {
+  position: fixed; inset: 0; z-index: 100; background: var(--bg);
+  height: 100vh; height: 100dvh; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+  padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+}
+.lock-btn { display: flex; flex-direction: column; align-items: center; gap: 10px; border: 0; background: none; color: var(--fg); font-size: 14px; font-weight: 500; cursor: pointer; padding: 12px; border-radius: 12px; }
+.lock-btn svg { color: var(--tomato); }
+.bio-offer {
+  position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); bottom: max(20px, env(safe-area-inset-bottom));
+  width: min(440px, calc(100% - 24px)); display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  box-shadow: 0 12px 40px rgba(47, 44, 39, .14);
+}
+.bio-offer .error { flex-basis: 100%; margin: 0; }
+@media (max-width: 640px) { .bio-offer { bottom: calc(var(--tabs) + var(--tabs-gap) + 12px); } }

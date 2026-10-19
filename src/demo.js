@@ -232,9 +232,10 @@ export const demoClient = {
   }) },
   removeChannel: () => {},
   auth: {
-    getSession: async () => ({ data: { session: { user: { id: 'demo', email: 'demo@example.com' } } } }),
+    // #/?login=1 shows the sign-in screen
+    getSession: async () => ({ data: { session: location.hash.includes('login=1') ? null : { user: { id: 'demo', email: 'demo@example.com' } } } }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
-    signOut: async () => {}, signInWithOtp: async () => ({}),
+    signOut: async () => {}, signInWithOtp: async () => ({}), verifyOtp: async () => ({}),
   },
 }
 
