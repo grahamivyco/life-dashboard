@@ -44,14 +44,22 @@ export default function MobileNav({ counts }) {
       const portrait = matchMedia('(orientation: portrait)').matches
       const { width, height } = window.screen
       const screenH = portrait ? Math.max(width, height) : Math.min(width, height)
-      const vh = standalone ? screenH : window.innerHeight
+      const measure = (h) => {
+        const probe = document.createElement('div')
+        probe.style.cssText = `position:fixed;visibility:hidden;height:${h}`
+        document.body.appendChild(probe)
+        const px = probe.getBoundingClientRect().height
+        probe.remove()
+        return px
+      }
+      // In the home-screen app, the tallest of what iOS reports, so the page never comes up short of the screen.
+      // In a browser tab, the visible height, so the bar stays above the toolbar.
+      const vh = Math.round(standalone
+        ? Math.max(window.innerHeight, document.documentElement.clientHeight, measure('100lvh'), screenH)
+        : window.innerHeight)
       root.style.setProperty('--vh', `${vh}px`)
       // the open card keeps the same gap above and below: (screen - 2 * gap) / screen
-      const probe = document.createElement('div')
-      probe.style.cssText = 'position:fixed;visibility:hidden;height:var(--card-y)'
-      document.body.appendChild(probe)
-      const gap = probe.getBoundingClientRect().height
-      probe.remove()
+      const gap = measure('var(--card-y)')
       root.style.setProperty('--card-s', String(Math.max(0.8, (vh - 2 * gap) / vh)))
     }
     set()
