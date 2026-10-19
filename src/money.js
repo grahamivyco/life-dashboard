@@ -12,6 +12,20 @@ export const usd = (n, d = 0) =>
 // Money out is positive in the money app. Show it plainly, and money in with a plus.
 export const amt = (n, d = 2) => (n < 0 ? '+' : '') + usd(Math.abs(n), d)
 
+// Older copies of the Mac app file check deposits as transfers, so "Came in" missed them.
+// The Mac app counts them as income now; this covers a snapshot from a Mac that hasn't updated.
+function countCheckDeposits(p) {
+  for (const t of p.transactions || []) {
+    if (t.category !== 'Transfer' || !(t.amount < 0) || !/^check deposit/i.test(t.name || t.description || '')) continue
+    t.category = 'Income'
+    for (const s of Object.values(p.spending || {})) {
+      if (!(s.start <= t.date && t.date < s.end)) continue
+      s.income -= t.amount
+      s.net -= t.amount
+    }
+  }
+}
+
 export function useMoney() {
   const [snap, setSnap] = useState(undefined) // undefined: loading, null: the Mac hasn't published yet
   const [pending, setPending] = useState([])
@@ -26,7 +40,9 @@ export function useMoney() {
       return
     }
     const { data } = await supabase.from('money_snapshot').select('payload, published_at').limit(1)
-    setSnap(data?.[0] || null)
+    const snap = data?.[0] || null
+    if (snap) countCheckDeposits(snap.payload)
+    setSnap(snap)
   }, [])
 
   const settle = useCallback((rows) => {
