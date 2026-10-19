@@ -44,7 +44,15 @@ export default function MobileNav({ counts }) {
       const portrait = matchMedia('(orientation: portrait)').matches
       const { width, height } = window.screen
       const screenH = portrait ? Math.max(width, height) : Math.min(width, height)
-      root.style.setProperty('--vh', `${standalone ? screenH : window.innerHeight}px`)
+      const vh = standalone ? screenH : window.innerHeight
+      root.style.setProperty('--vh', `${vh}px`)
+      // the open card keeps the same gap above and below: (screen - 2 * gap) / screen
+      const probe = document.createElement('div')
+      probe.style.cssText = 'position:fixed;visibility:hidden;height:var(--card-y)'
+      document.body.appendChild(probe)
+      const gap = probe.getBoundingClientRect().height
+      probe.remove()
+      root.style.setProperty('--card-s', String(Math.max(0.8, (vh - 2 * gap) / vh)))
     }
     set()
     window.addEventListener('resize', set)
@@ -72,9 +80,7 @@ export default function MobileNav({ counts }) {
     if (!open) return
     const y = window.scrollY
     body.style.setProperty('--sy', `${-y}px`)
-    body.classList.add('drawer-lock')
-    void body.offsetWidth // start the card from full screen so it shrinks into place
-    body.classList.add('drawer-open')
+    body.classList.add('drawer-lock', 'drawer-open')
     // Keep swipes on the card from scrolling or stretching the page underneath
     const stop = (e) => { if (!e.target.closest?.('.m-drawer')) e.preventDefault() }
     document.addEventListener('touchmove', stop, { passive: false })
@@ -92,7 +98,7 @@ export default function MobileNav({ counts }) {
         if (body.classList.contains('drawer-open')) return
         body.classList.remove('drawer-lock')
         window.scrollTo(0, y)
-      }, 420)
+      }, 300)
     }
   }, [open])
 
