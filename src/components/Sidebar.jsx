@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import Mark from './Mark.jsx'
 import Avatar from './Avatar.jsx'
-import { sections, settingsSection } from '../sections.js'
+import { sections } from '../sections.js'
 
 function Item({ s, onNavigate, count }) {
   const Icon = s.icon
@@ -44,7 +44,6 @@ export default function Sidebar({ counts }) {
             <span className="nav-icon"><Avatar size={22} className="rail-avatar" /></span>
             <span className="nav-label">Profile</span>
           </NavLink>
-          <Item s={settingsSection} onNavigate={close} />
         </div>
       </nav>
     </>

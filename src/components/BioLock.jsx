@@ -4,16 +4,16 @@ import Mark from './Mark.jsx'
 import { supabase } from '../supabase.js'
 import { bioAvailable, bioEnabled, bioName, unlockBio } from '../biometric.js'
 
-const AWAY = 5 * 60 * 1000 // lock again after 5 minutes in the background
 const demo = import.meta.env.MODE === 'demo'
 
-// Optional lock (Settings): covers the app until Face ID / Touch ID passes, on open
-// and after time away. Also offers once per device to add a sign-in passkey.
+// Optional lock (Settings): asks for Face ID / Touch ID once when the app opens,
+// then stays unlocked until it is closed. Also offers once per device to add a sign-in passkey.
+const UNLOCKED = 'bio-unlocked' // sessionStorage: survives reloads, cleared when the app closes
 export default function BioLock() {
-  const [locked, setLocked] = useState(() => (demo ? location.hash.includes('lock=1') : bioEnabled()))
+  const [locked, setLocked] = useState(() => (demo ? location.hash.includes('lock=1') : bioEnabled() && !sessionStorage.getItem(UNLOCKED)))
   const [offer, setOffer] = useState(false)
   const [err, setErr] = useState('')
-  const hiddenAt = useRef(0)
+  const asking = useRef(false)
   const name = bioName()
   const Icon = name === 'Face ID' ? ScanFace : Fingerprint
 
@@ -28,18 +28,11 @@ export default function BioLock() {
     })
   }, [])
 
-  useEffect(() => {
-    const onVis = () => {
-      if (document.hidden) hiddenAt.current = Date.now()
-      else if (bioEnabled() && hiddenAt.current && Date.now() - hiddenAt.current > AWAY) setLocked(true)
-    }
-    document.addEventListener('visibilitychange', onVis)
-    return () => document.removeEventListener('visibilitychange', onVis)
-  }, [])
-
   const unlock = async () => {
-    setErr('')
-    try { await unlockBio(); setLocked(false) } catch { setErr(`${name} didn’t go through. Try again.`) }
+    if (asking.current) return
+    asking.current = true; setErr('')
+    try { await unlockBio(); sessionStorage.setItem(UNLOCKED, '1'); setLocked(false) } catch { setErr(`${name} didn’t go through. Try again.`) }
+    asking.current = false
   }
   useEffect(() => { if (locked && !demo) unlock() }, [locked]) // eslint-disable-line react-hooks/exhaustive-deps
 

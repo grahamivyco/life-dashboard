@@ -7,10 +7,10 @@ import { sections, settingsSection } from '../sections.js'
 
 // Phone nav, Instagram style: compact top bar that hides on scroll down,
 // profile avatar top right, and a floating rounded tab bar ending in More
-// (a sheet for everything else).
+// (a small card that pops up above it).
 const byPath = Object.fromEntries([...sections, settingsSection].map((s) => [s.path, s]))
 const tabs = ['/', '/email', '/jobs', '/events', '/housing', '/finances'].map((p) => byPath[p])
-const more = ['/clients', '/timeline', '/settings'].map((p) => byPath[p])
+const more = ['/clients', '/timeline'].map((p) => byPath[p])
 
 function Badge({ count }) {
   if (!count) return null
@@ -38,6 +38,14 @@ export default function MobileNav({ counts }) {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Any tap outside More closes it, and the tap still goes through to what was tapped
+  useEffect(() => {
+    if (!sheet) return
+    const onDown = (e) => { if (!e.target.closest('.m-pop, .m-more-btn')) setSheet(false) }
+    document.addEventListener('pointerdown', onDown, true)
+    return () => document.removeEventListener('pointerdown', onDown, true)
+  }, [sheet])
 
   useEffect(() => {
     document.body.classList.toggle('sheet-open', sheet)
@@ -71,15 +79,13 @@ export default function MobileNav({ counts }) {
             </NavLink>
           )
         })}
-        <button className={'m-tab' + (inMore || sheet ? ' active' : '')} onClick={() => setSheet((o) => !o)}
+        <button className={'m-tab m-more-btn' + (inMore || sheet ? ' active' : '')} onClick={() => setSheet((o) => !o)}
           aria-label="More" aria-expanded={sheet}>
           <span className="nav-icon"><Menu size={21} strokeWidth={inMore || sheet ? 2.25 : 1.6} /></span>
         </button>
       </nav>
 
-      <div className={'m-scrim' + (sheet ? ' show' : '')} onClick={() => setSheet(false)} />
-      <div className={'m-sheet' + (sheet ? ' show' : '')} role="dialog" aria-label="More" aria-hidden={!sheet}>
-        <span className="m-grab" />
+      <div className={'m-pop' + (sheet ? ' show' : '')} role="dialog" aria-label="More" aria-hidden={!sheet}>
         {more.map((s) => {
           const Icon = s.icon
           return (

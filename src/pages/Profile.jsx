@@ -7,6 +7,7 @@ import Avatar from '../components/Avatar.jsx'
 import { useProfile, saveProfile, uploadPhoto, uid } from '../profile.js'
 import { DEFAULT_SPECS, specsSummary } from './Housing.jsx'
 import { CATS } from '../events.js'
+import { AppSettings } from './Settings.jsx'
 
 // One place for Graham's preferences. Jobs reads job_profile, Housing reads housing_profile,
 // Events Explore starts on profile.events.cats. Documents: job-docs base docs + the profile bucket.
@@ -290,6 +291,7 @@ export default function Profile() {
         <EventPrefs />
       </Section>
       <Documents job={job} />
+      <AppSettings />
     </div>
   )
 }
