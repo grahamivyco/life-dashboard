@@ -570,7 +570,7 @@ section.tile .list.jobs { padding: 0; }
 /* ---------- phone shell: Instagram-style top bar + bottom tabs ---------- */
 .mnav { display: none; }
 @media (max-width: 640px) {
-  :root { --tabs: 56px; --top: 48px; --tabs-gap: max(12px, env(safe-area-inset-bottom)); }
+  :root { --tabs: 56px; --top: 48px; --tabs-gap: 12px; /* always 12px above the viewport bottom (Graham, 2026-10-19) */ }
   .rail, .scrim { display: none; }
   .mnav { display: block; }
   .main {
@@ -961,10 +961,8 @@ textarea, .plain, .field input { border-color: var(--ctl-line); border-radius: 1
 /* phone: round menu button + title + avatar on top, frosted floating tab bar with the main pages,
    side drawer with every page that pushes the page aside (after Muse) */
 .m-drawer, .m-shade, .phone-only { display: none; }
-/* phone menu color: cream by default so it runs into the iPhone status bar (Graham, 2026-10-19);
-   data-menu on body picks blue, gold or green */
-body { --menu-bg: var(--bg); --menu-fg: var(--fg); --menu-muted: var(--muted); --menu-line: var(--line); --menu-active: var(--blue-soft); --menu-active-fg: var(--blue-ink); }
-body[data-menu="blue"] { --menu-bg: var(--blue); --menu-fg: #fff; --menu-muted: rgba(255, 255, 255, .7); --menu-line: rgba(255, 255, 255, .25); --menu-active: rgba(255, 255, 255, .2); --menu-active-fg: #fff; }
+/* phone menu color: blue by default (Graham, 2026-10-19); data-menu on body picks gold or green */
+body, body[data-menu="blue"] { --menu-bg: var(--blue); --menu-fg: #fff; --menu-muted: rgba(255, 255, 255, .7); --menu-line: rgba(255, 255, 255, .25); --menu-active: rgba(255, 255, 255, .2); --menu-active-fg: #fff; }
 body[data-menu="gold"] { --menu-bg: var(--gold); --menu-fg: #2F2C27; --menu-muted: rgba(47, 44, 39, .6); --menu-line: rgba(47, 44, 39, .15); --menu-active: rgba(255, 255, 255, .45); --menu-active-fg: #2F2C27; }
 body[data-menu="green"] { --menu-bg: var(--green); --menu-fg: #fff; --menu-muted: rgba(255, 255, 255, .7); --menu-line: rgba(255, 255, 255, .25); --menu-active: rgba(255, 255, 255, .2); --menu-active-fg: #fff; }
 @media (max-width: 640px) {

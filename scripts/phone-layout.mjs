@@ -66,7 +66,7 @@ function measure({ inset, state }) {
   const barTop = shown(tabs) ? r(tabs).top : vh
   if (shown(tabs) && state !== 'drawer') { // with the menu open the page is a scaled card
     const gap = Math.round(vh - r(tabs).bottom)
-    const want = Math.max(12, inset.bottom)
+    const want = 12 // always 12px above the viewport bottom (Graham, 2026-10-19)
     if (Math.abs(gap - want) > 2) out.push(`bottom bar ${gap}px above the bottom, expected ${want}px`)
     if (r(tabs).left < 0 || r(tabs).right > window.innerWidth) out.push('bottom bar wider than the screen')
     const items = [...tabs.querySelectorAll(':scope > button, :scope > a')].filter(shown)

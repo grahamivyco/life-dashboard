@@ -57,18 +57,28 @@ export default function MobileNav({ counts }) {
     // Keep the bottom bar on the bottom of what's visible: if Safari's toolbar covers part of the
     // layout viewport, lift the bar by that much; when the keyboard is up, tuck the bar away.
     const vv = window.visualViewport
+    let touching = false
+    const down = () => { touching = true }
+    const up = () => { touching = false; setTimeout(place, 350) }
     const place = () => {
-      if (!vv) return
+      // A pull-down (rubber band or pull to reload) moves offsetTop below 0; that's not a toolbar, so ignore it.
+      if (!vv || vv.offsetTop < 0 || window.scrollY < 0 || (touching && window.scrollY <= 0)) return
       const covered = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop))
       root.style.setProperty('--vv-lift', `${covered < 120 ? covered : 0}px`)
       document.body.classList.toggle('kb-open', covered >= 120)
     }
     place()
+    window.addEventListener('touchstart', down, { passive: true })
+    window.addEventListener('touchend', up, { passive: true })
+    window.addEventListener('touchcancel', up, { passive: true })
     vv?.addEventListener('resize', place)
     vv?.addEventListener('scroll', place)
     window.addEventListener('resize', set)
     window.addEventListener('orientationchange', set)
     return () => {
+      window.removeEventListener('touchstart', down)
+      window.removeEventListener('touchend', up)
+      window.removeEventListener('touchcancel', up)
       vv?.removeEventListener('resize', place)
       vv?.removeEventListener('scroll', place)
       window.removeEventListener('resize', set)
