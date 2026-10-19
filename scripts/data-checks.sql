@@ -70,3 +70,12 @@ where coalesce(status, '') not in ('new', 'approved', 'applied', 'interview', 'o
 union all
 select 'jobs', 'Due date passed but still open', slug || ' due ' || due::text from jobs
 where due < current_date and status in ('new', 'approved')
+
+-- Sections whose page would show nothing
+union all
+select 'data', section || ' snapshot has no ' || k, 'synced ' || synced_at::text
+from (select distinct on (section) section, payload, synced_at from section_snapshots order by section, synced_at desc) s,
+  (values ('email', 'threads'), ('housing', 'listings'), ('events', 'events'), ('clients', 'clients')) as want(sec, k)
+where s.section = want.sec and coalesce(jsonb_array_length(s.payload->k), 0) = 0
+union all
+select 'data', 'Finances snapshot missing this month', 'published ' || published_at::text from money where p->'spending'->'month:0' is null

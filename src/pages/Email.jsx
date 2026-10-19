@@ -8,7 +8,7 @@ import { askClaude } from '../askClaude.js'
 import { LANGS, langName, translate, detect, canTranslate } from '../translate.js'
 import { gmail, nameOf } from '../gmail.js'
 import PageHeader from '../components/PageHeader.jsx'
-import { ago, fmtTime, fmtDay } from '../lib.js'
+import { ago, fmtTime, fmtDay, copyText } from '../lib.js'
 import ViewMenu from '../components/ViewMenu.jsx'
 import { Controls, Empty, RoundButton, Tabs } from '../components/Controls.jsx'
 
@@ -195,7 +195,7 @@ function Help({ t, asked, onAsked }) {
           {h.doc && (
             <div className="help-doc">
               <div className="row between"><b>{h.doc.title}</b>
-                <button className="mini" onClick={() => navigator.clipboard?.writeText(h.doc.body).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500) })}>{copied ? 'Copied' : 'Copy'}</button>
+                <button className="mini" onClick={() => copyText(h.doc.body).then((ok) => { if (!ok) return; setCopied(true); setTimeout(() => setCopied(false), 1500) })}>{copied ? 'Copied' : 'Copy'}</button>
               </div>
               <p className="msg-text">{h.doc.body}</p>
             </div>

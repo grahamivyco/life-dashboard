@@ -1,0 +1,32 @@
+name: Check pages
+
+# Runs the page checker on every push to main (sample data only). A red run means a page broke;
+# the scheduled page checker reads these results and fixes or reports them.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: check-pages
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Errors, overflow and raw text on every page
+        run: node scripts/check-pages.mjs
+      - name: Phone layout (iPhone insets, bottom tabs, menu)
+        if: always()
+        run: node scripts/phone-layout.mjs
+      - name: Tap every button, tab and menu
+        if: always()
+        run: node scripts/check-clicks.mjs

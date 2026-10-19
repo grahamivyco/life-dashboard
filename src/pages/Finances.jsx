@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ExternalLink, LayoutDashboard, PieChart, ReceiptText, RefreshCw, Search, Trash2 } from 'lucide-react'
 import PageHeader from '../components/PageHeader.jsx'
-import { ago } from '../lib.js'
+import { ago, copyText } from '../lib.js'
 import { amt, makeKey, usd, useMoney } from '../money.js'
 import { cancelGuide } from '../subscriptions.js'
 import ViewMenu from '../components/ViewMenu.jsx'
@@ -512,7 +512,7 @@ function MacLink({ publishedAt, first }) {
       {key ? (
         <>
           <pre className="fin-cmd">{cmd}</pre>
-          <div className="row gap"><button className="btn sm" onClick={() => navigator.clipboard?.writeText(cmd)}>Copy</button><span className="meta">Shown once. Make a new one any time.</span></div>
+          <div className="row gap"><button className="btn sm" onClick={() => copyText(cmd)}>Copy</button><span className="meta">Shown once. Make a new one any time.</span></div>
         </>
       ) : (
         <button className={'btn sm' + (first ? ' primary' : '')} onClick={() => makeKey().then(setKey, (e) => setErr(e.message))}>{first ? 'Make a key' : 'Make a new key'}</button>

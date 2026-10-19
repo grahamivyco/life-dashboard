@@ -22,3 +22,14 @@ export const greeting = () => {
   const h = new Date().getHours()
   return h < 12 ? 'Good morning' : h < 19 ? 'Good afternoon' : 'Good evening'
 }
+
+// Copy text, falling back to a hidden textarea when the Clipboard API says no (older Safari, no permission).
+export async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true } catch { /* fall back */ }
+  const ta = document.createElement('textarea')
+  ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;opacity:0;top:0'
+  document.body.appendChild(ta); ta.select()
+  const ok = document.execCommand('copy')
+  ta.remove()
+  return ok
+}

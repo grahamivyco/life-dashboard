@@ -207,7 +207,10 @@ function builder(table) {
     gte: () => q, lt: () => q, lte: (k, v) => { rows = rows.filter((r) => r[k] === undefined || r[k] == null || String(r[k]) <= String(v)); return q }, neq: () => q,
     eq: (k, v) => { rows = rows.filter((r) => r[k] === undefined || r[k] === v); return q },
     in: (k, vs) => { rows = rows.filter((r) => r[k] === undefined || vs.includes(r[k])); return q },
-    insert: () => q, upsert: () => q, update: () => q, upsert: () => q, delete: () => q,
+    insert: (v) => { rows = [].concat(v).map((r) => ({ id: `demo-${Math.random().toString(36).slice(2)}`, ...r })); return q },
+    upsert: () => q, update: () => q, delete: () => q, match: () => q, range: () => q, or: () => q, filter: () => q, ilike: () => q,
+    single: () => ({ then: (res) => res({ data: rows[0] ?? null, error: null }) }),
+    maybeSingle: () => ({ then: (res) => res({ data: rows[0] ?? null, error: null }) }),
     then: (res) => res({ data: rows, count: rows.length, error: null }),
   }
   return q

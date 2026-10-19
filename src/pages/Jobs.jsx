@@ -5,7 +5,7 @@ import { unzipSync } from 'fflate'
 import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
-import { fmtDay } from '../lib.js'
+import { fmtDay, copyText } from '../lib.js'
 import ViewMenu from '../components/ViewMenu.jsx'
 import { Controls, Empty, Tabs } from '../components/Controls.jsx'
 
@@ -75,7 +75,7 @@ function CopyBtn({ text }) {
   const [done, setDone] = useState(false)
   return (
     <button className="icon-btn ok" title="Copy" aria-label="Copy"
-      onClick={() => navigator.clipboard?.writeText(text).then(() => { setDone(true); setTimeout(() => setDone(false), 1500) })}>
+      onClick={() => copyText(text).then((ok) => { if (!ok) return; setDone(true); setTimeout(() => setDone(false), 1500) })}>
       {done ? <Check size={15} /> : <Copy size={15} />}
     </button>
   )
