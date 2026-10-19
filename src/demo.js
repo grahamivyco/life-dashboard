@@ -48,7 +48,12 @@ const demoProfile = {
   search: { instagram: ['@remotedesignjobs', '@museumjobs'] },
 }
 
+// Drawn stand-in portrait for the profile photo (no real photos in previews)
+const demoPhoto = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#D9D3C4"/><circle cx="50" cy="40" r="18" fill="#8C8577"/><path d="M18 100c4-22 18-32 32-32s28 10 32 32z" fill="#8C8577"/></svg>`)
+
 const fixtures = {
+  profile: [{ name: 'Sam Rivera', tagline: 'Designer in Barcelona', photo_path: 'demo/photo.svg', events: { cats: ['dance', 'latin', 'design'] } }],
   items: [
     { id: 'i1', kind: 'task', title: 'Tell Emma about Tess’s wedding', status: 'open', due_date: day(1), created_at: iso(2) },
     { id: 'i2', kind: 'task', title: 'Get an outfit for the wedding', status: 'open', due_date: day(3), created_at: iso(2) },
@@ -216,8 +221,14 @@ export const demoClient = {
   channel: () => demoChannel,
   storage: { from: () => ({
     createSignedUrls: async (ps) => ({ data: ps.map((p) => ({ path: p, signedUrl: '#', error: null })) }),
-    createSignedUrl: async () => ({ data: { signedUrl: '#' } }),
+    createSignedUrl: async (p) => ({ data: { signedUrl: p.includes('photo') ? demoPhoto : '#' } }),
     upload: async () => ({ error: null }),
+    remove: async () => ({ error: null }),
+    list: async (dir) => ({ data: dir.endsWith('/docs') ? [
+      { name: 'Passport.pdf', metadata: { size: 1240000 } },
+      { name: 'Digital Nomad Visa application.pdf', metadata: { size: 860000 } },
+      { name: 'TEFL certificate.pdf', metadata: { size: 241000 } },
+    ] : [] }),
   }) },
   removeChannel: () => {},
   auth: {

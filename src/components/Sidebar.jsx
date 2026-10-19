@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import Mark from './Mark.jsx'
+import Avatar from './Avatar.jsx'
 import { sections, settingsSection } from '../sections.js'
 
 function Item({ s, onNavigate, count }) {
@@ -39,6 +40,10 @@ export default function Sidebar({ counts }) {
           {sections.map((s) => <Item key={s.path} s={s} onNavigate={close} count={s.badge ? counts[s.badge] : 0} />)}
         </div>
         <div className="rail-bottom">
+          <NavLink to="/profile" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')} onClick={close} title="Profile">
+            <span className="nav-icon"><Avatar size={22} className="rail-avatar" /></span>
+            <span className="nav-label">Profile</span>
+          </NavLink>
           <Item s={settingsSection} onNavigate={close} />
         </div>
       </nav>

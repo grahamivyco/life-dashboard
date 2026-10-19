@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Star, EyeOff, Eye, Home, ChevronRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Star, EyeOff, Eye, Home } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
@@ -26,6 +27,13 @@ const SOURCES = [
 const sourceLabel = (k) => SOURCES.find((x) => x.k === k)?.label || k
 
 export const DEFAULT_SPECS = { max_price: 1600, min_beds: 3, balcony: true, exterior: false, lift: false, ac: false, areas: [] }
+
+export const specsSummary = (specs) => [
+  specs.max_price && `Up to ${eur(specs.max_price)}`,
+  specs.min_beds && `${specs.min_beds}+ bed`,
+  ...['balcony', 'exterior', 'lift', 'ac'].filter((k) => specs[k]).map((k) => ({ balcony: 'Balcony', exterior: 'Exterior', lift: 'Lift', ac: 'A/C' })[k]),
+  specs.areas?.length ? specs.areas.join(', ') : 'Anywhere in Barcelona',
+].filter(Boolean).join(' · ')
 
 // What a listing is missing against Graham's specs. Unknown details don't count against it.
 export function misses(l, s) {
@@ -100,49 +108,16 @@ function Listing({ l, mark, onMark, miss }) {
   )
 }
 
-function Specs({ specs, onSave }) {
-  const [open, setOpen] = useState(false)
-  const [draft, setDraft] = useState(specs)
-  useEffect(() => setDraft(specs), [specs])
-  const set = (k, v) => setDraft((d) => ({ ...d, [k]: v }))
-  const summary = [
-    `Up to ${eur(specs.max_price)}`,
-    `${specs.min_beds}+ bed`,
-    ...['balcony', 'exterior', 'lift', 'ac'].filter((k) => specs[k]).map((k) => ({ balcony: 'Balcony', exterior: 'Exterior', lift: 'Lift', ac: 'A/C' })[k]),
-    specs.areas?.length ? specs.areas.join(', ') : 'Anywhere in Barcelona',
-  ].join(' · ')
-
+// Specs are edited on Profile; here they show as a one-line summary.
+function Specs({ specs }) {
   return (
-    <section className={'tile dump specs' + (open ? ' open' : '')}>
-      <div className="dump-head">
-        <button className="dump-toggle" onClick={() => setOpen(!open)}>
-          <ChevronRight size={15} className="chev" />
-          <span>Your specs</span>
-          <span className="meta clamp grow">{summary}</span>
-        </button>
-      </div>
-      {open && (
-        <div className="dump-body specs-body">
-          <div className="form-grid">
-            <label className="field">Max rent (€/month)<input type="number" value={draft.max_price || ''} onChange={(e) => set('max_price', Number(e.target.value) || null)} /></label>
-            <label className="field">Min bedrooms<input type="number" value={draft.min_beds || ''} onChange={(e) => set('min_beds', Number(e.target.value) || null)} /></label>
-            <label className="field span2">Areas (barris or districts, comma separated, empty for anywhere)
-              <input value={(draft.areas || []).join(', ')} onChange={(e) => set('areas', e.target.value.split(',').map((x) => x.trim()).filter(Boolean))} placeholder="Gràcia, Eixample, Poblenou" />
-            </label>
-          </div>
-          <div className="row wrap gap">
-            <span className="hint">Must have</span>
-            {[['balcony', 'Balcony or terrace'], ['exterior', 'Exterior'], ['lift', 'Lift'], ['ac', 'A/C']].map(([k, label]) => (
-              <label key={k} className="chip-check"><input type="checkbox" checked={!!draft[k]} onChange={(e) => set(k, e.target.checked)} /> {label}</label>
-            ))}
-          </div>
-          <div className="row gap">
-            <button className="btn primary sm" onClick={() => { onSave(draft); setOpen(false) }}>Save</button>
-            <span className="hint">The sync uses these to pick flats from every source.</span>
-          </div>
-        </div>
-      )}
-    </section>
+    <Link to="/profile#housing" className="tile dump specs specs-link">
+      <span className="dump-toggle">
+        <span>Your specs</span>
+        <span className="meta clamp grow">{specsSummary(specs)}</span>
+        <span className="link">Edit in Profile</span>
+      </span>
+    </Link>
   )
 }
 
@@ -173,10 +148,6 @@ export default function Housing() {
       .then(({ data }) => { if (data?.[0]?.specs) setSpecs({ ...DEFAULT_SPECS, ...data[0].specs }) })
   }, [])
 
-  const saveSpecs = async (next) => {
-    setSpecs(next)
-    await supabase.from('housing_profile').upsert({ specs: next, updated_at: new Date().toISOString() })
-  }
   const [sort, setSort] = useState('newest')
   const [marks, setMarks] = useState(readMarks)
 
@@ -214,7 +185,7 @@ export default function Housing() {
     return (
       <div className="page">
         <PageHeader title="Housing">{actions}</PageHeader>
-        <Specs specs={specs} onSave={saveSpecs} />
+        <Specs specs={specs} />
         <p className="empty">Flats from your alert emails appear here after the next sync.</p>
         <Sources all={[]} />
       </div>
@@ -245,7 +216,7 @@ export default function Housing() {
         <div className="tile stat"><span className="eyebrow">Price drops</span><span className="big">{drops}</span></div>
       </div>
 
-      <Specs specs={specs} onSave={saveSpecs} />
+      <Specs specs={specs} />
 
       <div className="row between wrap gap">
         <div className="seg">

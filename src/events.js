@@ -104,3 +104,6 @@ export const dayLabel = (d, short = false) => {
   if (short) return new Date(d).toLocaleDateString('en-GB', { weekday: 'short' })
   return new Date(d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })
 }
+
+// Explore categories. Profile stores the ones Graham likes; Explore starts filtered to them.
+export const CATS = { dance: 'Dance', club: 'Disco & club', latin: 'Latin', net: 'Networking', design: 'UX/UI', founders: 'Founders', food: 'Food & drink', move: 'Exercise', culture: 'Culture' }

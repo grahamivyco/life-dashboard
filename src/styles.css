@@ -714,3 +714,38 @@ a.catch-row:hover .clamp:first-child { text-decoration: underline; text-underlin
   .wbar { width: 72px; }
 }
 .job-sec > .mini { align-self: flex-start; }
+
+/* ---------- profile ---------- */
+.rail-avatar { display: grid; place-items: center; border-radius: 50%; object-fit: cover; background: var(--fg); color: var(--surface); font-size: 10px; font-weight: 600; }
+.nav-item.active .rail-avatar { box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 3px var(--tomato); }
+.prof-head { display: flex; align-items: center; gap: 18px; padding: 18px; }
+.prof-photo { position: relative; flex: none; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 50%; }
+.prof-avatar { display: grid; place-items: center; border-radius: 50%; object-fit: cover; background: var(--fg); color: var(--surface); font-family: var(--display); font-size: 32px; font-weight: 500; }
+.prof-cam { position: absolute; right: 0; bottom: 0; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); color: var(--fg); }
+.prof-photo:hover .prof-cam { color: var(--tomato); }
+.prof-id { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; flex: 1; }
+.prof-id input { width: 100%; border: 0; background: none; padding: 2px 0; font: inherit; color: var(--fg); border-radius: 0; border-bottom: 1px solid transparent; }
+.prof-id input:hover, .prof-id input:focus { border-bottom-color: var(--line); outline: none; }
+.prof-name { font-family: var(--display) !important; font-size: 26px !important; font-weight: 500; letter-spacing: -.01em; }
+.prof-tag { color: var(--muted) !important; font-size: 13px !important; }
+.pref-group { display: flex; flex-direction: column; gap: 6px; }
+.pref-group .chips { margin: 0; align-items: center; }
+.pref-chip { display: inline-flex; align-items: center; gap: 2px; padding-right: 3px; background: var(--surface); }
+.icon-btn.xs { width: 18px; height: 18px; border-radius: 50%; }
+.pref-add { display: inline-flex; align-items: center; }
+.pref-add input { width: 90px; font: inherit; font-size: 12px; padding: 3px 10px; border: 1px dashed var(--line); border-radius: 99px; background: none; color: var(--fg); }
+.pref-add input:focus { outline: none; border-style: solid; border-color: #C9C4B7; width: 160px; }
+.kv > li { gap: 12px; padding: 4px 0; }
+.kv-k { flex: none; width: 38%; font-size: 12px; color: var(--muted); }
+.kv .plain { font-size: 13px; padding: 4px 6px; }
+.docs .doc-open { border: 0; background: none; padding: 0; font: inherit; color: var(--fg); text-align: left; cursor: pointer; }
+.docs .doc-open:hover { text-decoration: underline; text-underline-offset: 3px; }
+.doc-group { margin-top: 12px; }
+.tile-head .btn.sm { gap: 6px; }
+.specs-link { display: block; text-decoration: none; color: inherit; }
+.specs-link .dump-toggle { padding-left: 12px; }
+@media (max-width: 720px) {
+  .prof-head { gap: 14px; padding: 14px; }
+  .kv > li { flex-direction: column; align-items: stretch; gap: 2px; }
+  .kv-k { width: auto; }
+}

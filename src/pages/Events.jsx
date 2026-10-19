@@ -1,13 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CalendarDays, Check, ChevronLeft, ChevronRight, Columns3, ExternalLink, Grid3x3, MapPin, Plus, Search, Square, Trash2, X } from 'lucide-react'
 import PageHeader from '../components/PageHeader.jsx'
-import { useEvents, toDate } from '../events.js'
+import { useEvents, toDate, CATS } from '../events.js'
+import { useProfile } from '../profile.js'
 import { ago, dayKey, fmtTime } from '../lib.js'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const CATS = { dance: 'Dance', club: 'Disco & club', latin: 'Latin', net: 'Networking', design: 'UX/UI', founders: 'Founders', food: 'Food & drink', move: 'Exercise', culture: 'Culture' }
 // One accent only: the main calendar gets tomato, the others stay in ink tones.
 const DOTS = { Graham: 'd-main', 'Brain dump': 'd-main d-ring', 'Dance & Movement': 'd-ink', 'B & G Calendar': 'd-grey', 'Self-Care & Mental Wellness': 'd-ink d-ring' }
 const LEGEND = [['Graham', 'Main'], ['Dance & Movement', 'Dance'], ['B & G Calendar', 'B & G'], ['Self-Care & Mental Wellness', 'Self-Care'], ['Brain dump', 'Added here']]
@@ -187,6 +187,10 @@ function Explore({ picks, city = 'Barcelona', all, add }) {
   const [q, setQ] = useState('')
   const [date, setDate] = useState('')
   const [cats, setCats] = useState([])
+  // Start on the categories liked in Profile, until Graham changes the filter here
+  const liked = useProfile()?.events?.cats
+  const touched = useRef(false)
+  useEffect(() => { if (!touched.current && liked?.length) setCats(liked) }, [liked])
   const [busy, setBusy] = useState(null)
 
   const needle = q.trim().toLowerCase()
@@ -202,9 +206,9 @@ function Explore({ picks, city = 'Barcelona', all, add }) {
     .filter((p) => !needle || [p.title, p.note, p.where, ...(p.cats || []).map((c) => CATS[c])].join(' ').toLowerCase().includes(needle))
     .sort((a, b) => a.slot.start - b.slot.start)
 
-  const used = [...new Set(picks.flatMap((p) => p.cats || []))].filter((c) => CATS[c])
+  const used = [...new Set([...picks.flatMap((p) => p.cats || []), ...cats])].filter((c) => CATS[c])
   const added = (p) => all.some((e) => e.title.trim().toLowerCase() === p.title.trim().toLowerCase() && Math.abs(e.start - p.slot.start) < 60e3)
-  const toggle = (c) => setCats((xs) => (xs.includes(c) ? xs.filter((x) => x !== c) : [...xs, c]))
+  const toggle = (c) => { touched.current = true; setCats((xs) => (xs.includes(c) ? xs.filter((x) => x !== c) : [...xs, c])) }
 
   async function addPick(p) {
     setBusy(p.id)
@@ -226,7 +230,7 @@ function Explore({ picks, city = 'Barcelona', all, add }) {
 
       <div className="chips ex-cats">
         {used.map((c) => <button key={c} className="chip" aria-pressed={cats.includes(c)} onClick={() => toggle(c)}>{CATS[c]}</button>)}
-        {(cats.length > 0 || date) && <button className="link" onClick={() => { setCats([]); setDate('') }}>Clear filters</button>}
+        {(cats.length > 0 || date) && <button className="link" onClick={() => { touched.current = true; setCats([]); setDate('') }}>Clear filters</button>}
       </div>
 
       {rows.length === 0 ? (
