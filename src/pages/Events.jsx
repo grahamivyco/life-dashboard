@@ -1,51 +1,63 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
+import { ChevronRight, ExternalLink, MapPin, Repeat, Trash2 } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import PageHeader from '../components/PageHeader.jsx'
-import { dayKey, fmtDay, fmtTime } from '../lib.js'
+import { useUpcoming, dayLabel } from '../events.js'
+import { ago, fmtTime } from '../lib.js'
 
-const LEGACY = 'https://claude.ai/code/artifact/0b17e4d1-5ad4-439f-b8fe-d52ab783e7ac'
+const ranges = [{ d: 7, label: '7 days' }, { d: 30, label: '30 days' }]
+
+const timeOf = (e) => (e.allDay ? 'All day' : fmtTime(e.start))
+
+function EventRow({ e, open, onToggle, onRemove }) {
+  const hasMore = e.location || e.notes || e.url || e.end || e.source === 'app'
+  return (
+    <li className={'ev' + (open ? ' open' : '')}>
+      <button className="ev-head" onClick={onToggle} aria-expanded={open} disabled={!hasMore}>
+        <ChevronRight size={15} className="chev" />
+        <span className="ev-time meta">{timeOf(e)}</span>
+        <span className="ev-title grow clamp">{e.title}</span>
+        {e.location && <span className="ev-loc meta clamp">{e.location}</span>}
+      </button>
+      {open && (
+        <div className="ev-body">
+          {!e.allDay && e.end && <span className="meta">{fmtTime(e.start)} to {fmtTime(e.end)}</span>}
+          {e.location && <span className="row gap"><MapPin size={13} className="muted-icon" />{e.location}</span>}
+          {e.notes && <p className="ev-notes">{e.notes}</p>}
+          <div className="row between">
+            <span className="meta">{e.calendar}</span>
+            <span className="row gap">
+              {e.url && <a className="link row gap" href={e.url} target="_blank" rel="noreferrer">Google Calendar <ExternalLink size={12} /></a>}
+              {e.source === 'app' && <button className="icon-btn" onClick={() => onRemove(e.id)} aria-label="Delete event"><Trash2 size={15} /></button>}
+            </span>
+          </div>
+        </div>
+      )}
+    </li>
+  )
+}
 
 export default function Events() {
-  const [events, setEvents] = useState([])
+  const [days, setDays] = useState(30)
+  const { groups, routines, syncedAt, reload, remove } = useUpcoming(days)
+  const [open, setOpen] = useState(null)
   const [form, setForm] = useState({ title: '', date: '', time: '', location: '' })
   const [adding, setAdding] = useState(false)
-
-  const load = useCallback(async () => {
-    const start = new Date(); start.setHours(0, 0, 0, 0)
-    const { data } = await supabase.from('events').select('*').gte('starts_at', start.toISOString()).order('starts_at').limit(100)
-    setEvents(data || [])
-  }, [])
-
-  useEffect(() => { load() }, [load])
 
   async function add(e) {
     e.preventDefault()
     if (!form.title || !form.date) return
-    const allDay = !form.time
     const starts = new Date(`${form.date}T${form.time || '00:00'}`)
-    await supabase.from('events').insert({ title: form.title, starts_at: starts.toISOString(), all_day: allDay, location: form.location || null })
+    await supabase.from('events').insert({ title: form.title, starts_at: starts.toISOString(), all_day: !form.time, location: form.location || null })
     setForm({ title: '', date: '', time: '', location: '' })
     setAdding(false)
-    load()
-  }
-
-  async function remove(id) {
-    await supabase.from('events').delete().eq('id', id)
-    setEvents((xs) => xs.filter((x) => x.id !== id))
-  }
-
-  const groups = []
-  for (const ev of events) {
-    const k = dayKey(ev.starts_at)
-    if (groups.at(-1)?.k !== k) groups.push({ k, at: ev.starts_at, items: [] })
-    groups.at(-1).items.push(ev)
+    reload()
   }
 
   return (
     <div className="page">
-      <PageHeader eyebrow="Synced with Google Calendar in Phase 4" title="Events">
-        <a className="btn" href={LEGACY} target="_blank" rel="noreferrer">Open current tracker</a>
-        <button className="btn primary" onClick={() => setAdding((a) => !a)}>{adding ? 'Cancel' : 'Add event'}</button>
+      <PageHeader eyebrow={syncedAt ? `Google Calendar · updated ${ago(syncedAt)}` : 'Google Calendar syncs hourly'} title="Events">
+        <button className={'btn' + (adding ? '' : ' primary')} onClick={() => setAdding((a) => !a)}>{adding ? 'Cancel' : 'Add event'}</button>
       </PageHeader>
 
       {adding && (
@@ -58,20 +70,27 @@ export default function Events() {
         </form>
       )}
 
-      {groups.length === 0 && <p className="empty">No upcoming events yet.</p>}
-      {groups.map((g) => (
-        <section key={g.k} className="tl-day">
-          <h2 className="tl-date">{fmtDay(g.at)}</h2>
-          <div className="ev-grid">
-            {g.items.map((ev) => (
-              <article key={ev.id} className="tile ev-card">
-                <span className="meta">{ev.all_day ? 'All day' : fmtTime(ev.starts_at)}</span>
-                <span className="ev-title">{ev.title}</span>
-                {ev.location && <span className="meta">{ev.location}</span>}
-                <button className="mini" onClick={() => remove(ev.id)}>Remove</button>
-              </article>
-            ))}
+      <div className="row between wrap">
+        <div className="seg">
+          {ranges.map((r) => <button key={r.d} aria-pressed={days === r.d} onClick={() => setDays(r.d)}>Next {r.label}</button>)}
+        </div>
+        {routines.length > 0 && (
+          <div className="routines">
+            <Repeat size={13} className="muted-icon" />
+            {routines.map((r) => <span key={r.id} className="chip">{r.title} <span className="meta">{r.when}{!r.first.allDay && ` ${fmtTime(r.first.start)}`}</span></span>)}
           </div>
+        )}
+      </div>
+
+      {groups.length === 0 && <p className="empty">Nothing coming up. Events from Google Calendar and your brain dumps show here.</p>}
+      {groups.map((g) => (
+        <section key={g.k} className="tile ev-day">
+          <h2 className="ev-date">{dayLabel(g.at)}</h2>
+          <ul className="list ev-list">
+            {g.items.map((e) => (
+              <EventRow key={e.id} e={e} open={open === e.id} onToggle={() => setOpen(open === e.id ? null : e.id)} onRemove={remove} />
+            ))}
+          </ul>
         </section>
       ))}
     </div>

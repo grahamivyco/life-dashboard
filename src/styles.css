@@ -292,10 +292,28 @@ ul.tile.list { padding-top: 6px; padding-bottom: 6px; }
 .tl-day { display: flex; flex-direction: column; gap: 8px; }
 .tl-date { font-family: var(--display); font-weight: 500; font-size: 18px; }
 .tl-row { gap: 10px; }
-.ev-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
-.ev-card { display: flex; flex-direction: column; gap: 2px; }
+/* events */
+.ev-day { padding: 12px 6px 6px; }
+.ev-date { font-family: var(--display); font-weight: 500; font-size: 18px; padding: 0 10px 4px; }
+.ev-list > li.ev { display: block; padding: 0; }
+.ev-head { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 8px; border: 0; background: none; border-radius: 8px; cursor: pointer; text-align: left; }
+.ev-head:hover:not(:disabled) { background: var(--hover); }
+.ev-head:disabled { cursor: default; color: inherit; }
+.ev-head:disabled .chev { visibility: hidden; }
+.ev.open .chev { transform: rotate(90deg); }
+.ev-time { flex: none; width: 52px; }
 .ev-title { font-weight: 500; }
-.ev-card .mini { align-self: flex-start; margin-top: 6px; }
+.ev-loc { flex: 0 1 220px; text-align: right; }
+.ev-body { display: flex; flex-direction: column; gap: 8px; padding: 2px 10px 12px 95px; }
+.ev-notes { white-space: pre-wrap; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.muted-icon { flex: none; color: var(--muted); }
+.routines { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.week-list > li { gap: 10px; }
+.week-list .when { flex: none; width: 116px; }
+@media (max-width: 640px) {
+  .ev-loc { display: none; }
+  .ev-body { padding-left: 33px; }
+}
 .placeholder { display: flex; align-items: center; gap: 14px; color: var(--muted); padding: 22px 18px; }
 
 /* login */

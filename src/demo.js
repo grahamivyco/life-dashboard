@@ -3,6 +3,12 @@
 
 const now = Date.now()
 const iso = (h) => new Date(now - h * 3600e3).toISOString()
+// d days from today at h:m local time
+const at = (d, h, m = 0) => { const x = new Date(now + d * 864e5); x.setHours(h, m, 0, 0); return x.toISOString() }
+const gcal = 'https://calendar.google.com/'
+const workBlocks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+  .map((d) => new Date(now + d * 864e5)).filter((x) => x.getDay() > 0 && x.getDay() < 6)
+  .map((x, i) => { const s = new Date(x); s.setHours(11, 0, 0, 0); const e = new Date(s); e.setHours(16); return { id: `w${i}`, title: 'Work block', start: s.toISOString(), end: e.toISOString(), calendar: 'Graham', series: 'work', url: gcal } })
 const day = (d) => new Date(now + d * 864e5).toISOString().slice(0, 10)
 
 
@@ -24,8 +30,8 @@ const fixtures = {
     { id: 'd2', content: 'Morning plan: finish the inbox page, reply to Kym, groceries.', created_at: iso(26), processed_at: iso(25) },
   ],
   events: [
-    { id: 'e1', title: 'Salsa at Imperial', starts_at: new Date(now + 864e5 * 1).toISOString(), location: 'Imperial Meeting Point' },
-    { id: 'e2', title: 'Bailaqueer', starts_at: new Date(now + 864e5 * 3).toISOString(), location: 'Pati Llimona' },
+    { id: 'e1', title: 'Salsa at Imperial', starts_at: at(1, 21), location: 'Imperial Meeting Point', notes: 'From the brain dump: go with Marc.' },
+    { id: 'e2', title: 'Bailaqueer', starts_at: at(3, 22, 30), location: 'Pati Llimona' },
   ],
   claude_requests: [
     { id: 'r1', action: 'auto', item_id: 'i1', status: 'needs_approval', summary: 'Drafted a message to Emma', approval_ask: 'Send this email to Emma?', result: 'Hi Emma, Tess’s wedding is set for…', links: [], item: { title: 'Tell Emma about Tess’s wedding' }, updated_at: iso(1) },
@@ -109,6 +115,15 @@ const fixtures = {
         { slug: 'f', role: 'AI Tutor, Design', short: 'Model Lab', org: 'Model Lab · contract', pay: 'Hourly', score: 62, grade: 'C', actions: [], docs: [], paste: [], app: { status: 'approved', needsYou: false, waitingOn: 'Claude is filling the form.' } },
       ],
     } },
+    { section: 'calendar', synced_at: iso(0.3), payload: { events: [
+      ...workBlocks,
+      { id: 'c1', title: 'Coffee with Emma', start: at(0, 18), end: at(0, 19), location: 'Satan’s Coffee Corner', calendar: 'Friends', url: gcal },
+      { id: 'c2', title: 'Nude yoga to wake up', start: at(2, 9, 45), end: at(2, 10, 45), location: 'Prakasa', calendar: 'Graham', url: gcal },
+      { id: 'c3', title: 'Dentist', start: at(2, 15, 30), end: at(2, 16), location: 'Clínica Dental Gràcia', calendar: 'Health & Medical', notes: 'Bring the insurance card.', url: gcal },
+      { id: 'c4', title: 'Sagrada Família', start: at(6, 17), end: at(6, 18), calendar: 'Graham', url: gcal },
+      { id: 'c5', title: 'La Castanyada', start: day(12), all_day: true, calendar: 'Graham', url: gcal },
+      { id: 'c6', title: 'Tess’s wedding', start: day(26), all_day: true, location: 'Sitges', calendar: 'Family', url: gcal },
+    ] } },
     { section: 'finances', synced_at: iso(0.5), payload: {
       currency: 'USD', source: 'Era', warnings: [],
       totals: { cash: 2400, invest: 41000, credit: 650, net_worth: 42750 },
