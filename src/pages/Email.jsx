@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronRight, ExternalLink, Sparkles, Paperclip, Download, Archive, Trash2, Send, RefreshCw, Mic, Square, SkipForward, Layers, List, FilePen } from 'lucide-react'
+import { ChevronRight, ExternalLink, Sparkles, Paperclip, Download, Archive, Trash2, Send, RefreshCw, Mic, Square, SkipForward, Layers, List } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import { useDictation } from '../useDictation.js'
@@ -300,10 +300,11 @@ export default function Email() {
   const snap = useSnapshot('email')
   const [live, setLive] = useState(gmail.ready() && gmail.connected())
   const [params] = useSearchParams()
-  const [tab, setTab] = useState(params.get('tab') || 'reply')
+  const startTab = params.get('tab')
+  const [view, setView] = useState(startTab === 'inbox' ? 'inbox' : 'reply')
   const [skips, setSkips] = useState(readSkips)
   const [handled, setHandled] = useState({})
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState(startTab === 'outbox' ? 'drafts' : 'all')
   const [open, setOpen] = useState(params.get('open'))
   const [threads, setThreads] = useState(null)
   const [drafts, setDrafts] = useState(null)
@@ -345,21 +346,21 @@ export default function Email() {
   const pass = (t) => (filter === 'unread' ? t.unread : filter === 'important' ? t.important : true)
   const toReply = (snap?.payload?.threads || []).filter((t) => t.replies?.length && !queued[t.id] && !handled[t.id] && skips[t.id] !== t.date && pass(t))
   const shown = all.filter(pass)
+  const tab = live && filter === 'drafts' ? 'outbox' : view
+  const pick = (k) => { setFilter(k); setOpen(null) }
 
   return (
     <div className="page">
       <PageHeader eyebrow={live ? 'Gmail · live' : snap ? `Gmail · updated ${ago(snap.synced_at)}` : 'Gmail'} title="Email">
         <div className="seg icons">
-          <button aria-pressed={tab === 'reply'} onClick={() => { setTab('reply'); setOpen(null) }} aria-label="One at a time" title="One at a time"><Layers size={14} /></button>
-          <button aria-pressed={tab === 'inbox'} onClick={() => { setTab('inbox'); setOpen(null) }} aria-label="List" title="List"><List size={14} /></button>
-          {live && <button aria-pressed={tab === 'outbox'} onClick={() => { setTab('outbox'); setOpen(null) }} aria-label="Drafts" title="Drafts"><FilePen size={14} /></button>}
+          <button aria-pressed={tab === 'reply'} onClick={() => { setView('reply'); if (filter === 'drafts') setFilter('all'); setOpen(null) }} aria-label="One at a time" title="One at a time"><Layers size={14} /></button>
+          <button aria-pressed={tab === 'inbox'} onClick={() => { setView('inbox'); if (filter === 'drafts') setFilter('all'); setOpen(null) }} aria-label="List" title="List"><List size={14} /></button>
         </div>
-        {tab !== 'outbox' && (
-          <div className="seg">
-            {filters.map((f) => <button key={f.k} aria-pressed={filter === f.k} onClick={() => setFilter(f.k)}>{f.label}</button>)}
-          </div>
-        )}
-        {live && <button className="btn" onClick={load} disabled={busy} aria-label="Refresh"><RefreshCw size={13} className={busy ? 'spin' : ''} /></button>}
+        <div className="seg">
+          {filters.map((f) => <button key={f.k} aria-pressed={filter === f.k} onClick={() => pick(f.k)}>{f.label}</button>)}
+          {live && <button aria-pressed={filter === 'drafts'} onClick={() => pick('drafts')}>Drafts</button>}
+        </div>
+        {live && <button className="btn" onClick={load} disabled={busy}><RefreshCw size={13} className={busy ? 'spin' : ''} /> Refresh</button>}
       </PageHeader>
 
       {!live && tab !== 'reply' && <Connect onConnected={() => setLive(true)} />}
