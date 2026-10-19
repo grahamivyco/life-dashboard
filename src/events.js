@@ -33,6 +33,17 @@ export function useEvents() {
   }, [])
   useEffect(() => { load() }, [load])
 
+  // A sync that ran on an older prompt may write events without picks; fall back to the last row that had them.
+  const [oldPicks, setOldPicks] = useState(null)
+  const missing = snap && !snap.payload?.picks
+  useEffect(() => {
+    if (!missing) return
+    supabase.from('section_snapshots').select('payload').eq('section', 'events').not('payload->picks', 'is', null)
+      .order('synced_at', { ascending: false }).limit(1).maybeSingle()
+      .then(({ data }) => setOldPicks(data?.payload || null))
+  }, [missing])
+  const pickSrc = snap?.payload?.picks ? snap.payload : oldPicks
+
   const from = new Date(); from.setHours(0, 0, 0, 0)
   const cal = (snap?.payload?.events || []).map(fromCalendar)
   const mine = rows.map(fromRow).filter((r) => !cal.some((c) => (r.gcalId && c.id === `g-${r.gcalId}`) || sameEvent(c, r)))
@@ -65,7 +76,7 @@ export function useEvents() {
     return data
   }
 
-  return { all, routines, picks: snap?.payload?.picks || [], picksCity: snap?.payload?.picks_city, syncedAt: snap?.synced_at, reload: load, remove, add }
+  return { all, routines, picks: pickSrc?.picks || [], picksCity: pickSrc?.picks_city, syncedAt: snap?.synced_at, reload: load, remove, add }
 }
 
 // Upcoming events for the next `days` days, routines moved out so the days stay readable.
