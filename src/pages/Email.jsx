@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronRight, ExternalLink, Sparkles, Paperclip, Download, Archive, Trash2, Send, RefreshCw, Mic, Square, SkipForward } from 'lucide-react'
+import { ChevronRight, ExternalLink, Sparkles, Paperclip, Download, Archive, Trash2, Send, RefreshCw, Mic, Square, SkipForward, Layers, List, FilePen } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import { useDictation } from '../useDictation.js'
@@ -342,18 +342,19 @@ export default function Email() {
 
   const all = live ? threads || [] : snap?.payload?.threads || []
   const replies = Object.fromEntries((snap?.payload?.threads || []).map((t) => [t.id, t.replies]))
-  const toReply = (snap?.payload?.threads || []).filter((t) => t.replies?.length && !queued[t.id] && !handled[t.id] && skips[t.id] !== t.date)
-  const shown = all.filter((t) => (filter === 'unread' ? t.unread : filter === 'important' ? t.important : true))
+  const pass = (t) => (filter === 'unread' ? t.unread : filter === 'important' ? t.important : true)
+  const toReply = (snap?.payload?.threads || []).filter((t) => t.replies?.length && !queued[t.id] && !handled[t.id] && skips[t.id] !== t.date && pass(t))
+  const shown = all.filter(pass)
 
   return (
     <div className="page">
       <PageHeader eyebrow={live ? 'Gmail · live' : snap ? `Gmail · updated ${ago(snap.synced_at)}` : 'Gmail'} title="Email">
-        <div className="seg">
-          <button aria-pressed={tab === 'reply'} onClick={() => { setTab('reply'); setOpen(null) }}>To reply{toReply.length ? ` ${toReply.length}` : ''}</button>
-          <button aria-pressed={tab === 'inbox'} onClick={() => { setTab('inbox'); setOpen(null) }}>Inbox</button>
-          {live && <button aria-pressed={tab === 'outbox'} onClick={() => { setTab('outbox'); setOpen(null) }}>Drafts{drafts?.length ? ` ${drafts.length}` : ''}</button>}
+        <div className="seg icons">
+          <button aria-pressed={tab === 'reply'} onClick={() => { setTab('reply'); setOpen(null) }} aria-label="One at a time" title="One at a time"><Layers size={14} /></button>
+          <button aria-pressed={tab === 'inbox'} onClick={() => { setTab('inbox'); setOpen(null) }} aria-label="List" title="List"><List size={14} /></button>
+          {live && <button aria-pressed={tab === 'outbox'} onClick={() => { setTab('outbox'); setOpen(null) }} aria-label="Drafts" title="Drafts"><FilePen size={14} /></button>}
         </div>
-        {tab === 'inbox' && (
+        {tab !== 'outbox' && (
           <div className="seg">
             {filters.map((f) => <button key={f.k} aria-pressed={filter === f.k} onClick={() => setFilter(f.k)}>{f.label}</button>)}
           </div>

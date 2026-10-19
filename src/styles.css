@@ -396,3 +396,4 @@ button.pill.claude { border: 0; cursor: pointer; font-family: inherit; }
 .ok-title > span:first-child { font-weight: 500; }
 .btn.sm { height: 28px; padding: 0 12px; font-size: 12px; flex: none; }
 .result.flush { margin-left: 0; }
+.seg.icons button { padding: 0 10px; display: grid; place-items: center; }
