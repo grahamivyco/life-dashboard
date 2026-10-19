@@ -29,7 +29,7 @@ function Listing({ l, mark, onMark }) {
     l.floor && `Floor ${l.floor}`,
     l.size_m2 && `${eur(l.price / l.size_m2)}/m²`,
   ].filter(Boolean)
-  const tags = [l.balcony && 'Balcony', l.terrace && 'Terrace', l.exterior && 'Exterior', l.lift && 'Lift', l.ac && 'A/C'].filter(Boolean)
+  const tags = [l.kind === 'room' && 'Room', l.balcony && 'Balcony', l.terrace && 'Terrace', l.exterior && 'Exterior', l.lift && 'Lift', l.ac && 'A/C'].filter(Boolean)
 
   return (
     <li className={'tile home' + (l.gone ? ' gone' : '')}>
