@@ -1074,3 +1074,8 @@ body[data-menu="green"] { --menu-bg: var(--green); --menu-fg: #fff; --menu-muted
 .send-it { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
 .tile-hint { margin: -4px 0 6px; }
 .pill.s-approved { background: transparent; color: var(--tomato); border: 1px solid var(--tomato); }
+
+/* number tiles are plain numbers on the page, no boxes (Graham, 2026-10-19) */
+.tile.stat, .tile.stat.num-tile { background: none; border: 0; border-radius: 0; padding: 0; }
+button.tile.stat:hover, a.tile.stat:hover { background: none; opacity: .75; }
+.num-tile.on .big { color: var(--blue-ink); }
