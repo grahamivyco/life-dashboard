@@ -30,7 +30,7 @@ export function AppSettings() {
   const toggleLock = async () => {
     setNote('')
     if (lock) { disableBio(); setLock(false); return }
-    try { await enableBio(email); localStorage.setItem('bio-unlocked', '1'); setLock(true) } catch { setNote(`Couldn’t set up ${name}.`) }
+    try { await enableBio(); localStorage.setItem('bio-unlocked', '1'); setLock(true) } catch { setNote(`Couldn’t set up ${name}.`) }
   }
 
   return (

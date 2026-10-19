@@ -8,6 +8,7 @@ const demo = import.meta.env.MODE === 'demo'
 
 // Optional lock (Settings): asks for Face ID / Touch ID once on this device,
 // then trusts the device until sign out. Also offers once per device to add a sign-in passkey.
+const OFFERED = 'bio-offered-2' // v2: ask again, the first offers never added a passkey
 const UNLOCKED = 'bio-unlocked' // localStorage: once verified, this device is trusted until sign out
 export default function BioLock() {
   const [locked, setLocked] = useState(() => (demo ? location.hash.includes('lock=1') : bioEnabled() && !localStorage.getItem(UNLOCKED)))
@@ -26,12 +27,12 @@ export default function BioLock() {
 
   // Offer once per device to add a passkey, so next sign-in is Face ID / Touch ID
   useEffect(() => {
-    if (demo || localStorage.getItem('bio-offered')) return
+    if (demo || localStorage.getItem(OFFERED)) return
     bioAvailable().then(async (ok) => {
       if (!ok) return
       const { data, error } = await supabase.auth.passkey.list()
       if (!error && !(Array.isArray(data) ? data : []).length) setOffer(true)
-      else if (!error) localStorage.setItem('bio-offered', '1')
+      else if (!error) localStorage.setItem(OFFERED, '1')
     })
   }, [])
 
@@ -57,9 +58,9 @@ export default function BioLock() {
     setErr('')
     const { error } = await supabase.auth.registerPasskey()
     if (error) return setErr(`Couldn’t set up ${name}: ${error.message}`)
-    localStorage.setItem('bio-offered', '1'); setOffer(false)
+    localStorage.setItem(OFFERED, '1'); setOffer(false)
   }
-  const notNow = () => { localStorage.setItem('bio-offered', '1'); setOffer(false) }
+  const notNow = () => { localStorage.setItem(OFFERED, '1'); setOffer(false) }
 
   if (locked) return (
     <div className="lock">

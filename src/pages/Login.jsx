@@ -20,9 +20,11 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithPasskey()
     setBusy(false)
     if (!error) localStorage.setItem('bio-unlocked', '1') // just used Face ID, don't ask again
-    if (error) setErr(/abort|cancel|not ?allowed/i.test(error.message + (error.code || ''))
-      ? `${name} was cancelled. Try again, or use the email link.`
-      : `${name} didn’t work (${error.message}). Use the email link once to add it.`)
+    if (!error) return
+    if (/abort|cancel|not ?allowed/i.test(error.message + (error.code || ''))) return setErr(`${name} was cancelled. Try again, or use the email link.`)
+    // No passkey on file for this device (or an old one): the email link signs in, then Face ID gets added
+    setMode('email')
+    setErr(`${name} isn’t set up yet. Sign in with the email link once, then tap Turn on.`)
   }
 
   async function send(e) {
