@@ -17,11 +17,11 @@ Graham Ivy's personal app. Live at https://grahamivyco.github.io/life-dashboard/
 
 ## Design (Open Frame, refined)
 - Cream page `#F3F1EA`, surface `#FFFDF8`, ink `#2F2C27`, muted `#77736A`, hairline `#E4E0D5`
-- Tomato `#F24333` is the only accent (active icon, badges, alerts). No colored fills or tinted cards.
+- Brand colors, one meaning each (Graham, 2026-10-19): tomato `#F24333` = needs you (badges, alerts, active nav); blue `#2F6BF0` = where you are (active tab, selected menu row, chart lines, selected bar); green `#33AC66` = good / money in / done (`.num.pos`, progress, switches, paid); gold `#F4BF3A` = waiting (Pending, sent, applied). Soft tints (`--blue-soft` etc.) for pills and selected states; dark `-ink` variants for text. Stat tiles get a colored dot in the eyebrow. Use the tokens in `styles.css`, never a new color.
 - Fraunces for page titles and big numbers, Inter 13–14px for everything else
 - Icon rail menu that expands to labels on hover / tap of the mark. On phone (≤640px) it is replaced by `src/components/MobileNav.jsx`: compact top bar with the profile avatar top right (→ `#/profile`) and a floating rounded tab bar (Today, Email, Jobs, Events, Housing, Finances, More: a small card above the bar with Clients, Timeline; any tap outside closes it and still goes through)
 - Tiles: 12px radius, 1px hairline, no shadows. Lists use collapsible rows with a chevron; delete/dismiss are icon buttons.
-- One row of tabs per page at most. Any other view, filter, sort or period switch is a `ViewMenu` (`src/components/ViewMenu.jsx`): one button showing what's on, tap for a short list (Graham, 2026-10-19).
+- Controls (`src/components/Controls.jsx`, Graham 2026-10-19): header is eyebrow + title only, no buttons. Under it one `<Controls>` row: `<Tabs>` (page sections, at most one row) and `ViewMenu`s on the left; `end` holds `RoundButton`s (refresh, sync, search) and at most one primary `.btn`. A range row uses the same `<Controls>`: `.range-nav` (‹ title ›) left, period `ViewMenu` at the end. Every control is 32px. Any view, filter, sort or period switch is a `ViewMenu` (one button showing what's on, tap for a list). A view with nothing shows `<Empty title>line</Empty>`; an empty list inside a tile uses `<p className="empty">`.
 
 ## Data
 - `brain_dumps` → sorted by Claude into `items` (task/goal/idea/note) and `events`; set `processed_at`

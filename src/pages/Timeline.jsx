@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabase.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { dayKey, fmtDay, fmtTime } from '../lib.js'
+import { Empty } from '../components/Controls.jsx'
 
 // Scroll back through your life day by day: brain dumps, events and finished items.
 export default function Timeline() {
@@ -34,7 +35,7 @@ export default function Timeline() {
   return (
     <div className="page">
       <PageHeader eyebrow="Last 60 days" title="Timeline" />
-      {days.length === 0 && <p className="empty">Your days fill in as you add brain dumps and events.</p>}
+      {days.length === 0 && <Empty title="Nothing yet.">Your days fill in as you add brain dumps and events.</Empty>}
       <div className="timeline">
         {days.map((g) => (
           <section key={g.k} className="tl-day">

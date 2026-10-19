@@ -6,6 +6,7 @@ import { ago } from '../lib.js'
 import { amt, makeKey, usd, useMoney } from '../money.js'
 import { cancelGuide } from '../subscriptions.js'
 import ViewMenu from '../components/ViewMenu.jsx'
+import { Controls, RoundButton, Tabs } from '../components/Controls.jsx'
 
 const TABS = [
   ['overview', 'Overview'], ['spending', 'Spending'],
@@ -179,14 +180,13 @@ function Spending({ p, send }) {
 
   return (
     <>
-      <div className="row between gap fin-periodbar">
-        <div className="row gap">
+      <Controls end={<ViewMenu label="Period" options={PERIODS.map(([k, label]) => ({ k, label }))} value={period} onPick={(k) => { setPeriod(k); setOffset(0) }} />}>
+        <div className="range-nav">
           <button className="icon-btn" aria-label="Earlier" disabled={!older} onClick={() => setOffset(offset + 1)}><ChevronLeft size={16} /></button>
-          <span className="fin-period">{s.title}</span>
+          <h2 className="range-title">{s.title}</h2>
           <button className="icon-btn" aria-label="Later" disabled={offset === 0} onClick={() => setOffset(offset - 1)}><ChevronRight size={16} /></button>
         </div>
-        <ViewMenu label="Period" options={PERIODS.map(([k, label]) => ({ k, label }))} value={period} onPick={(k) => { setPeriod(k); setOffset(0) }} />
-      </div>
+      </Controls>
 
       <div className="stats even fin-stats">
         <div className="tile stat lead"><span className="eyebrow">Spent</span><span className="big">{usd(s.spent)}</span></div>
@@ -369,7 +369,7 @@ function TxnList({ txns, p, send, compact }) {
           head && <li key={'d' + t.date} className="fin-day">{head}</li>,
           <li key={t.transaction_id} className={'sub' + (isOpen ? ' open' : '') + (t.hidden ? ' fin-hidden' : '')}>
             <button className="sub-head" disabled={!send} aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : t.transaction_id)}>
-              <span className="grow clamp"><span className="fin-name">{t.name}{t.pending ? <span className="pill">Pending</span> : null}</span>
+              <span className="grow clamp"><span className="fin-name">{t.name}{t.pending ? <span className="pill s-pending">Pending</span> : null}</span>
                 <span className="meta fin-sub">{t.category}{t.bought ? ` · ${t.bought}` : ''} · {label[t.account_id] || 'Account'}{compact ? ` · ${day(t.date)}` : ''}</span>
               </span>
               <span className={'num' + (t.amount < 0 ? ' pos' : '')}>{amt(t.amount)}</span>
@@ -553,15 +553,9 @@ export default function Finances() {
     <div className="page">
       <PageHeader eyebrow={`From your Mac · ${ago(snap.published_at)}${waiting ? ` · ${pending[0].label}` : ''}`} title="Finances" />
 
-      <div className="row gap fin-tabbar">
-        <div className="seg tabs-seg fin-tabs">
-          {TABS.map(([k, label]) => <button key={k} aria-pressed={tab === k} onClick={() => go(k)}>{label}</button>)}
-        </div>
-        <button className="icon-btn round-btn" aria-label="Sync banks" title="Sync banks" disabled={waiting}
-          onClick={() => send('POST', '/api/sync', {}, 'Syncing banks')}>
-          <RefreshCw size={16} className={waiting ? 'spin' : ''} />
-        </button>
-      </div>
+      <Controls end={<RoundButton label="Sync banks" disabled={waiting} onClick={() => send('POST', '/api/sync', {}, 'Syncing banks')}><RefreshCw size={15} className={waiting ? 'spin' : ''} /></RoundButton>}>
+        <Tabs tabs={TABS.map(([k, label]) => ({ k, label }))} value={tab} onPick={go} />
+      </Controls>
 
       {slow && <p className="note">Waiting for your Mac. It picks up changes when it's on and the Money app is running.</p>}
       {error && <p className="note fin-alert" onClick={clearError}>{error}</p>}

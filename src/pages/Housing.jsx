@@ -6,6 +6,7 @@ import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago } from '../lib.js'
 import ViewMenu from '../components/ViewMenu.jsx'
+import { Controls, Empty } from '../components/Controls.jsx'
 
 const eur = (n) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
 const DAY = 864e5
@@ -183,7 +184,7 @@ export default function Housing() {
       <div className="page">
         <PageHeader title="Housing" />
         <Specs specs={specs} />
-        <p className="empty">Flats from your alert emails appear here after the next sync.</p>
+        <Empty title="No flats yet.">Flats from your alert emails appear here after the next sync.</Empty>
         <Sources all={[]} />
       </div>
     )
@@ -215,20 +216,19 @@ export default function Housing() {
 
       <Specs specs={specs} />
 
-      <div className="row between wrap gap">
+      <Controls end={<ViewMenu label="Sort" value={sort} onPick={setSort}
+        options={[['newest', 'Newest'], ['cheapest', 'Cheapest'], ['size', 'Biggest']].map(([k, label]) => ({ k, label }))} />}>
         <ViewMenu label="Show" value={view} onPick={setView}
           options={[['fits', 'Fits'], ['new', 'New'], ['all', 'All'], ['saved', 'Saved'], ['hidden', 'Hidden']]
             .filter(([k]) => k !== 'hidden' || count('hidden') > 0).map(([k, label]) => ({ k, label, n: count(k) }))} />
-        <ViewMenu label="Sort" value={sort} onPick={setSort}
-          options={[['newest', 'Newest'], ['cheapest', 'Cheapest'], ['size', 'Biggest']].map(([k, label]) => ({ k, label }))} />
-      </div>
+      </Controls>
 
       {shown.length ? (
         <ul className="homes">
           {shown.map((l) => <Listing key={l.id} l={l} mark={marks[l.id]} onMark={onMark} miss={misses(l, specs)} />)}
         </ul>
       ) : (
-        <p className="empty">{view === 'saved' ? 'Star a flat to keep it here.' : view === 'new' ? 'Nothing new this week.' : view === 'fits' ? 'Nothing fits right now. Check All or loosen your specs.' : 'Nothing here.'}</p>
+        <Empty title={view === 'saved' ? 'Nothing saved.' : view === 'new' ? 'Nothing new this week.' : view === 'fits' ? 'Nothing fits right now.' : 'Nothing here.'}>{view === 'saved' ? 'Star a flat to keep it here.' : view === 'fits' ? 'Check All or loosen your specs.' : null}</Empty>
       )}
 
       <Sources all={all} />

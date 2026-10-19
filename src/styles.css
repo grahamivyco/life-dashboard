@@ -7,6 +7,12 @@
   --line: #E4E0D5;
   --hover: #ECE9E1;
   --tomato: #F24333;
+  /* Open Frame brand colors. Each has one meaning everywhere:
+     tomato = needs you, blue = where you are (selected), green = good / money in / done, gold = waiting. */
+  --tomato-soft: #FCE4E0;
+  --blue: #2F6BF0; --blue-ink: #2456CF; --blue-soft: #E3EBFD;
+  --green: #33AC66; --green-ink: #1E7A45; --green-soft: #DDF2E5;
+  --gold: #F4BF3A; --gold-ink: #7A5800; --gold-soft: #FCEFC6;
   --display: "Fraunces", Georgia, serif;
   --body: "Inter", ui-sans-serif, system-ui, sans-serif;
   --rail: 60px;
@@ -311,9 +317,6 @@ ul.tile.list { padding-top: 6px; padding-bottom: 6px; }
 .next-up .eyebrow { margin: 0; }
 .next-t { font-family: var(--display); font-weight: 500; font-size: 22px; letter-spacing: -.01em; line-height: 1.2; }
 .next-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; }
-.cal-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.cal-nav { display: flex; align-items: center; gap: 2px; }
-.cal-range { font-family: var(--display); font-weight: 500; font-size: 18px; min-width: 150px; text-align: center; }
 .cal-day { display: flex; flex-direction: column; gap: 8px; }
 .cal-dh { display: flex; align-items: baseline; gap: 8px; }
 .cal-dn { font-family: var(--display); font-weight: 500; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; }
@@ -365,9 +368,6 @@ ul.tile.list { padding-top: 6px; padding-bottom: 6px; }
 .ex-web { display: flex; flex-direction: column; gap: 8px; }
 .ex-web .btn { text-decoration: none; color: inherit; }
 @media (max-width: 640px) {
-  .cal-range { min-width: 0; font-size: 16px; }
-  .cal-bar .seg { order: 2; }
-  .cal-nav { flex: 1; justify-content: space-between; }
   .cal-cards { grid-template-columns: 1fr; }
   .month-cell { min-height: 56px; padding: 4px 2px; align-items: center; }
   .month-ev .clamp { display: none; }
@@ -768,16 +768,9 @@ button.set-row:active, button.set-row:hover { background: var(--hover); }
 .switch.on i { transform: translateX(18px); }
 
 /* ---------- finances (money app from the Mac) ---------- */
-.fin-tabs { margin-bottom: 2px; }
-.fin-periodbar { flex-wrap: nowrap; }
-.fin-periodbar .fin-period { min-width: 0; }
 .fin-recurring { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; scroll-margin-top: 80px; }
 .fin-recurring > .tile-head { padding: 0 4px; flex-wrap: wrap; gap: 4px 12px; }
-.fin-tabbar { flex-wrap: nowrap; }
-.fin-tabbar .fin-tabs { flex: 1; min-width: 0; align-self: auto; }
-.fin-tabbar .fin-tabs button { flex: 1; }
 
-@media (min-width: 641px) { .fin-tabbar .fin-tabs { flex: none; } .fin-tabbar .fin-tabs button { flex: none; } }
 .fin-line { display: block; width: 100%; height: 120px; overflow: visible; }
 .fin-line-ink { fill: none; stroke: var(--fg); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
 .fin-line-ghost { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; opacity: .6; }
@@ -788,7 +781,6 @@ button.set-row:active, button.set-row:hover { background: var(--hover); }
 .fin-legend i.ghost { border-top: 2px dashed var(--muted); }
 .fin-link { color: inherit; }
 .fin-alert { color: var(--fg); border-color: var(--tomato); cursor: pointer; }
-.fin-period { font-family: var(--display); font-size: 17px; font-weight: 500; min-width: 120px; text-align: center; }
 .fin-hist { display: flex; align-items: stretch; gap: 6px; height: 150px; }
 .fin-hist-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; border: 0; background: none; padding: 0; font: inherit; cursor: pointer; }
 .fin-hist-col:disabled { cursor: default; opacity: .5; }
@@ -858,9 +850,76 @@ button.set-row:active, button.set-row:hover { background: var(--hover); }
 .view-menu-list.left { right: auto; left: 0; }
 .view-menu-list button { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: none; font: inherit; font-size: 14px; color: var(--fg); text-align: left; white-space: nowrap; cursor: pointer; }
 .view-menu-list button:hover, .view-menu-list button[aria-checked="true"] { background: var(--hover); }
-.jobs-tabs { flex-wrap: nowrap; align-items: center; min-width: 0; }
-.jobs-tabs .tabs-seg { min-width: 0; }
 
 /* round icon button that sits in a row of pill buttons (Refresh, Sync) */
 .round-btn { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 99px; background: var(--surface); color: var(--fg); }
-.fin-tabbar .round-btn { width: 34px; height: 34px; }
+
+/* ================= one control system (Graham, 2026-10-19) =================
+   Page: header (eyebrow + title) -> one .controls row -> content.
+   .controls: [Tabs] [ViewMenus] ... [RoundButtons] [one primary .btn]. Everything 32px tall.
+   Inside the page, a range row uses the same .controls: [‹ title ›] ... [ViewMenu].
+   Empty view: <Empty> card. Empty list inside a tile: .empty line. */
+.controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.controls-end { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
+.controls > .tabs-seg { min-width: 0; }
+.seg.tabs-seg { padding: 2px; }
+.seg.tabs-seg button { height: 26px; font-size: 13px; padding: 0 14px; }
+.range-nav { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.range-title { font-family: var(--display); font-weight: 500; font-size: 18px; text-align: center; min-width: 0; padding: 0 4px; white-space: nowrap; }
+.round-btn.on { background: var(--fg); border-color: var(--fg); color: var(--surface); }
+.empty-card { list-style: none; }
+@media (max-width: 640px) {
+  .controls > .tabs-seg { flex: 1; }
+  .controls > .tabs-seg button { flex: 1; padding: 0 8px; }
+  .view-menu.tight .vm-label { display: none; }
+  .range-title { font-size: 16px; }
+}
+/* Touch screens keep :hover after a tap, which left the last tapped pill shaded. */
+@media (hover: none) {
+  .btn:hover, .icon-btn:hover, .round-btn:hover { background: var(--surface); color: inherit; }
+  .icon-btn:not(.round-btn):hover { background: none; }
+  .btn.primary:hover { background: var(--fg); }
+}
+
+/* ================= brand color, by meaning ================= */
+/* Blue: where you are */
+.seg button[aria-pressed="true"] { background: var(--blue-soft); color: var(--blue-ink); }
+.view-menu-list button[aria-checked="true"] { background: var(--blue-soft); color: var(--blue-ink); }
+.view-menu-list button[aria-checked="true"] svg { color: var(--blue); }
+.ex-cats .chip[aria-pressed="true"], .chip-check:has(input:checked) { border-color: var(--blue); color: var(--blue-ink); background: var(--blue-soft); }
+.round-btn.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+.fin-hist-col.on .fin-hist-bar i { background: var(--blue); }
+.fin-hist-col.on .meta { color: var(--blue-ink); }
+.fin-line-ink { stroke: var(--blue); }
+.fin-line-fill { fill: var(--blue); opacity: .08; }
+.fin-dot { background: var(--blue); }
+.fin-line-cursor { stroke: var(--blue); }
+.fin-bar i { background: var(--blue); }
+.cal-dot.d-ink { background: var(--blue); }
+.cal-dot.d-grey { background: var(--green); }
+.cal-dot.d-ring { box-shadow: inset 0 0 0 1.5px var(--blue); }
+:focus-visible { outline-color: var(--blue); }
+/* Green: good, money in, done */
+.num.pos { color: var(--green-ink); }
+.jprog i.on { background: var(--green); }
+.fin-progress i { background: var(--green); }
+.check.on, .switch.on { background: var(--green); border-color: var(--green); }
+.help-steps input { accent-color: var(--green); }
+.pill.s-paid, .pill.s-offer, .pill.s-accepted, .pill.s-interview { background: var(--green-soft); color: var(--green-ink); }
+/* Gold: waiting on someone */
+.pill.s-pending, .pill.s-sent, .pill.s-applied, .pill.s-approved, .pill.s-paused { background: var(--gold-soft); color: var(--gold-ink); }
+/* Tomato: needs you */
+.pill.alert, .pill.s-disputed, .pill.s-overdue { background: var(--tomato-soft); color: #B52A1C; }
+.pill.claude.needs_approval { background: var(--tomato-soft); }
+/* Stat tiles get a brand dot so a row of numbers isn't all grey */
+.stat .eyebrow::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; background: var(--blue); }
+.stats > .stat:nth-child(4n+2) .eyebrow::before { background: var(--green); }
+.stats > .stat:nth-child(4n+3) .eyebrow::before { background: var(--gold); }
+.stats > .stat:nth-child(4n+4) .eyebrow::before { background: var(--tomato); }
+.num-grid > .stat:nth-child(5n+2) .eyebrow::before { background: var(--green); }
+.num-grid > .stat:nth-child(5n+3) .eyebrow::before { background: var(--gold); }
+.num-grid > .stat:nth-child(5n+4) .eyebrow::before { background: var(--tomato); }
+.num-grid > .stat:nth-child(5n+5) .eyebrow::before { background: var(--blue); }
+.num-tile.on { background: var(--blue-soft); }
+.fin-legend i { border-top-color: var(--blue); }
+.fin-legend i.ghost { border-top-color: var(--muted); }

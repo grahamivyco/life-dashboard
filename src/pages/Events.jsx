@@ -6,6 +6,7 @@ import { useEvents, toDate, CATS } from '../events.js'
 import { useProfile } from '../profile.js'
 import { ago, dayKey, fmtTime } from '../lib.js'
 import ViewMenu from '../components/ViewMenu.jsx'
+import { Controls, Empty, Tabs } from '../components/Controls.jsx'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -144,24 +145,25 @@ function Calendar({ all, remove }) {
 
   return (
     <>
-      <div className="cal-bar">
-        <ViewMenu options={[
+      <Controls end={<>
+        {!isNow && <button className="btn" onClick={() => setCursor(new Date())}>Today</button>}
+        <ViewMenu label="Period" options={[
           { k: 'day', label: 'Day', icon: <Square size={14} /> },
           { k: 'week', label: 'Week', icon: <Columns3 size={14} /> },
           { k: 'month', label: 'Month', icon: <Grid3x3 size={14} /> },
         ]} value={view} onPick={setView} />
-        <div className="cal-nav">
+      </>}>
+        <div className="range-nav">
           <button className="icon-btn" onClick={() => step(-1)} aria-label="Previous"><ChevronLeft size={16} /></button>
-          <h2 className="cal-range">{rangeTitle(view, from, to)}</h2>
+          <h2 className="range-title">{rangeTitle(view, from, to)}</h2>
           <button className="icon-btn" onClick={() => step(1)} aria-label="Next"><ChevronRight size={16} /></button>
         </div>
-        {!isNow && <button className="btn sm" onClick={() => setCursor(new Date())}>Today</button>}
-      </div>
+      </Controls>
 
       {view === 'month' ? (
         <Month from={from} events={inRange} onPick={(d) => { setCursor(d); setView('day') }} />
       ) : groups.length === 0 ? (
-        <p className="empty">Nothing planned {view === 'day' ? 'this day' : 'this week'}.</p>
+        <Empty title={`Nothing planned ${view === 'day' ? 'this day' : 'this week'}.`}>Add an event or pick one from Explore.</Empty>
       ) : (
         groups.map((g) => (
           <section key={g.k} className="cal-day">
@@ -235,7 +237,7 @@ function Explore({ picks, city = 'Barcelona', all, add }) {
       </div>
 
       {rows.length === 0 ? (
-        <p className="empty">{picks.length ? 'No picks match. Try the web links below.' : 'No picks yet. The weekly scout adds them.'}</p>
+        <Empty title={picks.length ? 'No picks match.' : 'No picks yet.'}>{picks.length ? 'Try the web links below.' : 'The weekly scout adds them.'}</Empty>
       ) : (
         <ul className="tile list picks">
           {rows.map((p) => {
@@ -304,11 +306,11 @@ export default function Events() {
 
   return (
     <div className="page">
-      <PageHeader eyebrow={syncedAt ? `Google Calendar · updated ${ago(syncedAt)}` : 'Google Calendar syncs hourly'} title="Events">
-        <ViewMenu options={[{ k: 'calendar', label: 'Calendar', icon: <CalendarDays size={14} /> }, { k: 'explore', label: 'Explore', icon: <Search size={14} /> }]}
-          value={tab} onPick={setTab} />
-        <button className={'btn' + (adding ? '' : ' primary')} onClick={() => setAdding((a) => !a)}>{adding ? 'Cancel' : <><Plus size={14} /> Add event</>}</button>
-      </PageHeader>
+      <PageHeader eyebrow={syncedAt ? `Google Calendar · updated ${ago(syncedAt)}` : 'Google Calendar syncs hourly'} title="Events" />
+
+      <Controls end={<button className={'btn' + (adding ? '' : ' primary')} onClick={() => setAdding((a) => !a)}>{adding ? 'Cancel' : <><Plus size={14} /> Add event</>}</button>}>
+        <Tabs tabs={[{ k: 'calendar', label: 'Calendar' }, { k: 'explore', label: 'Explore' }]} value={tab} onPick={setTab} />
+      </Controls>
 
       {adding && (
         <form className="tile form-grid" onSubmit={save}>

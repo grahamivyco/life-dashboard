@@ -7,6 +7,7 @@ import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { fmtDay } from '../lib.js'
 import ViewMenu from '../components/ViewMenu.jsx'
+import { Controls, Empty, RoundButton, Tabs } from '../components/Controls.jsx'
 
 // Jobs: public.jobs (moved from the Job Hub) and public.job_profile. PDFs live in the private
 // job-docs bucket at <user id>/<doc path>. The daily digest's picks are jobs rows with extra.digest;
@@ -267,8 +268,8 @@ function JobRow({ j, open, onToggle, docs, act, n, tracker }) {
           <span className="meta clamp">{[name(j), j.pay].filter(Boolean).join(' · ')}</span>
         </span>
         {j.needs_you && <span className="tag">Needs you</span>}
-        {tracker ? <><span className="pill">{LABEL[j.status]}</span><Progress j={j} /></>
-          : j.status === 'new' ? <Due j={j} /> : <span className="pill">{LABEL[j.status]}</span>}
+        {tracker ? <><span className={'pill s-' + j.status}>{LABEL[j.status]}</span><Progress j={j} /></>
+          : j.status === 'new' ? <Due j={j} /> : <span className={'pill s-' + j.status}>{LABEL[j.status]}</span>}
         {!tracker && grade(j.score) && <span className="grade" title={`Fit score ${j.score}`}>{grade(j.score)}</span>}
       </button>
       {open && (
@@ -283,7 +284,7 @@ function JobRow({ j, open, onToggle, docs, act, n, tracker }) {
 
 function OneAtATime({ queue, docs, act }) {
   const j = queue[0]
-  if (!j) return <section className="tile empty-card"><b>All caught up.</b><span className="meta">No new jobs to look at. Search for more or check the tracker.</span></section>
+  if (!j) return <Empty title="All caught up.">No new jobs to look at. Search for more or check the tracker.</Empty>
   return (
     <section key={j.slug} className="tile reply-card job-card">
       <div className="row between">
@@ -427,7 +428,7 @@ function TrackerTab({ jobs, docs, act, startOpen }) {
           <ul className="list jobs">{g.rows.map((j) => <JobRow key={j.slug} j={j} tracker open={open === j.slug} onToggle={() => toggle(j.slug)} docs={docs} act={act} />)}</ul>
         </section>
       ))}
-      {groups.every((g) => !g.rows.length) && <p className="empty">Nothing in progress. Apply to something in Digest.</p>}
+      {groups.every((g) => !g.rows.length) && <Empty title="Nothing in progress.">Apply to something in New.</Empty>}
       {closed.length > 0 && (
         <div>
           <button className="mini" onClick={() => setShowClosed(!showClosed)}>{showClosed ? 'Hide' : 'Show'} closed ({closed.length})</button>
@@ -609,24 +610,15 @@ export default function Jobs() {
 
   return (
     <div className="page">
-      <PageHeader title="Jobs">
-        {current === 'digest' && (
-          <>
-            <ViewMenu options={[{ k: 'one', label: 'One at a time', icon: <Layers size={14} /> }, { k: 'list', label: 'List', icon: <List size={14} /> }]}
-              value={view} onPick={pickView} />
-          </>
-        )}
-      </PageHeader>
+      <PageHeader title="Jobs" />
 
-      <div className="row gap jobs-tabs">
-        <div className="seg tabs-seg">
-          {tabs.map((t) => (
-            <button key={t.k} aria-pressed={current === t.k} onClick={() => setTab(t.k)}>{t.label}{t.n ? <span className="seg-n hot"> {t.n}</span> : null}</button>
-          ))}
-        </div>
-        <button className={'icon-btn fin-sync' + (searching ? ' on' : '')} aria-label="Search for jobs" title="Search for jobs"
-          onClick={() => { setTab('digest'); setSearching(!searching) }}><Search size={16} /></button>
-      </div>
+      <Controls end={<RoundButton label="Search for jobs" on={searching} onClick={() => { setTab('digest'); setSearching(!searching) }}><Search size={15} /></RoundButton>}>
+        <Tabs tabs={tabs} value={current} onPick={setTab} />
+        {current === 'digest' && (
+          <ViewMenu tight options={[{ k: 'one', label: 'One at a time', icon: <Layers size={14} /> }, { k: 'list', label: 'List', icon: <List size={14} /> }]}
+            value={view} onPick={pickView} />
+        )}
+      </Controls>
 
       {err && <p className="error">{err}</p>}
       {!jobs && <p className="empty">Loading…</p>}

@@ -5,6 +5,7 @@ import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago, fmtDay } from '../lib.js'
+import { Empty } from '../components/Controls.jsx'
 
 const usd = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: n % 1 ? 2 : 0 }).format(n)
 const statusLabel = { sent: 'Sent', paid: 'Paid', disputed: 'Pushed back', overdue: 'Overdue', paused: 'Paused' }
@@ -104,7 +105,7 @@ function ClientCard({ client, data, emailIds }) {
                       <a className="client-mail" href={i.url} target="_blank" rel="noreferrer">
                         <span className="inv-num">#{i.number}</span>
                         <span className="grow clamp muted">{i.note || fmtDay(i.date)}</span>
-                        <span className={'pill' + (i.status === 'disputed' || i.status === 'overdue' ? ' alert' : '')}>{statusLabel[i.status] || i.status}</span>
+                        <span className={'pill s-' + i.status + (i.status === 'disputed' || i.status === 'overdue' ? ' alert' : '')}>{statusLabel[i.status] || i.status}</span>
                         <span className="num">{usd(i.amount)}</span>
                       </a>
                     </li>
@@ -137,7 +138,7 @@ export default function Clients() {
     <div className="page">
       <PageHeader eyebrow={snap ? `Gmail · updated ${ago(snap.synced_at)}` : 'Gmail'} title="Clients" />
       {clients?.map((c) => <ClientCard key={c.id} client={c} data={byId[c.id]} emailIds={emailIds} />)}
-      {clients && clients.length === 0 && <p className="empty">No clients yet.</p>}
+      {clients && clients.length === 0 && <Empty title="No clients yet." />}
     </div>
   )
 }

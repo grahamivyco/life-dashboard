@@ -3,7 +3,7 @@ import { Check, ChevronDown } from 'lucide-react'
 
 // Shows only the view that's on. Tapping it opens a short list of the others.
 // options: [{ k, label, icon?, n?, hot? }]
-export default function ViewMenu({ options, value, onPick, label = 'View' }) {
+export default function ViewMenu({ options, value, onPick, label = 'View', tight }) {
   const [open, setOpen] = useState(false)
   const [side, setSide] = useState('right')
   const ref = useRef(null)
@@ -19,14 +19,14 @@ export default function ViewMenu({ options, value, onPick, label = 'View' }) {
   const count = (o) => (o.n != null && o.n !== 0 ? <span className={'seg-n' + (o.hot ? ' hot' : '')}>{o.n}</span> : null)
 
   return (
-    <div className="view-menu" ref={ref}>
+    <div className={'view-menu' + (tight ? ' tight' : '')} ref={ref}>
       <button className="btn" aria-label={`${label}: ${on.label}`} aria-haspopup="menu" aria-expanded={open} onClick={() => {
         // Open toward whichever side has room, so the list never runs off the screen.
         const box = ref.current.getBoundingClientRect()
         setSide(box.right < 190 ? 'left' : 'right')
         setOpen(!open)
       }}>
-        {on.icon}{on.label}{count(on)}<ChevronDown size={13} className="view-menu-chev" />
+        {on.icon}<span className="vm-label">{on.label}</span>{count(on)}<ChevronDown size={13} className="view-menu-chev" />
       </button>
       {open && (
         <div className={`view-menu-list ${side}`} role="menu">

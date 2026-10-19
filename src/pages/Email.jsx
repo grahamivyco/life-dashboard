@@ -10,6 +10,7 @@ import { gmail, nameOf } from '../gmail.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago, fmtTime, fmtDay } from '../lib.js'
 import ViewMenu from '../components/ViewMenu.jsx'
+import { Controls, Empty, RoundButton } from '../components/Controls.jsx'
 
 const ME = 'grahamivy.co@gmail.com'
 const UNDO_MS = 5000
@@ -373,7 +374,7 @@ function ReplyQueue({ items, live, onDone, askedMap, onAsked }) {
     if (live) gmail.thread(t.id).then((th) => th && setThread(th)).catch(() => {})
   }, [t?.id])
 
-  if (!t) return <section className="tile empty-card"><b>All caught up.</b><span className="meta">Nothing waiting on a reply.</span></section>
+  if (!t) return <Empty title="All caught up.">Nothing waiting on a reply.</Empty>
 
   const last = thread?.messages.filter((m) => !m.from.toLowerCase().includes(ME)).pop()
   const body = last?.body || t.message || t.snippet
@@ -493,12 +494,13 @@ export default function Email() {
 
   return (
     <div className="page">
-      <PageHeader eyebrow={live ? 'Gmail · live' : snap ? `Gmail · updated ${ago(snap.synced_at)}` : 'Gmail'} title="Email">
+      <PageHeader eyebrow={live ? 'Gmail · live' : snap ? `Gmail · updated ${ago(snap.synced_at)}` : 'Gmail'} title="Email" />
+
+      <Controls end={live && <RoundButton label="Refresh" onClick={load} disabled={busy}><RefreshCw size={15} className={busy ? 'spin' : ''} /></RoundButton>}>
         <ViewMenu options={[{ k: 'reply', label: 'One at a time', icon: <Layers size={14} /> }, { k: 'inbox', label: 'List', icon: <List size={14} /> }]}
           value={tab === 'outbox' ? 'inbox' : tab} onPick={(k) => { setView(k); if (filter === 'drafts') setFilter('all'); setOpen(null) }} />
         <ViewMenu label="Show" options={[...filters, ...(live ? [{ k: 'drafts', label: 'Drafts' }] : [])]} value={filter} onPick={pick} />
-        {live && <button className="icon-btn round-btn" onClick={load} disabled={busy} aria-label="Refresh" title="Refresh"><RefreshCw size={15} className={busy ? 'spin' : ''} /></button>}
-      </PageHeader>
+      </Controls>
 
       {!live && tab !== 'reply' && <Connect onConnected={() => setLive(true)} />}
       {err && <p className="error">{err}</p>}
@@ -533,7 +535,7 @@ export default function Email() {
               </li>
             )
           })}
-          {(live ? threads : snap) && shown.length === 0 && <li className="empty">{filter === 'reply' ? 'All caught up.' : 'Nothing here.'}</li>}
+          {(live ? threads : snap) && shown.length === 0 && <li className="empty-card"><b>{filter === 'reply' ? 'All caught up.' : 'Nothing here.'}</b><span className="meta">{filter === 'reply' ? 'Nothing waiting on a reply.' : 'No emails in this view.'}</span></li>}
           {live && !threads && !err && <li className="empty">Loading…</li>}
         </ul>
       )}
@@ -555,7 +557,7 @@ export default function Email() {
               </li>
             )
           })}
-          {drafts && drafts.length === 0 && <li className="empty">No drafts.</li>}
+          {drafts && drafts.length === 0 && <li className="empty-card"><b>No drafts.</b><span className="meta">Drafts you start in Gmail show up here.</span></li>}
         </ul>
       )}
     </div>
