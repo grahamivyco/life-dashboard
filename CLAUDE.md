@@ -12,12 +12,13 @@ Graham Ivy's personal app. Live at https://grahamivyco.github.io/life-dashboard/
 - Concise UI copy. No em-dash asides, no hype words.
 - When Graham asks for a UI change or idea, include screenshots of what it looks like:
   `node scripts/screenshot.mjs <name> <route> [...]` builds with sample data (`--mode demo`, `src/demo.js`), saves desktop + phone PNGs to `public/previews/<name>/`, and prints their live URLs. Commit them so the URLs work. Never screenshot real data.
+- Phone must never zoom out or overflow sideways. After layout changes run `node scripts/phone-audit.mjs <routes>` (add `STRESS=1` to test long text); everything should print `ok` with no offenders.
 
 ## Design (Open Frame, refined)
 - Cream page `#F3F1EA`, surface `#FFFDF8`, ink `#2F2C27`, muted `#77736A`, hairline `#E4E0D5`
 - Tomato `#F24333` is the only accent (active icon, badges, alerts). No colored fills or tinted cards.
 - Fraunces for page titles and big numbers, Inter 13–14px for everything else
-- Icon rail menu that expands to labels on hover / tap of the mark
+- Icon rail menu that expands to labels on hover / tap of the mark. On phone (≤640px) it is replaced by `src/components/MobileNav.jsx`: compact top bar (☰ More: Clients, Timeline, Settings) and a floating rounded tab bar (Today, Email, Jobs, Events, Housing, Finances, profile avatar → `#/profile`)
 - Tiles: 12px radius, 1px hairline, no shadows. Lists use collapsible rows with a chevron; delete/dismiss are icon buttons.
 
 ## Data

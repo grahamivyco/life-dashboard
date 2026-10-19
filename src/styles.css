@@ -18,6 +18,8 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
+/* stop iOS from inflating text in wide blocks */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
   background: var(--bg); color: var(--fg);
   font: 14px/1.5 var(--body);
@@ -691,7 +693,7 @@ a.catch-row:hover .clamp:first-child { text-decoration: underline; text-underlin
 .doc-list li { display: flex; align-items: center; gap: 8px; min-height: 32px; color: var(--muted); }
 .doc-list a { color: var(--fg); text-underline-offset: 3px; }
 .doc-list .icon-btn { width: 28px; height: 28px; }
-.list > li.doc-job { display: grid; grid-template-columns: minmax(140px, 220px) 1fr; align-items: start; gap: 16px; padding: 10px 0; }
+.list > li.doc-job { display: grid; grid-template-columns: minmax(140px, 220px) minmax(0, 1fr); align-items: start; gap: 16px; padding: 10px 0; }
 .ask-field { color: var(--fg); font-size: 13px; }
 .ask-field textarea { margin-top: 4px; }
 .search-panel { max-width: 760px; }
@@ -709,7 +711,7 @@ a.catch-row:hover .clamp:first-child { text-decoration: underline; text-underlin
 .job-card .job-next { font-weight: 500; }
 .prep { padding-top: 4px; }
 @media (max-width: 640px) {
-  .list > li.doc-job { grid-template-columns: 1fr; gap: 4px; }
+  .list > li.doc-job { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .jprog { width: 56px; }
   .wbar { width: 72px; }
 }
@@ -748,4 +750,17 @@ a.catch-row:hover .clamp:first-child { text-decoration: underline; text-underlin
   .prof-head { gap: 14px; padding: 14px; }
   .kv > li { flex-direction: column; align-items: stretch; gap: 2px; }
   .kv-k { width: auto; }
+}
+
+/* phone: one full-width column, nothing wider than the screen */
+@media (max-width: 640px) {
+  .main { overflow-x: clip; }
+  .page { max-width: 100%; min-width: 0; }
+  .page > *, .tile, .col, .grow, .list > li > *, .row > *, .check-row > * { min-width: 0; }
+  .clamp { max-width: 100%; }
+  .pill, .tag, .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .tile, .page p, .meta, .hint { overflow-wrap: anywhere; }
+  .grid.two { grid-template-columns: minmax(0, 1fr); }
+  img, video, iframe, table, pre { max-width: 100%; }
+  pre { white-space: pre-wrap; }
 }
