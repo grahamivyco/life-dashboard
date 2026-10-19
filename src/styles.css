@@ -1053,13 +1053,15 @@ body[data-menu="green"] { --menu-bg: var(--green); --menu-fg: #fff; --menu-muted
 .dump-said p { margin: 0; }
 .dump-said .dump-live { color: var(--muted); font-style: italic; }
 .dump-hero .wave { flex: none; width: min(260px, 100%); height: 22px; justify-content: center; }
-.hero-actions { display: flex; align-items: center; justify-content: center; gap: 10px; }
-.hero-mic { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; transition: color var(--ease), border-color var(--ease); }
+.hero-actions { display: flex; align-items: center; justify-content: center; gap: 8px; }
+/* Mic and Save: two quiet round buttons, same size, side by side (like Claude's voice input) */
+.hero-mic, .hero-send { flex: none; display: grid; place-items: center; width: var(--ctl, 36px); height: var(--ctl, 36px); padding: 0; border-radius: 50%; border: 1px solid var(--ctl-line, var(--line)); line-height: 0; cursor: pointer; transition: color var(--ease), background var(--ease), border-color var(--ease); }
+.hero-mic { background: var(--surface); color: var(--fg); }
 .hero-mic:hover { color: var(--tomato); }
 .hero-mic.on { border-color: var(--tomato); color: var(--tomato); }
 .hero-mic:disabled { opacity: .4; cursor: default; }
-.hero-send { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 0; background: var(--fg); color: var(--surface); cursor: pointer; transition: opacity var(--ease); }
-.hero-send:disabled { background: var(--hover); color: var(--muted); cursor: default; }
+.hero-send { background: var(--fg); border-color: var(--fg); color: var(--surface); }
+.hero-send:disabled { background: var(--hover); border-color: var(--ctl-line, var(--line)); color: var(--muted); cursor: default; }
 @media (max-width: 640px) {
   .dump-hero { padding: 28px 16px 22px; gap: 16px; }
   .dump-q { font-size: 26px; }

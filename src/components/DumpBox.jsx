@@ -47,7 +47,7 @@ export default function DumpBox({ onSaved }) {
           aria-label={listening ? 'Stop' : 'Talk'}
           title={listening ? 'Stop' : 'Talk'}
         >
-          {listening ? <Square size={10} fill="currentColor" /> : <Mic size={15} strokeWidth={2} />}
+          {listening ? <Square size={11} fill="currentColor" /> : <Mic size={16} strokeWidth={2} />}
         </button>
         <button className="hero-send" onClick={save} disabled={busy || !said} aria-label="Save" title="Save"><ArrowUp size={16} strokeWidth={2.25} /></button>
       </div>
