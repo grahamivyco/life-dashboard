@@ -6,7 +6,7 @@ import { useEvents, toDate, CATS } from '../events.js'
 import { useProfile } from '../profile.js'
 import { ago, dayKey, fmtTime } from '../lib.js'
 import ViewMenu from '../components/ViewMenu.jsx'
-import { Controls, Empty, Tabs } from '../components/Controls.jsx'
+import { Controls, Empty, RoundButton, Tabs, useIsPhone } from '../components/Controls.jsx'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -285,6 +285,7 @@ function Explore({ picks, city = 'Barcelona', all, add }) {
 }
 
 export default function Events() {
+  const phone = useIsPhone()
   const { all, picks, picksCity, syncedAt, remove, add } = useEvents()
   const [params, setParams] = useSearchParams()
   const tab = params.get('tab') === 'explore' ? 'explore' : 'calendar'
@@ -308,7 +309,9 @@ export default function Events() {
     <div className="page">
       <PageHeader eyebrow={syncedAt ? `Google Calendar · updated ${ago(syncedAt)}` : 'Google Calendar syncs hourly'} title="Events" />
 
-      <Controls end={<button className={'btn' + (adding ? '' : ' primary')} onClick={() => setAdding((a) => !a)}>{adding ? 'Cancel' : <><Plus size={14} /> Add event</>}</button>}>
+      <Controls end={phone
+        ? <RoundButton label={adding ? 'Cancel' : 'Add event'} on={adding} onClick={() => setAdding((a) => !a)}>{adding ? <X size={16} /> : <Plus size={16} />}</RoundButton>
+        : <button className={'btn' + (adding ? '' : ' primary')} onClick={() => setAdding((a) => !a)}>{adding ? 'Cancel' : <><Plus size={14} /> Add event</>}</button>}>
         <Tabs tabs={[{ k: 'calendar', label: 'Calendar', icon: CalendarDays }, { k: 'explore', label: 'Explore', icon: Compass }]} value={tab} onPick={setTab} />
       </Controls>
 
