@@ -5,7 +5,7 @@ import {
 // `legacy` = existing dashboard, linked until that section moves into the app
 export const sections = [
   { path: '/', label: 'Today', icon: Sun, badge: 'claude' },
-  { path: '/email', label: 'Email', icon: Mail, badge: 'email' },
+  { path: '/email', label: 'Email', icon: Mail, badge: 'email', dot: true },
   { path: '/timeline', label: 'Timeline', icon: History },
   { path: '/finances', label: 'Finances', icon: Wallet },
   { path: '/jobs', label: 'Jobs', icon: Briefcase },

@@ -5,6 +5,7 @@ import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import { useDictation } from '../useDictation.js'
 import { askClaude } from '../askClaude.js'
+import { LANGS, langName, translate, detect, canTranslate } from '../translate.js'
 import { gmail, nameOf } from '../gmail.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago, fmtTime, fmtDay } from '../lib.js'
@@ -57,12 +58,66 @@ function ReplyOptions({ options, value, onPick }) {
       <span className="meta">Reply options</span>
       <div className="opts">
         {options.map((o, i) => (
-          <button key={i} className="opt" aria-pressed={value === o.body} onClick={() => onPick(o.body)}>
+          <button key={i} className="opt" aria-pressed={value === o.body} onClick={() => onPick(o)}>
             <b>{o.label}</b>
             <span className="opt-text">{o.body.replace(/^(hi|hello|hey|hola|dear|bon dia|buenas)\b[^\n]*\n+/i, '')}</span>
           </button>
         ))}
       </div>
+    </div>
+  )
+}
+
+// Their message in English by default, with the original one tap away.
+// Uses the sync's translation when there is one, else the browser's on-device translator.
+function MsgText({ text, en, className = '' }) {
+  const [auto, setAuto] = useState(null)
+  const [orig, setOrig] = useState(false)
+  useEffect(() => {
+    setAuto(null)
+    if (en || !text || !canTranslate()) return
+    let off = false
+    detect(text).then((l) => (l && l !== 'en' ? translate(text, 'en', l) : null)).then((r) => { if (!off && r) setAuto(r) })
+    return () => { off = true }
+  }, [text, en])
+  const english = en || auto
+  return (
+    <>
+      <p className={'msg-text ' + className}>{english && !orig ? english : text}</p>
+      {english && <button className="mini tr-toggle" onClick={() => setOrig(!orig)}>{orig ? 'Show English' : 'Show original'}</button>}
+    </>
+  )
+}
+
+// Language of the reply box. Draft options come with English, Spanish and Catalan versions
+// from the sync; anything typed goes through the browser's translator, else to Claude.
+function useReplyLang(text, setText) {
+  const [lang, setLang] = useState(null)
+  const [busy, setBusy] = useState(null)
+  const [note, setNote] = useState('')
+  const versions = useRef(null)
+  const reset = (body, tr, l) => { versions.current = tr || null; setText(body); setLang(l || null); setNote(''); setBusy(null) }
+  const to = async (k) => {
+    if (k === lang || busy || !text.trim()) return
+    setNote('')
+    const pre = versions.current
+    if (pre && pre[k] && Object.values(pre).includes(text)) { setText(pre[k]); setLang(k); return }
+    setBusy(k)
+    const out = await translate(text, k, lang || undefined)
+    setBusy(null)
+    if (out) { setText(out); setLang(k); return }
+    await askClaude(`Translate this email reply into ${langName(k)}. Keep the meaning and tone. Reply with only the translation.\n\n${text}`)
+    setNote(`Sent to Claude. The ${langName(k)} version shows up in the ✦ panel.`)
+  }
+  return { lang, busy, note, to, reset }
+}
+
+function LangSwitch({ rl }) {
+  return (
+    <div className="seg lang-seg" aria-label="Reply language">
+      {LANGS.map((l) => (
+        <button key={l.k} aria-pressed={rl.lang === l.k} onClick={() => rl.to(l.k)}>{rl.busy === l.k ? '…' : l.label}</button>
+      ))}
     </div>
   )
 }
@@ -115,11 +170,12 @@ function useUndoSend() {
   return { pending, send, undo }
 }
 
-function ThreadView({ id, options, asked, onAsked, onArchived }) {
+function ThreadView({ id, snapT, asked, onAsked, onArchived }) {
   const [thread, setThread] = useState(null)
   const [err, setErr] = useState('')
   const [reply, setReply] = useState('')
   const { pending, send, undo } = useUndoSend()
+  const rl = useReplyLang(reply, setReply)
 
   useEffect(() => {
     gmail.thread(id).then(setThread).catch((e) => setErr(e.message))
@@ -135,12 +191,14 @@ function ThreadView({ id, options, asked, onAsked, onArchived }) {
       {msgs.map((m, i) => (
         <div key={m.id} className={'msg' + (i < msgs.length - 2 ? ' older' : '')}>
           <div className="row between"><b className="clamp">{nameOf(m.from)}</b><span className="meta">{when(m.date)}</span></div>
-          <p className="msg-text">{m.body}</p>
+          <MsgText text={m.body} en={i === msgs.length - 1 && snapT?.date === m.date ? snapT.message_en : null} />
           <Files files={m.files} />
         </div>
       ))}
-      <ReplyOptions options={options} value={reply} onPick={setReply} />
+      <ReplyOptions options={snapT?.replies} value={reply} onPick={(o) => rl.reset(o.body, o.tr, snapT?.lang)} />
       <textarea value={reply} onChange={(e) => setReply(e.target.value)} placeholder={`Reply to ${nameOf(msgs[msgs.length - 1].from)}`} rows={reply ? 7 : 4} />
+      {reply.trim() && <LangSwitch rl={rl} />}
+      {rl.note && <p className="hint">{rl.note}</p>}
       <div className="row gap wrap">
         {pending
           ? <span className="sending">Sending… <button className="mini" onClick={undo}>Undo</button></span>
@@ -173,7 +231,7 @@ function DraftView({ d, onGone }) {
       {theirs && (
         <div className="msg quoted">
           <div className="row between"><b className="clamp">{nameOf(theirs.from)}</b><span className="meta">{when(theirs.date)}</span></div>
-          <p className="msg-text">{theirs.body}</p>
+          <MsgText text={theirs.body} />
         </div>
       )}
       <Files files={files} />
@@ -201,14 +259,17 @@ function DraftView({ d, onGone }) {
 function SnapshotThread({ t, queued, onQueued }) {
   const [reply, setReply] = useState('')
   const { pending, send, undo } = useUndoSend()
+  const rl = useReplyLang(reply, setReply)
   return (
     <div className="mail-body">
-      <p className="msg-text">{t.snippet}</p>
+      {t.message ? <MsgText text={t.message} en={t.message_en} /> : <MsgText text={t.snippet} en={t.snippet_en} />}
       {queued
         ? <p className="hint"><Send size={12} /> Reply queued. It goes out on the next sync.</p>
         : <>
-            <ReplyOptions options={t.replies} value={reply} onPick={setReply} />
+            <ReplyOptions options={t.replies} value={reply} onPick={(o) => rl.reset(o.body, o.tr, t.lang)} />
             <textarea value={reply} onChange={(e) => setReply(e.target.value)} placeholder={`Reply to ${t.from}`} rows={reply ? 7 : 4} />
+            {reply.trim() && <LangSwitch rl={rl} />}
+            {rl.note && <p className="hint">{rl.note}</p>}
           </>}
       <div className="row gap wrap">
         {!queued && (pending
@@ -233,10 +294,11 @@ function ReplyQueue({ items, live, onDone }) {
   const [thread, setThread] = useState(null)
   const { pending, send, undo } = useUndoSend()
   const mic = useDictation(text, setText)
+  const rl = useReplyLang(text, setText)
 
   useEffect(() => {
     if (!t) return
-    setText(t.replies[0].body); setMore(false); setThread(null)
+    rl.reset(t.replies[0].body, t.replies[0].tr, t.lang); setMore(false); setThread(null)
     if (live) gmail.thread(t.id).then((th) => th && setThread(th)).catch(() => {})
   }, [t?.id])
 
@@ -253,14 +315,14 @@ function ReplyQueue({ items, live, onDone }) {
   return (
     <section className="tile reply-card">
       <div className="row between"><span className="meta">{items.length === 1 ? 'Last one' : `1 of ${items.length}`}</span><span className="meta">{when(t.date)}</span></div>
-      <div className="reply-from"><b>{t.from}</b><span className="clamp">{t.subject}</span></div>
-      <p className="msg-text reply-msg">{body}</p>
+      <div className="reply-from"><b>{t.from}</b><span className="clamp">{t.subject_en || t.subject}</span></div>
+      <MsgText text={body} en={t.message_en} className="reply-msg" />
       {last && <Files files={last.files} />}
       <div className="row between">
-        <span className="meta">Your reply</span>
+        <LangSwitch rl={rl} />
         {t.replies.length > 1 && <button className="mini" onClick={() => setMore(!more)}>{more ? 'Hide options' : `${t.replies.length - 1} other options`}</button>}
       </div>
-      {more && <ReplyOptions options={t.replies} value={text} onPick={(b) => { setText(b); setMore(false) }} />}
+      {more && <ReplyOptions options={t.replies} value={text} onPick={(o) => { rl.reset(o.body, o.tr, t.lang); setMore(false) }} />}
       <div className={'compose' + (mic.listening ? ' listening' : '')}>
         <textarea value={text} onChange={(e) => setText(e.target.value)} rows={7} placeholder="Type or tap the mic and talk" />
         {mic.canTalk && (
@@ -269,6 +331,7 @@ function ReplyQueue({ items, live, onDone }) {
           </button>
         )}
       </div>
+      {rl.note && <p className="hint">{rl.note}</p>}
       {blank && <p className="hint">Fill in the [brackets] before sending.</p>}
       <div className="row gap wrap">
         {pending
@@ -342,7 +405,7 @@ export default function Email() {
   }, [])
 
   const all = live ? threads || [] : snap?.payload?.threads || []
-  const replies = Object.fromEntries((snap?.payload?.threads || []).map((t) => [t.id, t.replies]))
+  const snapById = Object.fromEntries((snap?.payload?.threads || []).map((t) => [t.id, t]))
   const pass = (t) => (filter === 'unread' ? t.unread : filter === 'important' ? t.important : true)
   const toReply = (snap?.payload?.threads || []).filter((t) => t.replies?.length && !queued[t.id] && !handled[t.id] && skips[t.id] !== t.date && pass(t))
   const shown = all.filter(pass)
@@ -383,12 +446,12 @@ export default function Email() {
                 <button className="mail-head" onClick={() => setOpen(isOpen ? null : t.id)} aria-expanded={isOpen}>
                   <ChevronRight size={15} className="chev" />
                   <span className="mail-from clamp">{t.from}{t.count > 1 && <span className="meta"> {t.count}</span>}</span>
-                  <span className="mail-subject grow clamp">{t.subject}</span>
-                  {queued[t.id] ? <span className="tag">Sending</span> : replies[t.id]?.length > 0 && <span className="tag soft">Reply ready</span>}
+                  <span className="mail-subject grow clamp">{snapById[t.id]?.subject_en || t.subject}</span>
+                  {queued[t.id] ? <span className="tag">Sending</span> : snapById[t.id]?.replies?.length > 0 && <span className="tag soft">Reply ready</span>}
                   <span className="meta">{when(t.date)}</span>
                 </button>
                 {isOpen && (live
-                  ? <ThreadView id={t.id} options={replies[t.id]} asked={asked[t.id]} onAsked={() => setAsked((a) => ({ ...a, [t.id]: true }))}
+                  ? <ThreadView id={t.id} snapT={snapById[t.id]} asked={asked[t.id]} onAsked={() => setAsked((a) => ({ ...a, [t.id]: true }))}
                       onArchived={() => { setOpen(null); setThreads((ts) => ts.filter((x) => x.id !== t.id)) }} />
                   : <SnapshotThread t={t} queued={queued[t.id]} onQueued={() => setQueued((q) => ({ ...q, [t.id]: true }))} />)}
               </li>

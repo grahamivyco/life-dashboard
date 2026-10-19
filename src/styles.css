@@ -182,6 +182,7 @@ textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
 /* claude + inbox */
 .nav-icon { position: relative; display: grid; place-items: center; flex: none; }
 .badge { position: absolute; top: -6px; right: -9px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 99px; background: var(--tomato); color: #fff; font-size: 9.5px; font-weight: 600; line-height: 15px; text-align: center; }
+.badge.dot { min-width: 8px; width: 8px; height: 8px; padding: 0; top: -2px; right: -3px; }
 .pill.claude { text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
 .pill.claude .spark { color: var(--muted); font-size: 10px; }
 .pill.claude.needs_approval { background: #FBE3DF; color: var(--fg); }
@@ -513,3 +514,5 @@ section.tile .list.jobs { padding: 0; }
 .steps { margin: 0; padding-left: 18px; list-style: decimal; display: grid; gap: 4px; color: var(--muted); font-size: 13px; }
 .sub-hidden { color: var(--muted); }
 .sub-amt { width: 96px; height: 32px; padding: 0 10px; text-align: right; font: inherit; font-size: 13px; border: 1px solid var(--line); border-radius: 99px; background: var(--surface); }
+.tr-toggle { justify-self: start; align-self: flex-start; }
+.lang-seg button { padding: 0 10px; }

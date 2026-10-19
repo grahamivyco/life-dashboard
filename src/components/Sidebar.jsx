@@ -16,7 +16,7 @@ function Item({ s, onNavigate, count }) {
     >
       <span className="nav-icon">
         <Icon size={18} strokeWidth={1.75} />
-        {count > 0 && <span className="badge">{count > 9 ? '9+' : count}</span>}
+        {count > 0 && (s.dot ? <span className="badge dot" /> : <span className="badge">{count > 9 ? '9+' : count}</span>)}
       </span>
       <span className="nav-label">{s.label}</span>
     </NavLink>
@@ -33,11 +33,17 @@ export default function Sidebar() {
   useEffect(() => {
     let alive = true
     const load = async () => {
-      const [a, m] = await Promise.all([
+      const [a, m, q] = await Promise.all([
         supabase.from('claude_requests').select('id', { count: 'exact', head: true }).eq('status', 'needs_approval'),
-        supabase.from('section_snapshots').select('payload->unread').eq('section', 'email').order('synced_at', { ascending: false }).limit(1),
+        supabase.from('section_snapshots').select('payload->threads').eq('section', 'email').order('synced_at', { ascending: false }).limit(1),
+        supabase.from('claude_requests').select('note').eq('action', 'send_reply').in('status', ['approved', 'working']),
       ])
-      if (alive) setCounts({ claude: a.count || 0, email: Number(m.data?.[0]?.unread || 0) })
+      // Email: emails waiting in "To reply" (same rule as the Email page), shown as a dot
+      let skips = {}
+      try { skips = JSON.parse(localStorage.getItem('email-skipped') || '{}') } catch { /* ignore */ }
+      const queued = new Set((q.data || []).map((r) => r.note?.split('|')[0].slice(6)))
+      const toReply = (m.data?.[0]?.threads || m.data?.[0]?.payload?.threads || []).filter((t) => t.replies?.length && !queued.has(t.id) && skips[t.id] !== t.date)
+      if (alive) setCounts({ claude: a.count || 0, email: toReply.length })
     }
     load()
     const t = setInterval(load, 60000)
