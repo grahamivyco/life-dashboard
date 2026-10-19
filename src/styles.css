@@ -721,7 +721,7 @@ a.catch-row:hover .clamp:first-child { text-decoration: underline; text-underlin
 .job-sec > .mini { align-self: flex-start; }
 
 /* ---------- profile ---------- */
-.rail-avatar { display: grid; place-items: center; border-radius: 50%; object-fit: cover; background: var(--fg); color: var(--surface); font-size: 10px; font-weight: 600; }
+.rail-avatar { margin: 0 -2px; display: grid; place-items: center; border-radius: 50%; object-fit: cover; background: var(--fg); color: var(--surface); font-size: 10px; font-weight: 600; }
 .nav-item.active .rail-avatar { box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 3px var(--tomato); }
 .prof-head { display: flex; align-items: center; gap: 18px; padding: 18px; }
 .prof-photo { position: relative; flex: none; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 50%; }
