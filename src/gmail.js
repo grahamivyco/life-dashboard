@@ -55,19 +55,43 @@ async function token(interactive) {
   return pending
 }
 
+// Gmail allows only a few requests at once per user, so queue them
+const MAX_AT_ONCE = 4
+let running = 0
+const waiting = []
+async function slot(fn) {
+  if (running >= MAX_AT_ONCE) await new Promise((r) => waiting.push(r))
+  running++
+  try { return await fn() } finally { running--; waiting.shift()?.() }
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+function friendly(status, text) {
+  if (status === 429 || /rateLimit|concurrent/i.test(text)) return 'Gmail is busy right now. Tap Refresh in a moment.'
+  if (status === 401 || status === 403) return 'Gmail sign-in expired. Connect Gmail again.'
+  if (status >= 500) return 'Gmail is having trouble. Try again in a moment.'
+  return `Gmail error ${status}. Try again.`
+}
+
 async function api(path, opts = {}, retry = true) {
   const t = await token(false)
-  const res = await fetch(API + path, {
-    ...opts,
-    headers: { Authorization: `Bearer ${t}`, ...(opts.body ? { 'Content-Type': 'application/json' } : {}) },
-  })
-  if (res.status === 401 && retry) {
-    const old = JSON.parse(localStorage.getItem(KEY) || '{}')
-    localStorage.setItem(KEY, JSON.stringify({ ...old, exp: 0 }))
-    return api(path, opts, false)
+  for (let attempt = 0; ; attempt++) {
+    const res = await slot(() => fetch(API + path, {
+      ...opts,
+      headers: { Authorization: `Bearer ${t}`, ...(opts.body ? { 'Content-Type': 'application/json' } : {}) },
+    }))
+    if (res.status === 401 && retry) {
+      const old = JSON.parse(localStorage.getItem(KEY) || '{}')
+      localStorage.setItem(KEY, JSON.stringify({ ...old, exp: 0 }))
+      return api(path, opts, false)
+    }
+    if (res.ok) return res.status === 204 ? null : res.json()
+    const text = await res.text()
+    const limited = res.status === 429 || (res.status === 403 && /rateLimit/i.test(text)) || res.status >= 500
+    if (limited && attempt < 4) { await sleep(500 * 2 ** attempt + Math.random() * 300); continue }
+    console.warn('Gmail', res.status, text.slice(0, 300))
+    throw new Error(friendly(res.status, text))
   }
-  if (!res.ok) throw new Error(`Gmail said ${res.status}: ${(await res.text()).slice(0, 160)}`)
-  return res.status === 204 ? null : res.json()
 }
 
 // ---------- parsing ----------

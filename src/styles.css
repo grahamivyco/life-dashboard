@@ -713,7 +713,10 @@ a.catch-row:hover .clamp:first-child { text-decoration: underline; text-underlin
 .doc-group { margin-top: 12px; }
 .tile-head .btn.sm { gap: 6px; }
 .specs-link { display: block; text-decoration: none; color: inherit; }
-.specs-link .dump-toggle { padding-left: 12px; }
+.specs-link { padding: 12px 14px; }
+.specs-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; white-space: nowrap; }
+.specs-label { font-weight: 500; }
+.specs-sum { display: block; margin-top: 4px; overflow-wrap: anywhere; }
 @media (max-width: 720px) {
   .prof-head { gap: 14px; padding: 14px; }
   .kv > li { flex-direction: column; align-items: stretch; gap: 2px; }

@@ -112,11 +112,11 @@ function Listing({ l, mark, onMark, miss }) {
 function Specs({ specs }) {
   return (
     <Link to="/profile#housing" className="tile dump specs specs-link">
-      <span className="dump-toggle">
-        <span>Your specs</span>
-        <span className="meta clamp grow">{specsSummary(specs)}</span>
+      <span className="specs-row">
+        <span className="specs-label">Your specs</span>
         <span className="link">Edit in Profile</span>
       </span>
+      <span className="meta specs-sum">{specsSummary(specs)}</span>
     </Link>
   )
 }
