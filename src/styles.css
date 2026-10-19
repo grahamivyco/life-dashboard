@@ -55,9 +55,9 @@ button, input, textarea, select { font: inherit; color: inherit; }
   transition: width var(--ease), box-shadow var(--ease);
 }
 @media (hover: hover) {
-  .rail:hover { width: var(--rail-open); box-shadow: 0 8px 28px rgba(47, 44, 39, .08); }
+  .rail:hover { width: var(--rail-open); }
 }
-.rail.open { width: var(--rail-open); box-shadow: 0 8px 28px rgba(47, 44, 39, .08); }
+.rail.open { width: var(--rail-open); }
 .scrim { position: fixed; inset: 0; z-index: 15; background: rgba(47, 44, 39, .12); opacity: 0; pointer-events: none; transition: opacity var(--ease); }
 .scrim.show { opacity: 1; pointer-events: auto; }
 
@@ -433,7 +433,7 @@ button.pill.claude { border: 0; cursor: pointer; font-family: inherit; }
 .rec-pill {
   position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: max(24px, env(safe-area-inset-bottom));
   display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 14px; border-radius: 99px;
-  background: var(--fg); color: var(--surface); box-shadow: 0 8px 28px rgba(47, 44, 39, .18);
+  background: var(--fg); color: var(--surface);
 }
 .rec-link { white-space: nowrap; display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; font-size: 13px; font-weight: 500; }
 .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--tomato); animation: rec 1.2s ease-in-out infinite; }
@@ -601,7 +601,6 @@ section.tile .list.jobs { padding: 0; }
     display: grid; grid-template-columns: repeat(7, 1fr);
     background: rgba(255, 253, 248, .9); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     border: 1px solid var(--line); border-radius: 99px;
-    box-shadow: 0 8px 28px rgba(47, 44, 39, .12);
   }
   .m-tab {
     display: grid; place-items: center; height: var(--tabs);
@@ -620,7 +619,6 @@ section.tile .list.jobs { padding: 0; }
     position: fixed; z-index: 34; right: 16px; bottom: calc(var(--tabs) + var(--tabs-gap) + 10px);
     width: 200px; padding: 6px; display: flex; flex-direction: column;
     background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
-    box-shadow: 0 12px 36px rgba(47, 44, 39, .16);
     transform-origin: calc(100% - 26px) 100%;
     opacity: 0; transform: translateY(10px) scale(.86); pointer-events: none;
     transition: opacity 160ms ease, transform 160ms ease;
@@ -741,7 +739,7 @@ section.tile .list.jobs { padding: 0; }
 .bio-offer {
   position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); bottom: max(20px, env(safe-area-inset-bottom));
   width: min(440px, calc(100% - 24px)); display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
-  box-shadow: 0 12px 40px rgba(47, 44, 39, .14);
+  border: 1px solid var(--line);
 }
 .bio-offer .error { flex-basis: 100%; margin: 0; }
 @media (max-width: 640px) { .bio-offer { bottom: calc(var(--tabs) + var(--tabs-gap) + 12px); } }
@@ -765,7 +763,7 @@ button.set-row:active, button.set-row:hover { background: var(--hover); }
 .set-row.danger .grow { flex: none; }
 .set-note { margin: 0 4px; }
 .switch { flex: none; position: relative; width: 44px; height: 26px; border-radius: 99px; border: 0; padding: 0; background: var(--line); cursor: pointer; transition: background 200ms ease; }
-.switch i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px rgba(47, 44, 39, .25); transition: transform 240ms cubic-bezier(.34, 1.4, .64, 1); }
+.switch i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); transition: transform 240ms cubic-bezier(.34, 1.4, .64, 1); }
 .switch.on { background: var(--fg); }
 .switch.on i { transform: translateX(18px); }
 
@@ -927,17 +925,17 @@ button.set-row:active, button.set-row:hover { background: var(--hover); }
 .fin-legend i.ghost { border-top-color: var(--muted); }
 
 /* ================= airy controls (Graham, 2026-10-19, after Muse) =================
-   Every control is a 36px soft pill on the surface: barely-there border, a light lifted shadow,
+   Every control is a 36px soft pill on the surface: barely-there border, no shadows (Graham, 2026-10-19),
    fully round. Menus and popovers are big soft cards. */
 :root {
   --ctl: 36px;
   --ctl-line: rgba(47, 44, 39, .07);
-  --ctl-shadow: 0 1px 2px rgba(47, 44, 39, .04), 0 4px 14px rgba(47, 44, 39, .05);
-  --pop-shadow: 0 2px 6px rgba(47, 44, 39, .05), 0 16px 40px rgba(47, 44, 39, .12);
+  --ctl-shadow: none;
+  --pop-shadow: none;
   --soft: rgba(47, 44, 39, .06);
 }
 .btn { height: var(--ctl); padding: 0 16px; border-color: var(--ctl-line); box-shadow: var(--ctl-shadow); }
-.btn.primary { box-shadow: 0 4px 14px rgba(47, 44, 39, .18); }
+.btn.primary { box-shadow: none; }
 .btn.sm { height: 30px; padding: 0 13px; box-shadow: none; }
 .round-btn { width: var(--ctl); height: var(--ctl); border-color: var(--ctl-line); box-shadow: var(--ctl-shadow); }
 .icon-btn { border-radius: 99px; }
@@ -975,7 +973,7 @@ body[data-menu="green"] { --menu-bg: var(--green); --menu-fg: #fff; --menu-muted
     left: 14px; right: 14px; padding: 6px; gap: 4px; grid-template-columns: repeat(5, 1fr);
     background: rgba(255, 253, 248, .5); -webkit-backdrop-filter: blur(22px) saturate(1.8); backdrop-filter: blur(22px) saturate(1.8);
     border: 1px solid rgba(255, 255, 255, .55);
-    box-shadow: 0 0 0 1px var(--ctl-line), 0 12px 34px rgba(47, 44, 39, .12), inset 0 1px 0 rgba(255, 255, 255, .6);
+    box-shadow: 0 0 0 1px var(--ctl-line);
   }
   .m-tab { height: 100%; border-radius: 99px; color: var(--fg); transition: background 180ms ease, transform 120ms ease; }
   .m-tab.active { color: var(--blue-ink); background: none; }
@@ -1017,7 +1015,7 @@ body[data-menu="green"] { --menu-bg: var(--green); --menu-fg: #fff; --menu-muted
   body.drawer-lock .main { margin-top: var(--sy); }
   body.drawer-open .shell {
     transform: translateX(var(--drawer)) scale(var(--card-s, .92)); border-radius: 34px;
-    box-shadow: 0 0 0 1px var(--ctl-line), -16px 0 50px rgba(47, 44, 39, .16);
+    box-shadow: 0 0 0 1px var(--ctl-line);
   }
   body.drawer-open .m-top { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .m-drawer {
