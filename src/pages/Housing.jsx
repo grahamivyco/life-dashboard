@@ -5,7 +5,6 @@ import { supabase } from '../supabase.js'
 import { useSnapshot } from '../useSnapshot.js'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago } from '../lib.js'
-import { sections } from '../sections.js'
 
 const eur = (n) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
 const DAY = 864e5
@@ -178,13 +177,10 @@ export default function Housing() {
     return [...rows].sort((a, b) => (a.gone - b.gone) || by(a, b))
   }, [all, view, sort, marks, specs])
 
-  const tracker = sections.find((s) => s.path === '/housing')?.tracker
-  const actions = tracker && <a className="btn" href={tracker} target="_blank" rel="noreferrer">Tracker</a>
-
   if (!p) {
     return (
       <div className="page">
-        <PageHeader title="Housing">{actions}</PageHeader>
+        <PageHeader title="Housing" />
         <Specs specs={specs} />
         <p className="empty">Flats from your alert emails appear here after the next sync.</p>
         <Sources all={[]} />
@@ -207,7 +203,7 @@ export default function Housing() {
 
   return (
     <div className="page">
-      <PageHeader eyebrow={`${used.join(', ')} · updated ${ago(snap.synced_at)}`} title="Housing">{actions}</PageHeader>
+      <PageHeader eyebrow={`${used.join(', ')} · updated ${ago(snap.synced_at)}`} title="Housing" />
 
       <div className="stats even">
         <div className="tile stat"><span className="eyebrow">Fit your specs</span><span className="big">{fits.length}</span></div>

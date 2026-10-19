@@ -2,7 +2,6 @@ import {
   Sun, Mail, History, Wallet, Briefcase, Users, Home, CalendarDays, Settings,
 } from 'lucide-react'
 
-// `legacy` = existing dashboard, linked until that section moves into the app
 export const sections = [
   { path: '/', label: 'Today', icon: Sun, badge: 'claude' },
   { path: '/email', label: 'Email', icon: Mail, badge: 'email', dot: true },
@@ -10,8 +9,7 @@ export const sections = [
   { path: '/finances', label: 'Finances', icon: Wallet },
   { path: '/jobs', label: 'Jobs', icon: Briefcase },
   { path: '/clients', label: 'Clients', icon: Users },
-  // Housing lives in the app; `tracker` is the older Pisolist dashboard
-  { path: '/housing', label: 'Housing', icon: Home, tracker: 'https://claude.ai/code/artifact/8b906a24-09b3-48c3-b616-eff0d23b8906' },
+  { path: '/housing', label: 'Housing', icon: Home },
   { path: '/events', label: 'Events', icon: CalendarDays },
 ]
 

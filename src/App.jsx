@@ -15,12 +15,8 @@ import Events from './pages/Events.jsx'
 import Clients from './pages/Clients.jsx'
 import Housing from './pages/Housing.jsx'
 import Jobs from './pages/Jobs.jsx'
-import Placeholder from './pages/Placeholder.jsx'
 import SettingsPage from './pages/Settings.jsx'
 import Profile from './pages/Profile.jsx'
-import { sections } from './sections.js'
-
-const legacy = sections.filter((s) => s.legacy)
 
 export default function App() {
   const [session, setSession] = useState(undefined)
@@ -58,9 +54,6 @@ function Shell({ session }) {
           <Route path="/events" element={<Events />} />
           <Route path="/clients" element={<Clients />} />
           <Route path="/housing" element={<Housing />} />
-          {legacy.map((s) => (
-            <Route key={s.path} path={s.path} element={<Placeholder section={s} />} />
-          ))}
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<SettingsPage session={session} />} />
           <Route path="*" element={<Today />} />

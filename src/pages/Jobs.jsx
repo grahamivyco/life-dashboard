@@ -481,7 +481,7 @@ function DocsTab({ jobs, profile, docs }) {
       {docs.ready && missing.length > 0 && (
         <section className="tile stack">
           <div className="tile-head"><h2>{missing.length} of {docs.paths.length} documents still need uploading</h2></div>
-          <p className="meta">Pick the Job Hub docs zip or the PDFs. Only your base PDFs and cover letters are kept.</p>
+          <p className="meta">Pick the docs zip or the PDFs. Only your base PDFs and cover letters are kept.</p>
           <div className="row gap wrap">
             <label className="btn primary"><Upload size={13} /> Upload zip or PDFs<input type="file" accept=".zip,application/pdf,application/zip" multiple hidden onChange={onFiles} /></label>
             {msg && <span className="hint">{msg}</span>}

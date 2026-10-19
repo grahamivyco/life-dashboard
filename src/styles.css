@@ -375,7 +375,6 @@ ul.tile.list { padding-top: 6px; padding-bottom: 6px; }
   .month-wd { padding: 6px 2px; text-align: center; font-size: 10px; letter-spacing: 0; }
   .ex-date { width: 120px; }
 }
-.placeholder { display: flex; align-items: center; gap: 14px; color: var(--muted); padding: 22px 18px; }
 
 /* login */
 .login {
