@@ -14,6 +14,7 @@ export default function BioLock() {
   const [offer, setOffer] = useState(false)
   const [err, setErr] = useState('')
   const asking = useRef(false)
+  const autoTried = useRef(false)
   const name = bioName()
   const Icon = name === 'Face ID' ? ScanFace : Fingerprint
 
@@ -28,13 +29,23 @@ export default function BioLock() {
     })
   }, [])
 
-  const unlock = async () => {
+  // auto: the ask on open. Browsers refuse it when the window isn't focused, so that stays quiet and retries on focus.
+  const unlock = async (auto) => {
     if (asking.current) return
+    if (auto === true && (autoTried.current || !document.hasFocus())) return
+    if (auto === true) autoTried.current = true
     asking.current = true; setErr('')
-    try { await unlockBio(); sessionStorage.setItem(UNLOCKED, '1'); setLocked(false) } catch { setErr(`${name} didn’t go through. Try again.`) }
+    try { await unlockBio(); sessionStorage.setItem(UNLOCKED, '1'); setLocked(false) }
+    catch (e) { if (auto !== true) setErr(e?.name === 'NotAllowedError' ? `${name} was cancelled or timed out. Tap to try again.` : `${name} didn’t go through (${e?.name || 'error'}). Try again.`) }
     asking.current = false
   }
-  useEffect(() => { if (locked && !demo) unlock() }, [locked]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!locked || demo) return
+    const ask = () => unlock(true)
+    ask()
+    window.addEventListener('focus', ask)
+    return () => window.removeEventListener('focus', ask)
+  }, [locked]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const turnOn = async () => {
     setErr('')
@@ -47,7 +58,7 @@ export default function BioLock() {
   if (locked) return (
     <div className="lock">
       <Mark size={48} />
-      <button className="lock-btn" onClick={unlock}><Icon size={28} strokeWidth={1.5} />Unlock with {name}</button>
+      <button className="lock-btn" onClick={() => unlock()}><Icon size={28} strokeWidth={1.5} />Unlock with {name}</button>
       {err && <p className="error">{err}</p>}
       <button className="mini" onClick={() => { localStorage.removeItem('bio-lock'); supabase.auth.signOut() }}>Sign out</button>
     </div>
