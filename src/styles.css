@@ -774,3 +774,64 @@ button.set-row:active, button.set-row:hover { background: var(--hover); }
 .switch i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px rgba(47, 44, 39, .25); transition: transform 240ms cubic-bezier(.34, 1.4, .64, 1); }
 .switch.on { background: var(--fg); }
 .switch.on i { transform: translateX(18px); }
+
+/* ---------- finances (money app from the Mac) ---------- */
+.fin-tabs { margin-bottom: 2px; }
+.fin-line { display: block; width: 100%; height: 120px; overflow: visible; }
+.fin-line-ink { fill: none; stroke: var(--fg); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.fin-line-ghost { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; opacity: .6; }
+.fin-line-fill { fill: var(--fg); opacity: .05; }
+.fin-legend { margin-top: 6px; gap: 16px; }
+.fin-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.fin-legend i { width: 14px; height: 0; border-top: 2px solid var(--fg); }
+.fin-legend i.ghost { border-top: 2px dashed var(--muted); }
+.fin-link { color: inherit; }
+.fin-alert { color: var(--fg); border-color: var(--tomato); cursor: pointer; }
+.fin-period { font-family: var(--display); font-size: 17px; font-weight: 500; min-width: 120px; text-align: center; }
+.fin-hist { display: flex; align-items: stretch; gap: 6px; height: 150px; }
+.fin-hist-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; border: 0; background: none; padding: 0; font: inherit; cursor: pointer; }
+.fin-hist-col:disabled { cursor: default; opacity: .5; }
+.fin-hist-bar { flex: 1; width: 100%; max-width: 40px; display: flex; align-items: flex-end; }
+.fin-hist-bar i { display: block; width: 100%; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--line); transition: background var(--ease); }
+.fin-hist-col:hover .fin-hist-bar i { background: var(--muted); }
+.fin-hist-col.on .fin-hist-bar i { background: var(--fg); }
+.fin-hist-col.on .meta { color: var(--fg); font-weight: 600; }
+.fin-hist .meta { font-size: 11px; white-space: nowrap; overflow: hidden; max-width: 100%; }
+.fin-bar { flex: none; width: 80px; height: 4px; border-radius: 99px; background: var(--hover); overflow: hidden; }
+.fin-bar i { display: block; height: 100%; background: var(--fg); border-radius: 99px; }
+.fin-moves { margin-top: 10px; }
+.fin-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.list > li.fin-sort { flex-wrap: wrap; }
+.fin-select { height: 30px; max-width: 100%; padding: 0 8px; font: inherit; font-size: 13px; color: var(--fg); border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.fin-input { height: 32px; width: 100%; padding: 0 10px; font: inherit; font-size: 14px; color: var(--fg); border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.fin-progress { position: relative; height: 6px; border-radius: 99px; background: var(--hover); margin: 6px 0 8px; }
+.fin-progress i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: var(--fg); }
+.fin-progress b { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--tomato); border-radius: 1px; }
+.fin-txns .sub-head { padding: 8px 0; }
+.fin-txns .sub-head:disabled { cursor: default; }
+.fin-txns .grow { display: flex; flex-direction: column; gap: 1px; }
+.fin-txns .pill { margin-left: 6px; align-self: flex-start; }
+.fin-sub { display: block; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list > li.fin-day { padding: 14px 0 4px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-top: 0; }
+.fin-hidden { opacity: .5; }
+.fin-detail { padding-left: 0; }
+.fin-field { display: grid; grid-template-columns: 72px 1fr; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.fin-filters { margin-bottom: 4px; }
+.fin-search { flex: 1; min-width: 180px; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); }
+.fin-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; font-size: 14px; color: var(--fg); }
+.fin-cmd { margin: 4px 0 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+.fin-setup { max-width: 640px; }
+.fin-setup .steps { margin-bottom: 14px; color: var(--fg); }
+.fin-share .fin-bar { width: 64px; }
+@media (max-width: 640px) {
+  .fin-bar { width: 48px; }
+  .fin-share .fin-bar { width: 40px; }
+  .fin-hist { gap: 3px; height: 120px; }
+  .fin-field { grid-template-columns: 60px 1fr; }
+}
+.fin-name { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fin-txns .fin-name .pill { margin-left: 0; align-self: center; }
+@media (max-width: 760px) {
+  .fin-stats .stat.lead { grid-column: auto; }
+  .fin-stats .stat .meta { font-size: 11px; }
+}
