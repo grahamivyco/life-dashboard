@@ -35,6 +35,23 @@ export default function MobileNav({ counts }) {
 
   useEffect(() => { setOpen(false); setHidden(false) }, [pathname])
 
+  // iOS can misplace bottom-anchored fixed bars in the home-screen app after a scroll, so the bar and the
+  // drawer card are placed from the top using the real screen height (--vh).
+  useEffect(() => {
+    const root = document.documentElement
+    const set = () => {
+      const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches
+      const portrait = matchMedia('(orientation: portrait)').matches
+      const { width, height } = window.screen
+      const screenH = portrait ? Math.max(width, height) : Math.min(width, height)
+      root.style.setProperty('--vh', `${standalone ? screenH : window.innerHeight}px`)
+    }
+    set()
+    window.addEventListener('resize', set)
+    window.addEventListener('orientationchange', set)
+    return () => { window.removeEventListener('resize', set); window.removeEventListener('orientationchange', set) }
+  }, [])
+
   // Hide the top bar while scrolling down, bring it back on any scroll up
   useEffect(() => {
     let last = window.scrollY
@@ -55,7 +72,12 @@ export default function MobileNav({ counts }) {
     if (!open) return
     const y = window.scrollY
     body.style.setProperty('--sy', `${-y}px`)
-    body.classList.add('drawer-lock', 'drawer-open')
+    body.classList.add('drawer-lock')
+    void body.offsetWidth // start the card from full screen so it shrinks into place
+    body.classList.add('drawer-open')
+    // Keep swipes on the card from scrolling or stretching the page underneath
+    const stop = (e) => { if (!e.target.closest?.('.m-drawer')) e.preventDefault() }
+    document.addEventListener('touchmove', stop, { passive: false })
     const meta = document.querySelector('meta[name=theme-color]')
     const before = meta?.content
     if (meta) meta.content = getComputedStyle(body).getPropertyValue('--menu-bg').trim() || before
@@ -63,6 +85,7 @@ export default function MobileNav({ counts }) {
     document.addEventListener('keydown', onKey)
     return () => {
       document.removeEventListener('keydown', onKey)
+      document.removeEventListener('touchmove', stop)
       body.classList.remove('drawer-open')
       if (meta) meta.content = before
       setTimeout(() => {

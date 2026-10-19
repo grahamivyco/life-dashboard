@@ -994,6 +994,10 @@ body[data-menu="green"] { --menu-bg: var(--green); }
   .m-tab.active .m-tab-label { font-weight: 600; }
   .m-tabs { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; }
   .m-tabs:empty { display: none; }
+  /* placed from the top with the real screen height: iOS can float a bottom-anchored bar up mid-screen */
+  .m-tabs { bottom: auto; top: calc(var(--vh, 100dvh) - var(--tabs) - var(--tabs-gap)); }
+  /* with the menu open the card holds the bar, so it sits at the card's own bottom */
+  body.drawer-lock .m-tabs { top: auto; bottom: var(--tabs-gap); }
   .m-tab-word { font-size: 13px; font-weight: 500; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; }
   .m-tab .badge:not(.dot) { top: -7px; right: -11px; }
   .desk-only { display: none !important; }
@@ -1003,18 +1007,21 @@ body[data-menu="green"] { --menu-bg: var(--green); }
   .page > .page-head + .controls:has(> .controls-end:only-child):not(:has(.btn)) { margin-top: -46px; justify-content: flex-end; pointer-events: none; }
   .page > .page-head + .controls:has(> .controls-end:only-child) > * { pointer-events: auto; }
 
-  .shell { transition: transform 460ms var(--push), border-radius 460ms var(--push), box-shadow 460ms var(--push); transform-origin: 0 50%; }
-  body.drawer-lock { overflow: hidden; }
-  body.drawer-lock .shell { position: fixed; inset: 0; min-height: 0; height: auto; overflow: hidden; background: var(--bg); z-index: 2; }
+  .shell { transition: transform 460ms var(--push), top 460ms var(--push), height 460ms var(--push), border-radius 460ms var(--push), box-shadow 460ms var(--push); }
+  html:has(body.drawer-lock), body.drawer-lock { overflow: hidden; overscroll-behavior: none; }
+  /* the card: fixed size from the real screen height, same gap above and below, so it sits centered */
+  :root { --card-y: calc(env(safe-area-inset-top) + 12px); }
+  body.drawer-lock .shell { position: fixed; left: 0; right: 0; top: 0; bottom: auto; height: var(--vh, 100dvh); min-height: 0; overflow: hidden; background: var(--bg); z-index: 2; touch-action: none; transform: translateX(0); }
   body.drawer-lock .main { margin-top: var(--sy); }
   body.drawer-open .shell {
-    transform: translateX(var(--drawer)) scale(.95); border-radius: 34px;
+    top: var(--card-y); height: calc(var(--vh, 100dvh) - 2 * var(--card-y));
+    transform: translateX(var(--drawer)); border-radius: 34px;
     box-shadow: 0 0 0 1px var(--ctl-line), -16px 0 50px rgba(47, 44, 39, .16);
   }
   body.drawer-open .m-top { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .m-drawer {
-    display: flex; flex-direction: column; position: fixed; z-index: 1; height: 100dvh; inset: 0 auto 0 0; width: var(--drawer);
-    padding: calc(env(safe-area-inset-top) + 22px) 14px calc(env(safe-area-inset-bottom) + 18px);
+    display: flex; flex-direction: column; position: fixed; z-index: 1; top: 0; left: 0; height: var(--vh, 100dvh); width: var(--drawer);
+    padding: calc(var(--card-y) + 10px) 14px calc(var(--card-y) + 4px);
     background: transparent; color: var(--menu-fg); overflow-y: auto;
     opacity: 0; transform: translateX(-24px); visibility: hidden;
     transition: opacity 300ms ease, transform 420ms var(--push), visibility 0s 420ms;
