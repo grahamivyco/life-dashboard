@@ -19,7 +19,7 @@ export default function Login() {
     setBusy(true); setErr('')
     const { error } = await supabase.auth.signInWithPasskey()
     setBusy(false)
-    if (!error) sessionStorage.setItem('bio-unlocked', '1') // just used Face ID, don't ask again
+    if (!error) localStorage.setItem('bio-unlocked', '1') // just used Face ID, don't ask again
     if (error) setErr(/abort|cancel|not ?allowed/i.test(error.message + (error.code || ''))
       ? `${name} was cancelled. Try again, or use the email link.`
       : `${name} didn’t work (${error.message}). Use the email link once to add it.`)

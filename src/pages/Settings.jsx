@@ -30,7 +30,7 @@ export function AppSettings() {
   const toggleLock = async () => {
     setNote('')
     if (lock) { disableBio(); setLock(false); return }
-    try { await enableBio(email); sessionStorage.setItem('bio-unlocked', '1'); setLock(true) } catch { setNote(`Couldn’t set up ${name}.`) }
+    try { await enableBio(email); localStorage.setItem('bio-unlocked', '1'); setLock(true) } catch { setNote(`Couldn’t set up ${name}.`) }
   }
 
   return (
@@ -41,7 +41,7 @@ export function AppSettings() {
         {bio && (
           <>
             <button className="set-row" onClick={addPasskey}><span className="grow">Sign in with {name}</span><span className="set-val">Add to this device</span><ChevronRight size={16} className="chev" /></button>
-            <div className="set-row"><span className="grow">Ask for {name} when the app opens</span><Toggle on={lock} onChange={toggleLock} label={`Ask for ${name}`} /></div>
+            <div className="set-row"><span className="grow">Verify with {name} once on this device</span><Toggle on={lock} onChange={toggleLock} label={`Ask for ${name}`} /></div>
           </>
         )}
       </div>

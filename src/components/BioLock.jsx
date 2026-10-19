@@ -6,17 +6,23 @@ import { bioAvailable, bioEnabled, bioName, unlockBio } from '../biometric.js'
 
 const demo = import.meta.env.MODE === 'demo'
 
-// Optional lock (Settings): asks for Face ID / Touch ID once when the app opens,
-// then stays unlocked until it is closed. Also offers once per device to add a sign-in passkey.
-const UNLOCKED = 'bio-unlocked' // sessionStorage: survives reloads, cleared when the app closes
+// Optional lock (Settings): asks for Face ID / Touch ID once on this device,
+// then trusts the device until sign out. Also offers once per device to add a sign-in passkey.
+const UNLOCKED = 'bio-unlocked' // localStorage: once verified, this device is trusted until sign out
 export default function BioLock() {
-  const [locked, setLocked] = useState(() => (demo ? location.hash.includes('lock=1') : bioEnabled() && !sessionStorage.getItem(UNLOCKED)))
+  const [locked, setLocked] = useState(() => (demo ? location.hash.includes('lock=1') : bioEnabled() && !localStorage.getItem(UNLOCKED)))
   const [offer, setOffer] = useState(false)
   const [err, setErr] = useState('')
   const asking = useRef(false)
   const autoTried = useRef(false)
   const name = bioName()
   const Icon = name === 'Face ID' ? ScanFace : Fingerprint
+
+  // Signing out ends the device's trust, so the next sign-in verifies again
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((e) => { if (e === 'SIGNED_OUT') localStorage.removeItem(UNLOCKED) })
+    return () => data.subscription.unsubscribe()
+  }, [])
 
   // Offer once per device to add a passkey, so next sign-in is Face ID / Touch ID
   useEffect(() => {
@@ -35,7 +41,7 @@ export default function BioLock() {
     if (auto === true && (autoTried.current || !document.hasFocus())) return
     if (auto === true) autoTried.current = true
     asking.current = true; setErr('')
-    try { await unlockBio(); sessionStorage.setItem(UNLOCKED, '1'); setLocked(false) }
+    try { await unlockBio(); localStorage.setItem(UNLOCKED, '1'); setLocked(false) }
     catch (e) { if (auto !== true) setErr(e?.name === 'NotAllowedError' ? `${name} was cancelled or timed out. Tap to try again.` : `${name} didn’t go through (${e?.name || 'error'}). Try again.`) }
     asking.current = false
   }
