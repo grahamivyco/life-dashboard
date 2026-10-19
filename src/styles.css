@@ -1079,3 +1079,10 @@ body[data-menu="green"] { --menu-bg: var(--green); --menu-fg: #fff; --menu-muted
 .tile.stat, .tile.stat.num-tile { background: none; border: 0; border-radius: 0; padding: 0; }
 button.tile.stat:hover, a.tile.stat:hover { background: none; opacity: .75; }
 .num-tile.on .big { color: var(--blue-ink); }
+
+/* the iPhone status bar is see-through (black-translucent, white clock); this keeps it blue on every page
+   so it runs into the blue menu (Graham, 2026-10-19). In a browser tab the inset is 0, so it's hidden. */
+.status-strip { display: none; }
+@media (max-width: 640px) {
+  .status-strip { display: block; position: fixed; z-index: 1000; top: 0; left: 0; right: 0; height: env(safe-area-inset-top); background: var(--menu-bg, var(--blue)); pointer-events: none; }
+}
