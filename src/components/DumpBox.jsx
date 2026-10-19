@@ -4,7 +4,7 @@ import { Mic, Square } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import { useDump, setErr, start, stop, clear, canTalk as hasSpeech, demoTalk } from '../dumpStore.js'
 
-// Brain dump hero: a big mic and Save. What you say shows under the mic as you talk,
+// Brain dump hero: what you say shows as you talk, with a small mic and Save under it,
 // with a voice wave while it listens. The draft and any recording carry on if you
 // switch pages (see dumpStore.js).
 export default function DumpBox({ onSaved }) {
@@ -33,19 +33,24 @@ export default function DumpBox({ onSaved }) {
   return (
     <section className={'tile dump-hero' + (listening ? ' listening' : '')}>
       <h2 className="dump-q">{listening ? 'Listening…' : "What's on your mind?"}</h2>
-      <button
-        className={'hero-mic' + (listening ? ' on' : '')}
-        onClick={listening ? stop : start}
-        disabled={!canTalk}
-        aria-label={listening ? 'Stop' : 'Talk'}
-        title={listening ? 'Stop' : 'Talk'}
-      >
-        {listening ? <Square size={26} fill="currentColor" /> : <Mic size={34} strokeWidth={1.75} />}
-      </button>
-      {listening && <div className="wave" aria-hidden="true">{levels.map((l, i) => <span key={i} style={{ transform: `scaleY(${l})` }} />)}</div>}
-      {said && <p className="dump-said">{text}{live && <span className="dump-live"> {live}</span>}</p>}
-      {!canTalk && <p className="hint">Voice needs Safari or Chrome.</p>}
-      <button className="btn primary hero-save" onClick={save} disabled={busy || !said}>{busy ? 'Saving…' : 'Save'}</button>
+      <div className="dump-said">
+        {said
+          ? <p>{text}{live && <span className="dump-live"> {live}</span>}</p>
+          : <p className="hint">{canTalk ? 'Tap the mic and talk.' : 'Voice needs Safari or Chrome.'}</p>}
+        {listening && <div className="wave" aria-hidden="true">{levels.map((l, i) => <span key={i} style={{ transform: `scaleY(${l})` }} />)}</div>}
+      </div>
+      <div className="hero-actions">
+        <button
+          className={'hero-mic' + (listening ? ' on' : '')}
+          onClick={listening ? stop : start}
+          disabled={!canTalk}
+          aria-label={listening ? 'Stop' : 'Talk'}
+          title={listening ? 'Stop' : 'Talk'}
+        >
+          {listening ? <Square size={13} fill="currentColor" /> : <Mic size={17} strokeWidth={1.9} />}
+        </button>
+        <button className="btn primary sm" onClick={save} disabled={busy || !said}>{busy ? 'Saving…' : 'Save'}</button>
+      </div>
       {err && <p className="error">{err}</p>}
     </section>
   )
