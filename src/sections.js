@@ -1,13 +1,11 @@
 import {
-  Sun, Mail, Mic, Target, History, Wallet, Briefcase, Users, Home, CalendarDays, Settings,
+  Sun, Mail, History, Wallet, Briefcase, Users, Home, CalendarDays, Settings,
 } from 'lucide-react'
 
 // `legacy` = existing dashboard, linked until that section moves into the app
 export const sections = [
   { path: '/', label: 'Today', icon: Sun, badge: 'claude' },
   { path: '/email', label: 'Email', icon: Mail, badge: 'email' },
-  { path: '/brain-dump', label: 'Brain Dump', icon: Mic },
-  { path: '/goals', label: 'Goals & Ideas', icon: Target },
   { path: '/timeline', label: 'Timeline', icon: History },
   { path: '/finances', label: 'Finances', icon: Wallet },
   { path: '/jobs', label: 'Jobs', icon: Briefcase, legacy: 'https://claude.ai/code/artifact/94c1d4fb-5a22-4cb3-8c2d-bde80507dbd2' },

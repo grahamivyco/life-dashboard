@@ -3,11 +3,10 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './supabase.js'
 import Sidebar from './components/Sidebar.jsx'
 import AskClaude from './components/AskClaude.jsx'
+import RecordingPill from './components/RecordingPill.jsx'
 import Login from './pages/Login.jsx'
 import Today from './pages/Today.jsx'
 import Email from './pages/Email.jsx'
-import BrainDump from './pages/BrainDump.jsx'
-import Goals from './pages/Goals.jsx'
 import Timeline from './pages/Timeline.jsx'
 import Finances from './pages/Finances.jsx'
 import Events from './pages/Events.jsx'
@@ -37,8 +36,8 @@ export default function App() {
           <Route path="/" element={<Today />} />
           <Route path="/email" element={<Email />} />
           <Route path="/inbox" element={<Navigate to="/email" replace />} />
-          <Route path="/brain-dump" element={<BrainDump />} />
-          <Route path="/goals" element={<Goals />} />
+          <Route path="/brain-dump" element={<Navigate to="/" replace />} />
+          <Route path="/goals" element={<Navigate to="/" replace />} />
           <Route path="/timeline" element={<Timeline />} />
           <Route path="/finances" element={<Finances />} />
           <Route path="/events" element={<Events />} />
@@ -49,6 +48,7 @@ export default function App() {
           <Route path="*" element={<Today />} />
         </Routes>
       </main>
+      <RecordingPill />
       <AskClaude />
     </div>
   )

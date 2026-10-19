@@ -33,12 +33,11 @@ export default function Sidebar() {
   useEffect(() => {
     let alive = true
     const load = async () => {
-      const [a, b, m] = await Promise.all([
+      const [a, m] = await Promise.all([
         supabase.from('claude_requests').select('id', { count: 'exact', head: true }).eq('status', 'needs_approval'),
-        supabase.from('claude_requests').select('id', { count: 'exact', head: true }).eq('status', 'done').is('seen_at', null),
         supabase.from('section_snapshots').select('payload->unread').eq('section', 'email').order('synced_at', { ascending: false }).limit(1),
       ])
-      if (alive) setCounts({ claude: (a.count || 0) + (b.count || 0), email: Number(m.data?.[0]?.unread || 0) })
+      if (alive) setCounts({ claude: a.count || 0, email: Number(m.data?.[0]?.unread || 0) })
     }
     load()
     const t = setInterval(load, 60000)
