@@ -79,7 +79,7 @@ function CategoryPick({ value, categories, onPick }) {
 
 const RANGES = [['1m', 30], ['3m', 90], ['6m', 180], ['1y', 365]]
 
-function Overview({ p, go, send, publishedAt }) {
+function Overview({ p, go, send, publishedAt, onServer }) {
   const [range, setRange] = useState('3m')
   const d = p.dashboard
   const b = d.balances
@@ -116,7 +116,7 @@ function Overview({ p, go, send, publishedAt }) {
         </div>
       </div>
 
-      {d.needs_attention?.length > 0 && <p className="note fin-alert">Reconnect in the Mac app: {d.needs_attention.join(', ')}</p>}
+      {d.needs_attention?.length > 0 && <p className="note fin-alert">{onServer ? 'Needs reconnecting (ask Claude)' : 'Reconnect in the Mac app'}: {d.needs_attention.join(', ')}</p>}
 
       <div className="grid two">
         <section className="tile">
@@ -158,7 +158,7 @@ function Overview({ p, go, send, publishedAt }) {
       </div>
 
       <div id="fin-accounts" className="fin-recurring">
-        <Accounts p={p} send={send} publishedAt={publishedAt} />
+        <Accounts p={p} send={send} publishedAt={publishedAt} onServer={onServer} />
       </div>
     </>
   )
@@ -447,7 +447,7 @@ function Transactions({ p, send }) {
 
 // ---------- Accounts ----------
 
-function Accounts({ p, send, publishedAt }) {
+function Accounts({ p, send, publishedAt, onServer }) {
   const accounts = p.accounts.accounts
   const groups = GROUPS.map(([k, label]) => [label, accounts.filter((a) => a.group === k)]).filter(([, a]) => a.length)
 
@@ -473,7 +473,7 @@ function Accounts({ p, send, publishedAt }) {
             </ul>
           </div>
         ))}
-        <p className="meta fin-moves">Link a new bank in the Money app on your Mac. Apple Card comes from YNAB.</p>
+        <p className="meta fin-moves">{onServer ? 'To add a bank, ask Claude.' : 'Link a new bank in the Money app on your Mac.'} Apple Card comes from YNAB.</p>
       </section>
 
       {p.holdings.length > 0 && (
@@ -490,7 +490,7 @@ function Accounts({ p, send, publishedAt }) {
           </section>
         )}
 
-      <MacLink publishedAt={publishedAt} />
+      {!onServer && <MacLink publishedAt={publishedAt} />}
     </>
   )
 }
@@ -525,7 +525,7 @@ function MacLink({ publishedAt, first }) {
 // ---------- Page ----------
 
 export default function Finances() {
-  const { snap, pending, error, clearError, send } = useMoney()
+  const { snap, onServer, pending, error, clearError, send } = useMoney()
   const [params, setParams] = useSearchParams()
   const asked = { recurring: 'spending', accounts: 'overview' }[params.get('tab')] || params.get('tab')
   const tab = TABS.some(([k]) => k === asked) ? asked : 'overview'
@@ -547,11 +547,11 @@ export default function Finances() {
 
   const p = snap.payload
   const waiting = pending.length > 0
-  const slow = pending.some((x) => Date.now() - x.at > 45000)
+  const slow = !onServer && pending.some((x) => Date.now() - x.at > 45000)
 
   return (
     <div className="page">
-      <PageHeader eyebrow={`From your Mac · ${ago(snap.published_at)}${waiting ? ` · ${pending[0].label}` : ''}`} title="Finances" />
+      <PageHeader eyebrow={`${onServer ? 'Updated' : 'From your Mac ·'} ${ago(snap.published_at)}${waiting ? ` · ${pending[0].label}` : ''}`} title="Finances" />
 
       <Controls end={<RoundButton label="Sync banks" disabled={waiting} onClick={() => send('POST', '/api/sync', {}, 'Syncing banks')}><RefreshCw size={15} className={waiting ? 'spin' : ''} /></RoundButton>}>
         <Tabs tabs={TABS.map(([k, label, icon]) => ({ k, label, icon }))} value={tab} onPick={go} />
@@ -560,7 +560,7 @@ export default function Finances() {
       {slow && <p className="note">Waiting for your Mac. It picks up changes when it's on and the Money app is running.</p>}
       {error && <p className="note fin-alert" onClick={clearError}>{error}</p>}
 
-      {tab === 'overview' && <Overview p={p} go={go} send={send} publishedAt={snap.published_at} />}
+      {tab === 'overview' && <Overview p={p} go={go} send={send} publishedAt={snap.published_at} onServer={onServer} />}
       {tab === 'spending' && <Spending p={p} send={send} />}
       {tab === 'transactions' && <Transactions p={p} send={send} />}
     </div>

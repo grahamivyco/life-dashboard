@@ -11,7 +11,7 @@ import time
 import webbrowser
 from pathlib import Path
 
-from . import bridge, plaid_client, db, demo, importer, rules, sync, ynab
+from . import bridge, cloud, plaid_client, db, demo, importer, rules, sync, ynab
 from .server import App, serve
 
 EXAMPLE_RULES = Path(__file__).parent.parent / "rules.example.txt"
@@ -30,6 +30,8 @@ def main() -> None:
                         help="save the key from the Life Dashboard's Finances page, then stop")
     parser.add_argument("--export-payload", type=Path, metavar="JSON",
                         help="write what the dashboard would get to a file, then stop (use with --demo)")
+    parser.add_argument("--move-to-cloud", action="store_true",
+                        help="move your data and keys to the Life Dashboard's server once, so it syncs without this Mac")
     parser.add_argument("--ynab-check", action="store_true", help="show what YNAB has for Apple Card, then stop")
     args = parser.parse_args()
     os.umask(0o077)  # every file the app makes is readable by you only
@@ -67,6 +69,11 @@ def main() -> None:
     rules_path.chmod(0o600)  # older copies were made readable by everyone on this Mac
     if args.demo:
         demo.fill(conn)
+    if args.move_to_cloud:
+        if args.demo:
+            raise SystemExit("--move-to-cloud moves your real data, so it doesn't run with --demo")
+        cloud.move(conn, rules_path)
+        return
 
     app = App(conn, rules_path, demo=args.demo, port=args.port)
     if args.export_payload:
@@ -77,7 +84,9 @@ def main() -> None:
     print(f"Money dashboard running at {url}{' (demo data)' if args.demo else ''}")
     print(f"Your sorting rules: {rules_path}")
     print("Press Ctrl+C to stop.")
-    if not args.demo:
+    if not args.demo and cloud.moved():
+        print("Your Finances live on the Life Dashboard's server now, so this app no longer syncs or publishes.")
+    elif not args.demo:
         threading.Thread(target=keep_fresh, args=(db_path,), daemon=True).start()
         # Its own connection and app, so the web page's edits never wait on this window.
         link = bridge.Bridge(App(db.connect(db_path), rules_path, demo=False, port=args.port))
