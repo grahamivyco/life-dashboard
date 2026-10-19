@@ -82,3 +82,17 @@ class SpecialCategoryTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DepositTests(unittest.TestCase):
+    def test_check_deposit_is_income(self):
+        txn = {"description": "Check Deposit From VIVIEN SMITH", "merchant": None, "amount": -200.0,
+               "plaid_category": "TRANSFER_IN/TRANSFER_IN_ACCOUNT_TRANSFER"}
+        self.assertEqual(rules.categorize(txn, [])[0], "Income")
+
+    def test_deposit_category_is_income(self):
+        self.assertEqual(rules.plaid_category_name("TRANSFER_IN/TRANSFER_IN_DEPOSIT"), "Income")
+
+    def test_own_rule_still_wins(self):
+        txn = {"description": "Check Deposit From ME", "merchant": None, "amount": -200.0, "plaid_category": None}
+        self.assertEqual(rules.categorize(txn, rules.parse("From ME -> Transfer")[0])[0], "Transfer")

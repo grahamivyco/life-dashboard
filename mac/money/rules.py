@@ -61,9 +61,13 @@ PLAID_DETAILED_NAMES = {
     "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT": CARD_PAYMENT,
     "TRANSFER_OUT_INVESTMENT_AND_RETIREMENT_FUNDS": INVESTING,
     "TRANSFER_IN_INVESTMENT_AND_RETIREMENT_FUNDS": INVESTING,
+    "TRANSFER_IN_DEPOSIT": "Income",  # cash and checks paid in are new money, not a move between accounts
     "FOOD_AND_DRINK_GROCERIES": "Groceries",
     "PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS": "Health & Wellness",
 }
+
+# Banks often file a deposited check under transfers. Money paid in by check or cash is income.
+DEPOSIT = re.compile(r"\b(check|cheque|mobile|atm|cash|branch) deposit")
 
 # Hidden from the spending ring when "Include bills" is off.
 BILL_CATEGORIES = {"Rent", "Bills & Utilities", "Loan Payments"}
@@ -130,6 +134,8 @@ def categorize(txn: dict, rules: list[Rule]) -> tuple[str, str]:
     for rule in rules:
         if rule.matches(haystack, txn["amount"]):
             return rule.category, f"rule on line {rule.line}"
+    if txn["amount"] < 0 and DEPOSIT.search(haystack):
+        return "Income", "check or cash deposit"
     return plaid_category_name(txn.get("plaid_category")), "Plaid"
 
 
