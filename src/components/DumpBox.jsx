@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Mic, Square } from 'lucide-react'
 import { supabase } from '../supabase.js'
-import { useDump, setText, setErr, start, stop, clear, canTalk as hasSpeech, demoTalk } from '../dumpStore.js'
+import { useDump, setErr, start, stop, clear, canTalk as hasSpeech, demoTalk } from '../dumpStore.js'
 
-// Brain dump box. Tap the mic and talk: the words land in the box as you speak,
-// with a voice wave while it listens. Typing still works. The draft and any
-// recording carry on if you switch pages (see dumpStore.js).
+// Brain dump hero: a big mic and Save. What you say shows under the mic as you talk,
+// with a voice wave while it listens. The draft and any recording carry on if you
+// switch pages (see dumpStore.js).
 export default function DumpBox({ onSaved }) {
   const { search } = useLocation()
   const demo = import.meta.env.MODE === 'demo' && search.includes('talk=1')
@@ -28,38 +28,25 @@ export default function DumpBox({ onSaved }) {
   }
 
   const canTalk = hasSpeech || demo
+  const said = [text, live].join(' ').trim()
 
   return (
-    <div className={'tile dumpbox' + (listening ? ' listening' : '')}>
-      <div className="dump-field">
-        <textarea
-          rows={3}
-          placeholder={canTalk ? "What's on your mind? Tap the mic and talk, or type." : "What's on your mind?"}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) save() }}
-        />
-        {live && <p className="dump-live">{live}</p>}
-      </div>
-      <div className="row between">
-        <div className="row talk">
-          {canTalk && (
-            <button
-              className={'mic-btn' + (listening ? ' on' : '')}
-              onClick={listening ? stop : start}
-              aria-label={listening ? 'Stop' : 'Talk'}
-              title={listening ? 'Stop' : 'Talk'}
-            >
-              {listening ? <Square size={14} fill="currentColor" /> : <Mic size={18} />}
-            </button>
-          )}
-          {listening
-            ? <div className="wave" aria-hidden="true">{levels.map((l, i) => <span key={i} style={{ transform: `scaleY(${l})` }} />)}</div>
-            : <span className="hint">⌘ Enter to save. Claude sorts it into tasks, goals and ideas.</span>}
-        </div>
-        <button className="btn primary" onClick={save} disabled={busy || !(text.trim() || live)}>{busy ? 'Saving…' : 'Save'}</button>
-      </div>
+    <section className={'tile dump-hero' + (listening ? ' listening' : '')}>
+      <h2 className="dump-q">{listening ? 'Listening…' : "What's on your mind?"}</h2>
+      <button
+        className={'hero-mic' + (listening ? ' on' : '')}
+        onClick={listening ? stop : start}
+        disabled={!canTalk}
+        aria-label={listening ? 'Stop' : 'Talk'}
+        title={listening ? 'Stop' : 'Talk'}
+      >
+        {listening ? <Square size={26} fill="currentColor" /> : <Mic size={34} strokeWidth={1.75} />}
+      </button>
+      {listening && <div className="wave" aria-hidden="true">{levels.map((l, i) => <span key={i} style={{ transform: `scaleY(${l})` }} />)}</div>}
+      {said && <p className="dump-said">{text}{live && <span className="dump-live"> {live}</span>}</p>}
+      {!canTalk && <p className="hint">Voice needs Safari or Chrome.</p>}
+      <button className="btn primary hero-save" onClick={save} disabled={busy || !said}>{busy ? 'Saving…' : 'Save'}</button>
       {err && <p className="error">{err}</p>}
-    </div>
+    </section>
   )
 }

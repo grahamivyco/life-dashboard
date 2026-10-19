@@ -1042,3 +1042,25 @@ body[data-menu="green"] { --menu-bg: var(--green); }
   .m-shade { position: fixed; z-index: 45; inset: 0 0 0 var(--drawer); border: 0; padding: 0; background: transparent; }
   body.drawer-open .m-shade { display: block; }
 }
+
+/* ---------- brain dump hero ---------- */
+.dump-hero { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 36px 24px 28px; text-align: center; }
+.dump-q { font-family: var(--display); font-size: 30px; font-weight: 500; letter-spacing: -.01em; margin: 0; }
+.hero-mic { display: grid; place-items: center; width: 104px; height: 104px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; box-shadow: 0 8px 28px rgba(47, 44, 39, .12); transition: color var(--ease), border-color var(--ease), transform var(--ease); }
+.hero-mic:hover { color: var(--tomato); }
+.hero-mic:active { transform: scale(.97); }
+.hero-mic.on { border-color: var(--tomato); color: var(--tomato); }
+.hero-mic:disabled { opacity: .4; cursor: default; }
+.dump-hero .wave { flex: none; width: min(320px, 100%); justify-content: center; }
+.dump-said { max-width: 560px; margin: 0; white-space: pre-wrap; }
+.dump-said .dump-live { color: var(--muted); font-style: italic; }
+.hero-save { min-width: 140px; }
+@media (max-width: 640px) {
+  .dump-hero { padding: 28px 16px 22px; gap: 16px; }
+  .dump-q { font-size: 26px; }
+}
+
+/* iPhone zooms in on any field under 16px when you tap it. Keep fields at 16px on phone. */
+@media (max-width: 640px) {
+  input:not(.code-input), textarea, select { font-size: 16px !important; }
+}
