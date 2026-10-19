@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 // The one control row every page uses, right under the page title:
@@ -23,7 +23,8 @@ export function Tabs({ tabs, value, onPick, phoneOnly }) {
     if (!slot) return null
     const on = tabs.find((t) => t.k === value)
     const title = document.getElementById('m-title-slot')
-    return <>{title && on && createPortal(on.title || on.label, title)}{createPortal(tabs.map((t) => {
+    const index = Math.max(0, tabs.indexOf(on))
+    return <>{title && on && createPortal(on.title || on.label, title)}{createPortal(<><Pill i={index} n={tabs.length} />{tabs.map((t) => {
       const Icon = t.icon
       const on = value === t.k
       return (
@@ -35,7 +36,7 @@ export function Tabs({ tabs, value, onPick, phoneOnly }) {
           </span>
         </button>
       )
-    }), slot)}</>
+    })}</>, slot)}</>
   }
   if (phoneOnly) return null
   return (
@@ -47,6 +48,22 @@ export function Tabs({ tabs, value, onPick, phoneOnly }) {
       ))}
     </div>
   )
+}
+
+// The highlight behind the current tab. It glides to the new tab and stretches like a drop on the way.
+function Pill({ i, n }) {
+  const ref = useRef(null)
+  const last = useRef(i)
+  useEffect(() => {
+    if (last.current === i || !ref.current?.animate) { last.current = i; return }
+    const far = Math.min(Math.abs(i - last.current), 3)
+    last.current = i
+    ref.current.animate(
+      [{ scale: '1 1' }, { scale: `${1 + 0.18 * far} ${1 - 0.06 * far}`, offset: 0.4 }, { scale: '0.97 1.03', offset: 0.75 }, { scale: '1 1' }],
+      { duration: 560, easing: 'cubic-bezier(.3, .7, .3, 1)' },
+    )
+  }, [i])
+  return <span ref={ref} className="m-pill" style={{ '--i': i, '--n': n }} aria-hidden="true" />
 }
 
 const PHONE = '(max-width: 640px)'
