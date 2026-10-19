@@ -16,6 +16,38 @@ const day = (d) => new Date(now + d * 864e5).toISOString().slice(0, 10)
 const room = (wall, floor, sky) => 'data:image/svg+xml;utf8,' + encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="${wall}"/><rect y="150" width="320" height="50" fill="${floor}"/><rect x="190" y="34" width="86" height="104" rx="2" fill="${sky}"/><rect x="231" y="34" width="4" height="104" fill="${wall}"/><rect x="190" y="84" width="86" height="4" fill="${wall}"/><rect x="36" y="118" width="110" height="34" rx="6" fill="#8C8577"/><rect x="40" y="104" width="30" height="20" rx="5" fill="#A49D8F"/></svg>`)
 
+
+// Jobs page sample rows (public.jobs shape)
+const dg = (n) => ({ n, date: day(0), thread_id: 'dg1', url: '#' })
+const J = (o) => ({ status: 'new', needs_you: false, actions: [{ label: 'Job posting', href: '#', primary: true }], docs: [], paste: [], steps: [], asks: [], updates: [], extra: {}, ...o })
+const resume = { label: 'Resume PDF', path: 'docs/demo-resume.pdf', save: 'Graham-Ivy-Resume.pdf' }
+const cover = { label: 'Cover letter PDF', path: 'docs/demo-cover-letter.pdf' }
+const portfolio = { label: 'Portfolio PDF', path: 'docs/base/Graham-Ivy-Portfolio.pdf' }
+const demoJobs = [
+  J({ slug: 'p1', source: 'digest', role: 'Graphic Designer (contract)', short: 'Lingo Studio', org: 'Lingo Studio', pay: 'Asks for a USD rate', score: 82, due: day(50), extra: { where: 'Worldwide', digest: dg(1) }, why: 'Ongoing contract. Social and ad graphics for a translation company. Lead with your Spanish and Portuguese.', steps: ['Free account, then apply with CV.', 'Upload the design resume and portfolio.'], docs: [resume, portfolio], paste: [{ title: 'Rate', text: '$35 USD per hour.' }] }),
+  J({ slug: 'p2', source: 'digest', role: 'Video Editor and Designer', short: 'Ocean Trust', pay: 'Not listed', score: 74, due: day(5), extra: { where: 'Worldwide', digest: dg(2) }, why: 'Conservation mission. Short-form video plus print. Lead with Reels work.' }),
+  J({ slug: 'p3', source: 'digest', role: 'Brand Designer', short: 'Fieldnotes', pay: '€45–55K', score: 70, due: day(30), extra: { where: 'Remote, EU', digest: dg(3) }, why: 'Mid-level brand role. Lead with Open Frame identity work.' }),
+  J({ slug: 'p4', source: 'digest', role: 'Learning Designer', short: 'Open Classroom', pay: '$60–70K', score: 77, due: day(21), extra: { where: 'Worldwide', digest: dg(4) }, why: 'Education mission, curriculum and visual design.' }),
+  J({ slug: 'p5', source: 'digest', role: 'Community Coordinator', short: 'Makers Co', pay: 'USD salary', score: 61, due: day(40), extra: { where: 'Worldwide', digest: dg(5) }, why: 'Run a creator community. Lead with social strategy and Spanish.' }),
+  J({ slug: 'a', role: 'Digital Content and Marketing Coordinator', short: 'Data for Good', org: 'Data for Good · fully remote', pay: '$60–65K', score: 80, due_text: 'Rolling', why: 'Nonprofit, fully remote, pay in your range.', docs: [resume, cover] }),
+  J({ slug: 'd', role: 'Educational Content Designer', short: 'Coffee Lab', org: 'Coffee Lab · part-time contract', pay: 'Not listed', score: 72, due: day(4), why: 'Education design you have done before, remote anywhere.' }),
+  J({ slug: 'c', status: 'approved', needs_you: true, role: 'Visual Designer', short: 'Studio North', pay: 'Not listed', score: 72, decided_at: iso(50), filling_at: iso(30), finish_url: '#', docs: [resume, portfolio], waiting_on: 'They ban AI-written answers, so these two are yours to write. Type them here and Claude pastes them in and submits.', asks: [{ q: 'Describe your most complex web design project.', long: true }, { q: 'What design tools do you like best?', hint: 'A few sentences' }], updates: [{ date: iso(50), text: 'You approved it.' }, { date: iso(30), text: 'Form filled with your details and resume.' }], extra: { prep: { about: 'Studio North makes brand systems for open-source projects.', questions: ['Walk us through a design system you built.'], stories: ['Needlework Guild rebrand.'], ask: ['How do designers and engineers work together?'] } } }),
+  J({ slug: 'm', status: 'applied', needs_you: true, role: 'Graphic Designer, AI projects', short: 'Model Lab', pay: '$30/hr', score: 66, decided_at: iso(240), applied_at: iso(236), followed_up_at: iso(70), waiting_on: 'Create your Model Lab account from their email. It needs a password, so it’s yours.', updates: [{ date: iso(236), text: 'Submitted with resume and portfolio link.' }] }),
+  J({ slug: 'f', status: 'approved', role: 'AI Tutor, Design', short: 'Tutor Co', pay: 'Hourly', score: 62, decided_at: iso(3), waiting_on: 'Claude is filling the form.', updates: [{ date: iso(3), text: 'You approved it.' }] }),
+  J({ slug: 'e', status: 'interview', role: 'Brand Designer', short: 'Robo Co', pay: '$50K', score: 64, decided_at: iso(320), applied_at: iso(300), confirmed_at: iso(299), followed_up_at: iso(130), responded_at: iso(20), waiting_on: 'Interview Thursday 15:00.', updates: [{ date: iso(20), text: 'Interview invite for Thursday 15:00 CET.' }] }),
+  J({ slug: 'b', status: 'applied', role: 'Learning Experience Designer', short: 'Bright Path', pay: 'Asked $75K', score: 76, decided_at: iso(250), applied_at: iso(240), confirmed_at: iso(239), followed_up_at: iso(70), waiting_on: 'Waiting to hear back.', docs: [{ label: 'Resume PDF', path: 'docs/bright-path-resume.pdf' }], updates: [{ date: iso(240), text: 'Submitted. Confirmation email received.' }, { date: iso(70), text: 'Follow-up email sent.' }] }),
+  J({ slug: 'g', status: 'applied', role: 'Social Media Designer', short: 'Reef Fund', pay: '$45K', score: 70, decided_at: iso(30), applied_at: iso(26), waiting_on: 'Submitted. Waiting for their confirmation email.' }),
+  J({ slug: 'r', status: 'rejected', role: 'Exhibit Designer', short: 'City Museum', pay: '$55K', score: 68, decided_at: iso(500), applied_at: iso(490), responded_at: iso(100) }),
+]
+const demoProfile = {
+  user_id: 'demo', more: 'Also easy-entry online work: tutoring, user testing.',
+  info: [['Professional name', 'Graham Ivy'], ['Email', 'graham@example.com'], ['Phone', '+34 600 000 000'], ['Portfolio', 'https://example.com'], ['Languages', 'English (native), Spanish (fluent)'], ['Availability', 'Two weeks after an offer.']],
+  picks: { roles: ['Graphic design', 'UX/UI design', 'Brand design', 'Social media'], causes: ['Museums', 'Conservation', 'Education'], where: ['Remote, Spain OK', 'US contract (USD)'], hours: ['Full time', 'Part time'] },
+  watchlist: ['Ocean Trust', 'City Museum', 'Open Classroom', 'Reef Fund'], weights: { 'Mission and cause': 30, Pay: 20, 'Spain eligibility': 20, 'Skills match': 15, Level: 15 },
+  base_docs: [{ group: 'Resumes', label: 'Design', path: 'docs/base/design-resume.pdf' }, { group: 'Resumes', label: 'UX/UI', path: 'docs/base/ux-ui-resume.pdf' }, { group: 'Portfolio', label: 'Portfolio PDF', path: 'docs/base/Graham-Ivy-Portfolio.pdf' }],
+  search: { instagram: ['@remotedesignjobs', '@museumjobs'] },
+}
+
 const fixtures = {
   items: [
     { id: 'i1', kind: 'task', title: 'Tell Emma about Tess’s wedding', status: 'open', due_date: day(1), created_at: iso(2) },
@@ -113,14 +145,6 @@ const fixtures = {
         closing: [{ text: 'Instructional Design Consultant, Health Org', deadline: day(1) }, { text: 'Communications Contractor, UN Lab', deadline: day(2) }],
         also: [{ text: 'Email Designer, part-time', url: '#' }, { text: 'Landing page designer, $20–25/h', url: '#' }],
       },
-      jobs: [
-        { slug: 'a', role: 'Digital Content and Marketing Coordinator', short: 'Data for Good', org: 'Data for Good · fully remote', pay: '$60–65K', score: 80, grade: 'B', due: null, dueText: 'Rolling', why: 'Nonprofit, fully remote, pay in your range.', next: 'Confirm your references, then apply.', actions: [{ label: 'Apply', href: '#', primary: true }, { label: 'Job posting', href: '#' }], docs: ['Resume PDF', 'Cover letter PDF'], steps: ['Click Apply and fill in your details.', 'Upload resume and cover letter.', 'Paste the answers below.'], paste: [{ title: 'Desired pay', text: '$62,000–65,000 USD per year.' }], app: null },
-        { slug: 'b', role: 'Learning Experience Designer', short: 'Bright Path', org: 'Bright Path · remote worldwide', pay: 'Asked $75K', score: 76, grade: 'B', actions: [], docs: [], paste: [], app: { status: 'applied', appliedAt: iso(240), waitingOn: 'Waiting to hear back.', updates: [{ date: iso(240), text: 'Submitted. Confirmation email received.' }, { date: iso(70), text: 'Follow-up email sent.' }] } },
-        { slug: 'c', role: 'Visual Designer', short: 'Studio North', org: 'Studio North', pay: 'Not listed', score: 72, grade: 'B', actions: [], docs: [], paste: [], app: { status: 'approved', needsYou: true, finishUrl: '#', waitingOn: 'They ban AI-written answers, so these three are yours to write.', asks: [{ q: 'Describe your most complex web design project.' }, { q: 'What design tools do you like best?' }], updates: [{ date: iso(30), text: 'Form filled with your details and resume.' }] } },
-        { slug: 'd', role: 'Educational Content Designer', short: 'Coffee Lab', org: 'Coffee Lab · part-time contract', pay: 'Not listed', score: 72, grade: 'B', due: day(4), actions: [{ label: 'Apply', href: '#', primary: true }], docs: [], paste: [], app: null, why: 'Education design you have done before, remote anywhere.' },
-        { slug: 'e', role: 'Brand Designer', short: 'Robo Co', org: 'Robo Co', pay: '$50K', score: 64, grade: 'C', actions: [], docs: [], paste: [], app: { status: 'interview', appliedAt: iso(300), waitingOn: 'Interview Thursday 15:00.', updates: [{ date: iso(20), text: 'Interview invite for Thursday 15:00 CET.' }] } },
-        { slug: 'f', role: 'AI Tutor, Design', short: 'Model Lab', org: 'Model Lab · contract', pay: 'Hourly', score: 62, grade: 'C', actions: [], docs: [], paste: [], app: { status: 'approved', needsYou: false, waitingOn: 'Claude is filling the form.' } },
-      ],
     } },
     { section: 'events', synced_at: iso(0.3), payload: { events: [
       ...workBlocks,
@@ -166,6 +190,8 @@ const fixtures = {
       subscriptions: [{ name: 'Claude', amount: 100 }, { name: 'YouTube Premium', amount: 29.19 }, { name: 'Apple', amount: 21.98 }, { name: 'Google One', amount: 19.99 }, { name: 'Gym app', amount: 12 }],
     } },
   ],
+  jobs: demoJobs,
+  job_profile: [demoProfile],
   subscription_overrides: [{ name: 'Gym app', hidden: true }, { name: 'Google One', amount: 9.99 }],
 }
 
@@ -188,9 +214,14 @@ export const demoClient = {
   from: builder,
   functions: { invoke: async () => ({ data: { row: null }, error: null }) },
   channel: () => demoChannel,
+  storage: { from: () => ({
+    createSignedUrls: async (ps) => ({ data: ps.map((p) => ({ path: p, signedUrl: '#', error: null })) }),
+    createSignedUrl: async () => ({ data: { signedUrl: '#' } }),
+    upload: async () => ({ error: null }),
+  }) },
   removeChannel: () => {},
   auth: {
-    getSession: async () => ({ data: { session: { user: { email: 'demo@example.com' } } } }),
+    getSession: async () => ({ data: { session: { user: { id: 'demo', email: 'demo@example.com' } } } }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
     signOut: async () => {}, signInWithOtp: async () => ({}),
   },

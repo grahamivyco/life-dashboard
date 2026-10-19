@@ -115,12 +115,12 @@ export default function Today() {
           ))}
         </Catch>
 
-        <Catch title="Jobs to apply for" n={jobs.length} to="/jobs?tab=new" link="Jobs">
+        <Catch title="Jobs to apply for" n={jobs.length} to="/jobs" link="Jobs">
           {jobs.slice(0, SHOWN).map((j) => (
             <li key={j.slug}>
-              <Link to={`/jobs?tab=${j.app ? 'progress' : 'new'}&open=${j.slug}`} className="catch-row">
+              <Link to={j.needs_you ? `/jobs?tab=tracker&open=${j.slug}` : `/jobs?view=list&open=${j.slug}`} className="catch-row">
                 <span className="clamp">{j.role}</span>
-                <span className="meta clamp">{j.app?.needsYou ? 'Needs you' : [j.short || j.org?.split(' · ')[0], j.dueText].filter(Boolean).join(' · ')}</span>
+                <span className="meta clamp">{j.needs_you ? 'Needs you' : [j.short || j.org?.split(' · ')[0], j.due_text].filter(Boolean).join(' · ')}</span>
               </Link>
             </li>
           ))}

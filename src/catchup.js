@@ -18,19 +18,16 @@ export function useToReply() {
   return (snap?.payload?.threads || []).filter((t) => t.replies?.length && !queued[t.id] && skips[t.id] !== t.date)
 }
 
-// New jobs not yet decided (best fit first), plus applications waiting on Graham
+// Jobs waiting on Graham, then new jobs not yet decided (best fit first), from public.jobs
 export function useJobsToApply() {
-  const snap = useSnapshot('jobs')
-  const [picked, setPicked] = useState({})
+  const [jobs, setJobs] = useState([])
   useEffect(() => {
-    supabase.from('claude_requests').select('note,status').eq('action', 'job')
-      .then(({ data }) => setPicked(Object.fromEntries((data || []).filter((r) => r.status !== 'failed' && r.status !== 'dismissed').map((r) => [(r.note || '').split('|')[0], true]))))
+    supabase.from('jobs').select('slug,role,short,org,status,needs_you,due,due_text,score').then(({ data }) => setJobs(data || []))
   }, [])
   const today = new Date(new Date().toDateString())
   const open = (j) => !j.due || new Date(j.due + 'T12:00:00') >= today
-  const jobs = snap?.payload?.jobs || []
-  const waiting = jobs.filter((j) => j.app?.status === 'approved' && j.app?.needsYou)
-  const fresh = jobs.filter((j) => !j.app && open(j) && !picked[`job:${j.slug}`]).sort((a, b) => (b.score || 0) - (a.score || 0))
+  const waiting = jobs.filter((j) => j.needs_you && !['rejected', 'skipped'].includes(j.status))
+  const fresh = jobs.filter((j) => j.status === 'new' && open(j)).sort((a, b) => (b.score || 0) - (a.score || 0))
   return [...waiting, ...fresh]
 }
 

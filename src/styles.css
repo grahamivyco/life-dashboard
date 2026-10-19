@@ -674,3 +674,39 @@ section.tile .list.jobs { padding: 0; }
 a.catch-row:hover .clamp:first-child { text-decoration: underline; text-underline-offset: 3px; }
 .catch .list > li { min-width: 0; }
 .catch-link { align-self: flex-start; margin-top: 8px; }
+/* ---------- jobs v2 ---------- */
+.seg-n.hot { color: var(--tomato); }
+.jprog { flex: none; display: inline-flex; gap: 2px; width: 70px; }
+.jprog i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+.jprog i.on { background: var(--fg); }
+.jprog.wide { width: 100%; max-width: 520px; }
+.jprog-full { display: flex; flex-direction: column; gap: 8px; }
+.jprog-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.jprog-steps li.on { color: var(--fg); }
+.doc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.doc-list li { display: flex; align-items: center; gap: 8px; min-height: 32px; color: var(--muted); }
+.doc-list a { color: var(--fg); text-underline-offset: 3px; }
+.doc-list .icon-btn { width: 28px; height: 28px; }
+.list > li.doc-job { display: grid; grid-template-columns: minmax(140px, 220px) 1fr; align-items: start; gap: 16px; padding: 10px 0; }
+.ask-field { color: var(--fg); font-size: 13px; }
+.ask-field textarea { margin-top: 4px; }
+.search-panel { max-width: 760px; }
+.search-panel .tile-head { align-items: center; margin-bottom: 0; }
+.filter-row { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.filter-row .chips { margin: 0; }
+.filter-row .eyebrow { margin: 0; }
+.info-list li { align-items: flex-start; }
+.info-list .col { gap: 2px; }
+.weights li { gap: 12px; }
+.wbar { flex: none; width: 120px; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.wbar i { display: block; height: 100%; background: var(--fg); }
+.more-note { margin-top: 12px; }
+.closed-list { margin-top: 8px; }
+.job-card .job-next { font-weight: 500; }
+.prep { padding-top: 4px; }
+@media (max-width: 640px) {
+  .list > li.doc-job { grid-template-columns: 1fr; gap: 4px; }
+  .jprog { width: 56px; }
+  .wbar { width: 72px; }
+}
+.job-sec > .mini { align-self: flex-start; }
