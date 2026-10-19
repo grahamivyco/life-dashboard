@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import { Menu, ChevronRight } from 'lucide-react'
 import Mark from './Mark.jsx'
+import Avatar from './Avatar.jsx'
 import { sections, settingsSection } from '../sections.js'
 
 // Phone nav, Instagram style: compact top bar that hides on scroll down,
-// a floating rounded tab bar with five tabs, and a More sheet for everything else.
+// a floating rounded tab bar ending in the profile avatar, and a More sheet
+// (menu button, top right) for everything else.
 const byPath = Object.fromEntries([...sections, settingsSection].map((s) => [s.path, s]))
-const tabs = ['/', '/email', '/jobs', '/events', '/housing'].map((p) => byPath[p])
-const more = ['/finances', '/clients', '/timeline', '/settings'].map((p) => byPath[p])
+const tabs = ['/', '/email', '/jobs', '/events', '/housing', '/finances'].map((p) => byPath[p])
+const more = ['/clients', '/timeline', '/settings'].map((p) => byPath[p])
 
 function Badge({ count }) {
   if (!count) return null
@@ -19,7 +21,7 @@ export default function MobileNav({ counts }) {
   const { pathname } = useLocation()
   const [sheet, setSheet] = useState(false)
   const [hidden, setHidden] = useState(false)
-  const current = byPath[pathname]
+  const current = pathname === '/profile' ? { label: 'Profile' } : byPath[pathname]
   const inMore = more.some((s) => s.path === pathname)
 
   useEffect(() => { setSheet(false); setHidden(false) }, [pathname])
@@ -49,6 +51,10 @@ export default function MobileNav({ counts }) {
           <Mark size={24} />
           {pathname === '/' ? <span className="m-word">Life</span> : <span className="m-title">{current?.label || 'Life'}</span>}
         </Link>
+        <button className={'m-more' + (inMore || sheet ? ' active' : '')} onClick={() => setSheet((o) => !o)}
+          aria-label="More" aria-expanded={sheet}>
+          <Menu size={22} strokeWidth={1.75} />
+        </button>
       </header>
 
       <nav className="m-tabs" aria-label="Main">
@@ -59,17 +65,16 @@ export default function MobileNav({ counts }) {
               className={({ isActive }) => 'm-tab' + (isActive && !sheet ? ' active' : '')}>
               {({ isActive }) => (
                 <span className="nav-icon">
-                  <Icon size={22} strokeWidth={isActive && !sheet ? 2.25 : 1.6} />
+                  <Icon size={21} strokeWidth={isActive && !sheet ? 2.25 : 1.6} />
                   <Badge count={s.badge ? counts[s.badge] : 0} />
                 </span>
               )}
             </NavLink>
           )
         })}
-        <button className={'m-tab' + (inMore || sheet ? ' active' : '')} onClick={() => setSheet((o) => !o)}
-          aria-label="More" aria-expanded={sheet}>
-          <span className="nav-icon"><Menu size={22} strokeWidth={inMore || sheet ? 2.25 : 1.6} /></span>
-        </button>
+        <NavLink to="/profile" aria-label="Profile" className={({ isActive }) => 'm-tab' + (isActive && !sheet ? ' active' : '')}>
+          <span className="nav-icon"><Avatar /></span>
+        </NavLink>
       </nav>
 
       <div className={'m-scrim' + (sheet ? ' show' : '')} onClick={() => setSheet(false)} />
