@@ -397,3 +397,29 @@ button.pill.claude { border: 0; cursor: pointer; font-family: inherit; }
 .btn.sm { height: 28px; padding: 0 12px; font-size: 12px; flex: none; }
 .result.flush { margin-left: 0; }
 .seg.icons button { padding: 0 10px; display: grid; place-items: center; }
+
+/* ---------- clients ---------- */
+.client { display: flex; flex-direction: column; gap: 14px; padding: 18px 20px; }
+.client-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.client-head h2 { font-family: var(--display); font-weight: 500; font-size: 20px; letter-spacing: -.01em; }
+.client-summary { color: var(--muted); font-size: 13px; }
+.client-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; }
+.client-grid > * { min-width: 0; }
+.gap16 { gap: 16px; }
+.client-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.client-block .eyebrow { margin-bottom: 2px; }
+.client-block .list > li { padding: 0; }
+.client-mail { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 8px 6px; margin: 0 -6px; border-radius: 8px; text-decoration: none; font-size: 13px; }
+.client-mail:hover { background: var(--hover); }
+.client-from { width: 120px; flex: none; font-weight: 500; }
+.inv-num { flex: none; font-weight: 600; min-width: 34px; }
+.pill.alert { color: var(--tomato); }
+.client textarea { min-height: 96px; font-size: 13px; }
+@media (max-width: 760px) {
+  .client { padding: 14px 16px; }
+  .client-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .client-mail:has(.client-subj) { flex-wrap: wrap; row-gap: 0; }
+  .client-from { width: auto; flex: 1; }
+  .client-subj { order: 3; flex-basis: 100%; }
+  .unread + .client-from + .client-subj { padding-left: 17px; }
+}

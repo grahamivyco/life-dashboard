@@ -32,7 +32,28 @@ const fixtures = {
     { id: 'a1', action: 'ask', note: 'What should I wear to Tess’s wedding in Sitges?', status: 'done', result: 'Beach ceremony at 6pm, so a light linen suit or chinos with a linen shirt. Loafers, no socks.', links: [], created_at: iso(3), updated_at: iso(2) },
     { id: 'r3', action: 'auto', item_id: 'i5', status: 'queued', item: { title: 'Mic button on Mac and iPhone' }, updated_at: iso(1) },
   ],
+  clients: [
+    { id: 'c1', name: 'Riverside Quilt Club', short: 'RQC', notes: 'Website and newsletter. $200 a week, paused until we agree a plan.\nTalk to Dana about the events page first.', position: 0 },
+    { id: 'c2', name: 'Northwind Apps', notes: '', position: 1 },
+  ],
   section_snapshots: [
+    { section: 'clients', synced_at: iso(0.3), payload: { clients: [
+      { id: 'c1', summary: 'Dana asked to pause the weekly invoice until there’s a plan. Sam is waiting on the events page fixes.', threads: [
+        { id: 't1', from: 'Kym Duea', subject: 'Annual Meeting page has slipped a stitch', date: iso(1), unread: true, needs_reply: true, url: '#' },
+        { id: 'x2', from: 'Dana Brook', subject: 'Fwd: Invoice #29', date: iso(70), unread: true, needs_reply: true, url: '#' },
+        { id: 'x3', from: 'Club president', subject: 'Find a fellow stitcher page', date: iso(150), needs_reply: false, url: '#' },
+        { id: 'x4', from: 'Sam Lee', subject: 'Re: Scrolling on the member list', date: iso(280), needs_reply: false, url: '#' },
+        { id: 'x5', from: 'Club president', subject: 'Names on Leadership Team', date: iso(500), needs_reply: false, url: '#' },
+      ], invoices: [
+        { number: 29, amount: 200, date: iso(70), status: 'disputed', note: 'Asked to pause', url: '#' },
+        { number: 28, amount: 200, date: iso(170), status: 'paid', note: 'Paid by check', url: '#' },
+        { number: 26, amount: 220, date: iso(430), status: 'disputed', note: 'Asked to cancel', url: '#' },
+        { number: 25, amount: 260, date: iso(450), status: 'sent', url: '#' },
+      ] },
+      { id: 'c2', summary: '', threads: [
+        { id: 'y1', from: 'Slack', subject: 'You have 14 unread messages in Northwind Dev', date: iso(900), needs_reply: false, url: '#' },
+      ], invoices: [] },
+    ] } },
     { section: 'email', synced_at: iso(0.2), payload: { unread: 3, threads: [
       { id: 't1', from: 'Kym Duea', subject: 'Annual Meeting page has slipped a stitch', snippet: 'I noticed an issue on the Annual Meeting page…', message: 'Also the registration link at the bottom goes nowhere. Thanks for taking a look!\n\nKym', date: iso(1), unread: true, important: true, count: 2, url: '#', replies: [
         { label: 'On it today', body: 'Hi Kym,\n\nThanks for catching this. I’ll fix the page and the registration link today and let you know when it’s live.\n\nGraham' },
@@ -118,7 +139,7 @@ const demoThreads = {
 const wait = () => new Promise((r) => setTimeout(r, 50))
 export const demoGmail = {
   ready: () => true, connected: () => true, connect: async () => 'demo', disconnect: () => {},
-  threads: async () => { await wait(); return fixtures.section_snapshots[0].payload.threads },
+  threads: async () => { await wait(); return fixtures.section_snapshots.find((s) => s.section === 'email').payload.threads },
   thread: async (id) => { await wait(); return demoThreads[id] },
   drafts: async () => { await wait(); return [
     { id: 'd1', threadId: 't1', from: 'me', to: 'Kym Duea <kym@example.com>', subject: 'Re: Annual Meeting page has slipped a stitch', date: iso(0.5), files: [],
