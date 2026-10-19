@@ -129,9 +129,11 @@ function DocLinks({ list, docs, bare }) {
       {!bare && <span className="eyebrow">Documents</span>}
       <ul className="doc-list">
         {list.map((d) => (
-          <li key={d.path}>
+          <li key={d.path || d.url}>
             <FileText size={14} />
-            {docs.urls[d.path]
+            {d.url
+              ? <a className="grow clamp" href={d.url} target="_blank" rel="noreferrer">{d.label}</a>
+              : docs.urls[d.path]
               ? <><a className="grow clamp" href={docs.urls[d.path]} target="_blank" rel="noreferrer">{d.label}</a>
                   <button className="icon-btn ok" title="Download" aria-label={`Download ${d.label}`} onClick={() => download(docs.uid, d)}><Download size={14} /></button></>
               : <span className="grow clamp meta">{d.label}{docs.ready && ' · not uploaded yet'}</span>}
@@ -149,7 +151,7 @@ function Asks({ j, act }) {
     const missing = j.asks.findIndex((q, i) => !q.optional && !(mine[i] || '').trim())
     if (missing >= 0) { setMsg('Answer every question first.'); return }
     setMsg('Sending…')
-    setMsg((await act(j, 'answers', mine)) ? 'Sent. Claude fills them in and submits.' : 'Couldn’t save. Try again.')
+    setMsg((await act(j, 'answers', mine)) ? 'Saved. Claude adds them to your form answers.' : 'Couldn’t save. Try again.')
   }
   return (
     <div className="job-sec">
@@ -571,10 +573,10 @@ export default function Jobs() {
   async function act(j, kind, answers) {
     const at = now()
     const patch = kind === 'apply'
-      ? { status: 'approved', decided_at: at, needs_you: false, waiting_on: 'Claude is getting your documents ready and filling in the form.', updates: [...(j.updates || []), { date: at, text: 'You approved it.' }] }
+      ? { status: 'approved', decided_at: at, needs_you: false, waiting_on: 'Claude is making your resume, cover letter and form answers.', updates: [...(j.updates || []), { date: at, text: 'You approved it.' }] }
       : kind === 'skip'
         ? { status: 'skipped', decided_at: at, needs_you: false, updates: [...(j.updates || []), { date: at, text: 'You skipped it.' }] }
-        : { my_answers: answers, needs_you: false, waiting_on: 'Your answers are in. Claude fills them in and submits.', updates: [...(j.updates || []), { date: at, text: 'You sent your answers.' }] }
+        : { my_answers: answers, needs_you: false, waiting_on: 'Your answers are in. Claude adds them to the form answers.', updates: [...(j.updates || []), { date: at, text: 'You sent your answers.' }] }
     const verb = { apply: 'Apply', skip: 'Skip', answers: 'Answers' }[kind]
     const before = j
     setJobs((js) => js.map((x) => (x.slug === j.slug ? { ...x, ...patch } : x)))
