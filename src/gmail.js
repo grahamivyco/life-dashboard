@@ -164,7 +164,9 @@ const real = {
 
   async download(file) {
     const r = await api(`messages/${file.messageId}/attachments/${file.id}`)
-    const blob = new Blob([b64urlToBytes(r.data)], { type: file.type || 'application/octet-stream' })
+    // Never give the browser a type it would run as a page on this site (HTML/SVG/XML attachments)
+    const type = /html|svg|xml|javascript/i.test(file.type || '') ? 'application/octet-stream' : file.type || 'application/octet-stream'
+    const blob = new Blob([b64urlToBytes(r.data)], { type })
     const url = URL.createObjectURL(blob)
     const a = Object.assign(document.createElement('a'), { href: url, download: file.name })
     document.body.append(a); a.click(); a.remove()

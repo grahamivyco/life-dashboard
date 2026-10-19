@@ -5,8 +5,10 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk";
 
+const OWNER = "c2cbf3bf-95b2-4c27-bc60-c598543f4cfa";
+
 const cors = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://grahamivyco.github.io",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 const json = (body: unknown, status = 200) =>
@@ -62,6 +64,10 @@ Deno.serve(async (req) => {
     const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: req.headers.get("Authorization")! } },
     });
+
+    // Only Graham's account may use this (and spend the API key)
+    const { data: { user } } = await db.auth.getUser();
+    if (user?.id !== OWNER) return json({ error: "forbidden" }, 403);
 
     const key = Deno.env.get("ANTHROPIC_API_KEY");
     if (!key) {
