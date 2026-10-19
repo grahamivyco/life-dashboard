@@ -33,7 +33,9 @@ def get(path: str) -> dict:
 
 def apple_accounts(budget: str = "last-used") -> list[dict]:
     accounts = get(f"/budgets/{budget}/accounts")["accounts"]
-    return [a for a in accounts if not a["deleted"] and not a["closed"] and "apple" in a["name"].lower()]
+    # "Apple Card", not "Apple Cash": the card is the credit account.
+    return [a for a in accounts if not a["deleted"] and not a["closed"]
+            and "apple" in a["name"].lower() and a["type"] == "creditCard"]
 
 
 def check() -> None:
