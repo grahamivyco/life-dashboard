@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Mic, Square } from 'lucide-react'
+import { Mic, Square, ArrowUp } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import { useDump, setErr, start, stop, clear, canTalk as hasSpeech, demoTalk } from '../dumpStore.js'
 
@@ -47,9 +47,9 @@ export default function DumpBox({ onSaved }) {
           aria-label={listening ? 'Stop' : 'Talk'}
           title={listening ? 'Stop' : 'Talk'}
         >
-          {listening ? <Square size={13} fill="currentColor" /> : <Mic size={17} strokeWidth={1.9} />}
+          {listening ? <Square size={10} fill="currentColor" /> : <Mic size={15} strokeWidth={2} />}
         </button>
-        <button className="btn primary sm" onClick={save} disabled={busy || !said}>{busy ? 'Saving…' : 'Save'}</button>
+        <button className="hero-send" onClick={save} disabled={busy || !said} aria-label="Save" title="Save"><ArrowUp size={16} strokeWidth={2.25} /></button>
       </div>
       {err && <p className="error">{err}</p>}
     </section>
