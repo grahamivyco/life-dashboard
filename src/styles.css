@@ -772,7 +772,13 @@ button.set-row:active, button.set-row:hover { background: var(--hover); }
 .fin-short { display: none; }
 .fin-periodbar { flex-wrap: nowrap; }
 .fin-periodbar .fin-period { min-width: 0; }
-.fin-periodbar .fin-select { flex: none; width: auto; }
+.fin-menu { position: relative; flex: none; }
+.fin-menu .btn { gap: 4px; }
+.fin-menu-list { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 150px; padding: 4px; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.fin-menu-list button { display: flex; align-items: center; justify-content: space-between; height: 34px; padding: 0 10px; border: 0; border-radius: 8px; background: none; font: inherit; font-size: 14px; color: var(--fg); text-align: left; cursor: pointer; }
+.fin-menu-list button:hover { background: var(--hover); }
+.fin-recurring { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; scroll-margin-top: 80px; }
+.fin-recurring > .tile-head { padding: 0 4px; flex-wrap: wrap; gap: 4px 12px; }
 @media (max-width: 640px) {
   .fin-tabs { align-self: stretch; }
   .fin-tabs button { flex: 1; padding: 0 6px; }

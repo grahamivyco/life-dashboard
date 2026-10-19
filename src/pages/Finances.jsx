@@ -1,14 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ExternalLink, RefreshCw, Search, Trash2 } from 'lucide-react'
+import { Check, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, RefreshCw, Search, Trash2 } from 'lucide-react'
 import PageHeader from '../components/PageHeader.jsx'
 import { ago } from '../lib.js'
 import { amt, makeKey, usd, useMoney } from '../money.js'
 import { cancelGuide } from '../subscriptions.js'
 
 const TABS = [
-  ['overview', 'Overview'], ['spending', 'Spending'], ['recurring', 'Recurring'],
-  ['transactions', 'Transactions', 'Activity'], ['accounts', 'Accounts'],
+  ['overview', 'Overview'], ['spending', 'Spending'],
+  ['transactions', 'Transactions'], ['accounts', 'Accounts'],
 ]
 const GROUPS = [
   ['checking', 'Checking'], ['card', 'Cards'], ['savings', 'Savings'], ['investments', 'Investments'], ['loan', 'Loans'],
@@ -146,7 +146,7 @@ function Overview({ p, go }) {
         </section>
 
         <section className="tile">
-          <div className="tile-head"><h2>Coming up</h2><button className="mini" onClick={() => go('recurring')}>All bills</button></div>
+          <div className="tile-head"><h2>Coming up</h2><button className="mini" onClick={() => go('spending', 'fin-recurring')}>All bills</button></div>
           {upcoming.length === 0 && <p className="empty">Nothing due in the next 30 days.</p>}
           <ul className="list">
             {upcoming.slice(0, 7).map((r) => (
@@ -171,6 +171,33 @@ function Overview({ p, go }) {
 
 const PERIODS = [['week', 'Week'], ['month', 'Month'], ['quarter', 'Quarter'], ['year', 'Year']]
 
+function PeriodMenu({ value, onPick }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  useEffect(() => {
+    if (!open) return
+    const close = (e) => { if (!ref.current?.contains(e.target)) setOpen(false) }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [open])
+  return (
+    <div className="fin-menu" ref={ref}>
+      <button className="btn sm" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+        {PERIODS.find(([k]) => k === value)[1]} <ChevronDown size={13} />
+      </button>
+      {open && (
+        <div className="fin-menu-list" role="menu">
+          {PERIODS.map(([k, label]) => (
+            <button key={k} role="menuitemradio" aria-checked={k === value} onClick={() => { setOpen(false); onPick(k) }}>
+              {label}{k === value && <Check size={14} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Spending({ p, send }) {
   const [period, setPeriod] = useState('month')
   const [offset, setOffset] = useState(0)
@@ -189,9 +216,7 @@ function Spending({ p, send }) {
           <span className="fin-period">{s.title}</span>
           <button className="icon-btn" aria-label="Later" disabled={offset === 0} onClick={() => setOffset(offset - 1)}><ChevronRight size={16} /></button>
         </div>
-        <select className="fin-select" aria-label="Period" value={period} onChange={(e) => { setPeriod(e.target.value); setOffset(0) }}>
-          {PERIODS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
-        </select>
+        <PeriodMenu value={period} onPick={(k) => { setPeriod(k); setOffset(0) }} />
       </div>
 
       <div className="stats even fin-stats">
@@ -259,6 +284,8 @@ function Spending({ p, send }) {
           )}
         </div>
       </div>
+
+      <Recurring p={p} send={send} />
     </>
   )
 }
@@ -324,16 +351,14 @@ function Recurring({ p, send }) {
   }
 
   return (
-    <>
-      <div className="stats even fin-stats">
-        <div className="tile stat lead"><span className="eyebrow">Bills a month</span><span className="big">{usd(perMonth(bills))}</span></div>
-        <div className="tile stat"><span className="eyebrow">Income a month</span><span className="big">{usd(perMonth(income))}</span></div>
-        <div className="tile stat"><span className="eyebrow">Next payday</span><span className="big">{forecast.next_payday ? day(forecast.next_payday) : 'None'}</span></div>
-        <div className="tile stat"><span className="eyebrow">Safe to spend</span><span className="big">{usd(forecast.safe_to_spend)}</span><span className="meta">Before next payday</span></div>
+    <div id="fin-recurring" className="fin-recurring">
+      <div className="tile-head">
+        <h2>Recurring</h2>
+        <span className="meta">{forecast.next_payday ? `${usd(forecast.safe_to_spend)} safe to spend before payday ${day(forecast.next_payday)}` : `${usd(forecast.safe_to_spend)} safe to spend`}</span>
       </div>
       <div className="grid two">
         <section className="tile">
-          <div className="tile-head"><h2>Bills</h2><span className="meta">{bills.length}</span></div>
+          <div className="tile-head"><h2>Bills</h2><span className="meta">{usd(perMonth(bills))} a month</span></div>
           <ul className="list">{bills.map(row)}</ul>
           {ignored.length > 0 && <button className="mini more" onClick={() => setShowIgnored(!showIgnored)}>{showIgnored ? 'Done' : `${ignored.length} hidden`}</button>}
           {showIgnored && (
@@ -348,11 +373,11 @@ function Recurring({ p, send }) {
           )}
         </section>
         <section className="tile">
-          <div className="tile-head"><h2>Income</h2><span className="meta">{income.length}</span></div>
+          <div className="tile-head"><h2>Income</h2><span className="meta">{usd(perMonth(income))} a month</span></div>
           <ul className="list">{income.map(row)}</ul>
         </section>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -550,8 +575,13 @@ function MacLink({ publishedAt, first }) {
 export default function Finances() {
   const { snap, pending, error, clearError, send } = useMoney()
   const [params, setParams] = useSearchParams()
-  const tab = TABS.some(([k]) => k === params.get('tab')) ? params.get('tab') : 'overview'
-  const go = (k) => { setParams(k === 'overview' ? {} : { tab: k }, { replace: true }); window.scrollTo(0, 0) }
+  const asked = params.get('tab') === 'recurring' ? 'spending' : params.get('tab')
+  const tab = TABS.some(([k]) => k === asked) ? asked : 'overview'
+  const go = (k, anchor) => {
+    setParams(k === 'overview' ? {} : { tab: k }, { replace: true })
+    if (anchor) setTimeout(() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth' }), 50)
+    else window.scrollTo(0, 0)
+  }
 
   if (snap === undefined) return <div className="page"><PageHeader title="Finances" /></div>
   if (snap === null) {
@@ -588,7 +618,6 @@ export default function Finances() {
 
       {tab === 'overview' && <Overview p={p} go={go} />}
       {tab === 'spending' && <Spending p={p} send={send} />}
-      {tab === 'recurring' && <Recurring p={p} send={send} />}
       {tab === 'transactions' && <Transactions p={p} send={send} />}
       {tab === 'accounts' && <Accounts p={p} send={send} publishedAt={snap.published_at} />}
     </div>
