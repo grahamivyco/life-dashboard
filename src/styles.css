@@ -581,3 +581,15 @@ section.tile .list.jobs { padding: 0; }
 .specs-body { padding-left: 12px; }
 .chip-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 99px; cursor: pointer; }
 .chip-check:has(input:checked) { border-color: var(--fg); }
+.help { border: 1px solid var(--line); border-radius: 12px; }
+.help-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 500; color: inherit; text-align: left; cursor: pointer; }
+.help-head .chev { color: var(--muted); transition: transform var(--ease); flex: none; }
+.help.open .help-head .chev { transform: rotate(90deg); }
+.help-body { padding: 0 12px 12px 35px; display: grid; gap: 12px; }
+.help-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 13px; }
+.help-steps label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+.help-steps input { margin-top: 2px; accent-color: var(--fg); }
+.help-steps input:checked + span { color: var(--muted); text-decoration: line-through; }
+.help-doc { border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 6px; font-size: 13px; }
+.help-ask { display: inline-flex; align-items: center; gap: 5px; justify-self: start; }
+.seg button { white-space: nowrap; }

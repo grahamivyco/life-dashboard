@@ -82,7 +82,7 @@ const fixtures = {
       ],
     } },
     { section: 'email', synced_at: iso(0.2), payload: { unread: 3, threads: [
-      { id: 't1', from: 'Kym Duea', subject: 'Annual Meeting page has slipped a stitch', snippet: 'I noticed an issue on the Annual Meeting page…', message: 'Also the registration link at the bottom goes nowhere. Thanks for taking a look!\n\nKym', date: iso(1), unread: true, important: true, count: 2, url: '#', replies: [
+      { id: 't1', from: 'Kym Duea', subject: 'Annual Meeting page has slipped a stitch', snippet: 'I noticed an issue on the Annual Meeting page…', message: 'Also the registration link at the bottom goes nowhere. Thanks for taking a look!\n\nKym', help: { title: 'Fix the page and the link', steps: ['Open the Annual Meeting page in the site editor.', 'Compare it with the screenshot Kym sent and fix the layout.', 'Point the registration link to the event form.', 'Test the link in a private window, then reply to Kym.'], doc: { title: 'Note for the board', body: 'The Annual Meeting page is fixed and the registration link now goes to the event form.' } }, date: iso(1), unread: true, important: true, count: 2, url: '#', replies: [
         { label: 'On it today', body: 'Hi Kym,\n\nThanks for catching this. I’ll fix the page and the registration link today and let you know when it’s live.\n\nGraham' },
         { label: 'This week', body: 'Hi Kym,\n\nThanks for the heads up and the screenshot. I’ll have the page and the link fixed by Friday.\n\nGraham' },
         { label: 'Ask for details', body: 'Hi Kym,\n\nThanks for flagging this. Which browser were you using? I want to make sure I see the same thing before I fix it.\n\nGraham' },

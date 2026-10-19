@@ -136,9 +136,12 @@ const real = {
       const full = await api(`threads/${t.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`)
       const msgs = full.messages || []
       const last = msgs[msgs.length - 1]
+      const sent = msgs.filter((m) => !(m.labelIds || []).includes('DRAFT'))
       const labels = new Set(msgs.flatMap((m) => m.labelIds || []))
       return {
         id: t.id, snippet: htmlToText(t.snippet || ''), count: msgs.length,
+        // Graham wrote the latest (non-draft) message, so nothing is waiting on him
+        fromMe: (sent[sent.length - 1]?.labelIds || []).includes('SENT'),
         from: nameOf(header(last, 'From')), subject: header(msgs[0], 'Subject'),
         date: new Date(Number(last.internalDate)).toISOString(),
         unread: labels.has('UNREAD'), important: labels.has('IMPORTANT'),

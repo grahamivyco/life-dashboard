@@ -15,6 +15,7 @@ const UNDO_MS = 5000
 const PH = /\[[^\]\n]{1,60}\]/
 
 const filters = [
+  { k: 'reply', label: 'To reply' },
   { k: 'all', label: 'All' },
   { k: 'unread', label: 'Unread' },
   { k: 'important', label: 'Important' },
@@ -147,6 +148,67 @@ function Files({ files }) {
   )
 }
 
+// Claude's help with what the email asks Graham to do: a checklist (ticks remembered per device),
+// a ready-to-use doc to copy, and links. Without help yet, a button asks Claude for it.
+const HELP_KEY = 'email-help-done'
+const readDone = () => { try { return JSON.parse(localStorage.getItem(HELP_KEY) || '{}') } catch { return {} } }
+
+function Help({ t, asked, onAsked }) {
+  const [open, setOpen] = useState(false)
+  const [done, setDone] = useState(() => readDone()[t.id] || [])
+  const [copied, setCopied] = useState(false)
+  const h = t.help
+  if (!h) {
+    if (asked) return <p className="hint"><Sparkles size={12} /> Claude is on it. Steps show up here after the next sync.</p>
+    return (
+      <button className="mini help-ask" onClick={async () => {
+        await askClaude(`email:${t.id}| Help me with this: give me step-by-step help with what this email asks me to do, and draft any doc I'd need.\n\nFrom: ${t.from}\nSubject: ${t.subject}\n${(t.message || t.snippet || '').slice(0, 1500)}`)
+        onAsked?.()
+      }}><Sparkles size={12} /> Help me with this</button>
+    )
+  }
+  const steps = h.steps || []
+  const tick = (i) => {
+    const next = done.includes(i) ? done.filter((x) => x !== i) : [...done, i]
+    setDone(next)
+    try { localStorage.setItem(HELP_KEY, JSON.stringify({ ...readDone(), [t.id]: next })) } catch { /* ignore */ }
+  }
+  return (
+    <div className={'help' + (open ? ' open' : '')}>
+      <button className="help-head" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <ChevronRight size={15} className="chev" />
+        <Sparkles size={13} />
+        <span className="grow">{h.title || 'Help with this'}</span>
+        {steps.length > 0 && <span className="meta">{done.length}/{steps.length}</span>}
+      </button>
+      {open && (
+        <div className="help-body">
+          {steps.length > 0 && (
+            <ul className="help-steps">
+              {steps.map((st, i) => (
+                <li key={i}><label><input type="checkbox" checked={done.includes(i)} onChange={() => tick(i)} /><span>{st}</span></label></li>
+              ))}
+            </ul>
+          )}
+          {h.doc && (
+            <div className="help-doc">
+              <div className="row between"><b>{h.doc.title}</b>
+                <button className="mini" onClick={() => navigator.clipboard?.writeText(h.doc.body).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500) })}>{copied ? 'Copied' : 'Copy'}</button>
+              </div>
+              <p className="msg-text">{h.doc.body}</p>
+            </div>
+          )}
+          {h.links?.length > 0 && (
+            <div className="row gap wrap">
+              {h.links.map((l) => <a key={l.url} className="btn" href={l.url} target="_blank" rel="noreferrer">{l.title} <ExternalLink size={12} /></a>)}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AskClaude({ thread, sent, onSent }) {
   const [q, setQ] = useState('')
   if (sent) return <p className="hint"><Sparkles size={12} /> Sent to Claude. The answer shows up in the ✦ panel.</p>
@@ -175,7 +237,7 @@ function useUndoSend() {
   return { pending, send, undo }
 }
 
-function ThreadView({ id, snapT, asked, onAsked, onArchived }) {
+function ThreadView({ id, snapT, asked, onAsked, helpAsked, onHelpAsked, onArchived }) {
   const [thread, setThread] = useState(null)
   const [err, setErr] = useState('')
   const [reply, setReply] = useState('')
@@ -200,6 +262,7 @@ function ThreadView({ id, snapT, asked, onAsked, onArchived }) {
           <Files files={m.files} />
         </div>
       ))}
+      {snapT && <Help t={snapT} asked={helpAsked} onAsked={onHelpAsked} />}
       <ReplyOptions options={snapT?.replies} value={reply} onPick={(o) => rl.reset(o.body, o.tr, snapT?.lang)} />
       <textarea value={reply} onChange={(e) => setReply(e.target.value)} placeholder={`Reply to ${nameOf(msgs[msgs.length - 1].from)}`} rows={reply ? 7 : 4} />
       {reply.trim() && <LangSwitch rl={rl} />}
@@ -261,13 +324,14 @@ function DraftView({ d, onGone }) {
 }
 
 // Synced copy of a thread when Gmail isn't connected: pick or write a reply, the queue sends it.
-function SnapshotThread({ t, queued, onQueued }) {
+function SnapshotThread({ t, queued, onQueued, asked, onAsked }) {
   const [reply, setReply] = useState('')
   const { pending, send, undo } = useUndoSend()
   const rl = useReplyLang(reply, setReply)
   return (
     <div className="mail-body">
       {t.message ? <MsgText text={t.message} en={t.message_en} /> : <MsgText text={t.snippet} en={t.snippet_en} />}
+      <Help t={t} asked={asked} onAsked={onAsked} />
       {queued
         ? <p className="hint"><Send size={12} /> Reply queued. It goes out on the next sync.</p>
         : <>
@@ -292,8 +356,9 @@ const readSkips = () => { try { return JSON.parse(localStorage.getItem(SKIP_KEY)
 const saveSkip = (t) => { try { localStorage.setItem(SKIP_KEY, JSON.stringify({ ...readSkips(), [t.id]: t.date })) } catch { /* ignore */ } }
 
 // One email at a time: read it, send the draft (or another option, or your own words), or skip.
-function ReplyQueue({ items, live, onDone }) {
+function ReplyQueue({ items, live, onDone, askedMap, onAsked }) {
   const t = items[0]
+  const asked = t && askedMap[t.id]
   const [text, setText] = useState('')
   const [more, setMore] = useState(false)
   const [thread, setThread] = useState(null)
@@ -323,6 +388,7 @@ function ReplyQueue({ items, live, onDone }) {
       <div className="reply-from"><b>{t.from}</b><span className="clamp">{t.subject_en || t.subject}</span></div>
       <MsgText text={body} en={t.message_en} className="reply-msg" />
       {last && <Files files={last.files} />}
+      <Help t={t} asked={asked} onAsked={() => onAsked(t.id)} />
       <div className="row between">
         <LangSwitch rl={rl} />
         {t.replies.length > 1 && <button className="mini" onClick={() => setMore(!more)}>{more ? 'Hide options' : `${t.replies.length - 1} other options`}</button>}
@@ -372,7 +438,7 @@ export default function Email() {
   const [view, setView] = useState(startTab === 'inbox' ? 'inbox' : 'reply')
   const [skips, setSkips] = useState(readSkips)
   const [handled, setHandled] = useState({})
-  const [filter, setFilter] = useState(startTab === 'outbox' ? 'drafts' : 'all')
+  const [filter, setFilter] = useState(startTab === 'outbox' ? 'drafts' : 'reply')
   const [open, setOpen] = useState(params.get('open'))
   const [threads, setThreads] = useState(null)
   const [drafts, setDrafts] = useState(null)
@@ -380,6 +446,7 @@ export default function Email() {
   const [busy, setBusy] = useState(false)
   const [asked, setAsked] = useState({})
   const [queued, setQueued] = useState({})
+  const [helpAsked, setHelpAsked] = useState({})
 
   const load = useCallback(async () => {
     if (!live) return
@@ -398,22 +465,28 @@ export default function Email() {
   useEffect(() => {
     supabase.from('claude_requests').select('note, action, status').is('item_id', null).like('note', 'email:%')
       .then(({ data }) => {
-        const a = {}, q = {}
+        const a = {}, q = {}, h = {}
         for (const r of data || []) {
           if (!r.note) continue
           const id = r.note.split('|')[0].slice(6)
           if (r.action === 'send_reply') { if (r.status === 'approved' || r.status === 'working') q[id] = true }
+          else if (r.note.includes('| Help me with this')) h[id] = true
           else a[id] = true
         }
-        setAsked(a); setQueued(q)
+        setAsked(a); setQueued(q); setHelpAsked(h)
       })
   }, [])
 
   const all = live ? threads || [] : snap?.payload?.threads || []
   const snapById = Object.fromEntries((snap?.payload?.threads || []).map((t) => [t.id, t]))
   const pass = (t) => (filter === 'unread' ? t.unread : filter === 'important' ? t.important : true)
-  const toReply = (snap?.payload?.threads || []).filter((t) => t.replies?.length && !queued[t.id] && !handled[t.id] && skips[t.id] !== t.date && pass(t))
-  const shown = all.filter(pass)
+  // "To reply": threads with Claude's reply options that still wait on Graham (not sent,
+  // skipped, or answered since). One at a time walks this set; the list's To reply filter shows it.
+  const liveById = Object.fromEntries((threads || []).map((t) => [t.id, t]))
+  const waiting = (t) => t.replies?.length && !queued[t.id] && !handled[t.id] && skips[t.id] !== t.date && !(live && liveById[t.id]?.fromMe)
+  const replyIds = new Set((snap?.payload?.threads || []).filter(waiting).map((t) => t.id))
+  const toReply = (snap?.payload?.threads || []).filter((t) => replyIds.has(t.id) && pass(t))
+  const shown = filter === 'reply' ? all.filter((t) => replyIds.has(t.id)) : all.filter(pass)
   const tab = live && filter === 'drafts' ? 'outbox' : view
   const pick = (k) => { setFilter(k); setOpen(null) }
 
@@ -435,7 +508,7 @@ export default function Email() {
       {err && <p className="error">{err}</p>}
 
       {tab === 'reply' && (
-        <ReplyQueue items={toReply} live={live} onDone={(t, how) => {
+        <ReplyQueue items={toReply} live={live} askedMap={helpAsked} onAsked={(id) => setHelpAsked((h) => ({ ...h, [id]: true }))} onDone={(t, how) => {
           setHandled((h) => ({ ...h, [t.id]: true }))
           if (how === 'skipped') setSkips(readSkips())
           else setQueued((q) => ({ ...q, [t.id]: !live }))
@@ -452,17 +525,19 @@ export default function Email() {
                   <ChevronRight size={15} className="chev" />
                   <span className="mail-from clamp">{t.from}{t.count > 1 && <span className="meta"> {t.count}</span>}</span>
                   <span className="mail-subject grow clamp">{snapById[t.id]?.subject_en || t.subject}</span>
-                  {queued[t.id] ? <span className="tag">Sending</span> : snapById[t.id]?.replies?.length > 0 && <span className="tag soft">Reply ready</span>}
+                  {queued[t.id] ? <span className="tag">Sending</span> : replyIds.has(t.id) && <span className="tag soft">Reply ready</span>}
                   <span className="meta">{when(t.date)}</span>
                 </button>
                 {isOpen && (live
                   ? <ThreadView id={t.id} snapT={snapById[t.id]} asked={asked[t.id]} onAsked={() => setAsked((a) => ({ ...a, [t.id]: true }))}
+                      helpAsked={helpAsked[t.id]} onHelpAsked={() => setHelpAsked((h) => ({ ...h, [t.id]: true }))}
                       onArchived={() => { setOpen(null); setThreads((ts) => ts.filter((x) => x.id !== t.id)) }} />
-                  : <SnapshotThread t={t} queued={queued[t.id]} onQueued={() => setQueued((q) => ({ ...q, [t.id]: true }))} />)}
+                  : <SnapshotThread t={t} queued={queued[t.id]} onQueued={() => setQueued((q) => ({ ...q, [t.id]: true }))}
+                      asked={helpAsked[t.id]} onAsked={() => setHelpAsked((h) => ({ ...h, [t.id]: true }))} />)}
               </li>
             )
           })}
-          {(live ? threads : snap) && shown.length === 0 && <li className="empty">Nothing here.</li>}
+          {(live ? threads : snap) && shown.length === 0 && <li className="empty">{filter === 'reply' ? 'All caught up.' : 'Nothing here.'}</li>}
           {live && !threads && !err && <li className="empty">Loading…</li>}
         </ul>
       )}
