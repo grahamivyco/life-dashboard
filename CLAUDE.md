@@ -25,13 +25,15 @@ Graham Ivy's personal app. Live at https://grahamivyco.github.io/life-dashboard/
 - `items` insert trigger auto-queues tasks and ideas into `claude_requests`
 - `claude_requests`: queued → working → needs_approval → approved → done/failed/dismissed. `links` is `[{title,url,image?}]`; `image: true` renders as a thumbnail. Today shows only what needs Graham: a "Needs your OK" list (hidden when empty) and a "Claude: done" pill on items with an unseen result, which opens inline and disappears once read. The sidebar badge counts approvals only.
 - Ask Claude (floating ✦ panel, `src/askClaude.js`): inserts a `claude_requests` row with `action='ask'`; the hourly worker answers in `result`. `supabase/functions/ask-claude` (instant replies via the Claude API) is deployed but unused, since Graham chose the queue.
-- `section_snapshots`: latest payload per section (`email`, `finances`, …) written by the hourly sync
+- `section_snapshots`: latest payload per section (`email`, `finances`, `housing`, `jobs`, `clients`, …) written by the hourly sync
+- Housing snapshot: `{source:'idealista', search:{label,url}, listings:[{id (idealista inmueble id), street, area, district, price, prev_price?, beds, size_m2, floor, exterior, lift, balcony, terrace, ac, photo, url, first_seen, gone?}]}` built from idealista alert emails (last 30 days)
+- Jobs: `scripts/jobs-snapshot.mjs` builds the `jobs` payload from Graham's Job Hub artifact (job list in its HTML, application status in its db `apps` collection) plus the newest "Job digest" email. Apply/Skip on the Jobs page inserts `claude_requests` (`action='job'`, `status='approved'`, note `job:<slug>| Apply: …` or `digest:<threadId>#<n>| Skip: …`) that the hourly sync carries out.
 - Email reply options: the sync adds `message` (their latest message) and `replies: [{label, body}]` to email snapshot threads that need an answer. Picking one fills the reply box. Send goes straight through Gmail when connected, otherwise it inserts a `claude_requests` row (`action='send_reply'`, `status='approved'`, body in `result`) that the next sync sends. The Email page opens on "To reply": one email at a time with the first option as the draft, the others on request, Send, Skip (remembered per device until a new message arrives) and a mic for dictation.
 
 ## Pages
 Brain dump drafts and recordings live in `src/dumpStore.js`, outside React, so they survive page switches (draft text also in localStorage). A recording pill shows on other pages.
 
-Today (brain dump box, Needs your OK, tasks, week, goals/ideas/notes) · Email (Gmail) · Timeline (includes past brain dumps) · Finances · Jobs/Clients/Housing (link to old dashboards for now) · Events · Settings
+Today (brain dump box, Needs your OK, tasks, week, goals/ideas/notes) · Email (Gmail) · Timeline (includes past brain dumps) · Finances · Housing (idealista alert listings from the `housing` snapshot; Save/Hide per device) · Jobs (Job Hub + daily digest, from the `jobs` snapshot) · Clients (one card per row in `clients`: emails, needs-reply threads and Open Frame invoices from the `clients` snapshot, notes saved to `clients.notes`) · Events · Settings
 
 ## Roadmap
 1. Web app shell ✓  2. Tauri Mac app  3. Brain dump flow ✓  4. Move in Jobs, Clients, Housing, Events + Google Calendar sync  5. Sync tasks, ⌘K search  6. Share pages with Ben
