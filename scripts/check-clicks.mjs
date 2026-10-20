@@ -15,8 +15,8 @@ const routes = process.argv.slice(2).length ? process.argv.slice(2) : ROUTES
 const MAX = Number(process.env.MAX || 40)
 const BASE = 'http://localhost:4322/life-dashboard/#'
 const CONTROLS = '.main button, .main [role=tab], .main [role=button], .main summary, .main a[href^="#"], .main input[type=checkbox], #m-tabs-slot > *, .m-top button, .m-top a'
-// Controls that do nothing in sample data on purpose (Finances sync talks to the Mac).
-const DEMO_NOOP = /^Sync banks$/
+// Controls that do nothing in sample data on purpose (Finances sync talks to the Mac; Connect opens Google sign-in, which needs the network).
+const DEMO_NOOP = /^(Sync banks|Connect)$/
 const RAW = /\bNaN\b|\bundefined\b|\[object Object\]|TypeError|ReferenceError|Something went wrong|Invalid Date/
 
 execSync('npx vite build --mode demo --outDir dist-demo', { stdio: 'ignore' })
