@@ -17,9 +17,12 @@ email as (select payload p, synced_at from section_snapshots where section = 'em
 -- Snapshots the pages read from that stopped updating
 select 'freshness' area, section || ' snapshot is stale' problem, 'last synced ' || synced_at::text detail
 from (select distinct on (section) section, synced_at from section_snapshots order by section, synced_at desc) s
-where section <> 'finances' and synced_at < now() - interval '6 hours'
+-- only email is rewritten every hourly run; housing, clients, events and jobs are written only when something changed
+where section = 'email' and synced_at < now() - interval '3 hours'
 union all
-select 'freshness', 'Finances: Mac has not published', 'last published ' || published_at::text from money where published_at < now() - interval '6 hours'
+-- once the money data lives on the server (money_store) the snapshot refreshes when Finances opens, so age means nothing
+select 'freshness', 'Finances: Mac has not published', 'last published ' || published_at::text from money
+where published_at < now() - interval '6 hours' and not exists (select 1 from money_store)
 
 -- Finances: tiles must match the transactions they summarize
 union all

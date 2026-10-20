@@ -41,9 +41,10 @@ async function checkRoute(route) {
   const page = await browser.newPage()
   await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })
   let errors = []
-  page.on('dialog', (d) => d.dismiss().catch(() => {})) // a confirm before Delete is fine; dismissing keeps the sample data
+  let asked = false
+  page.on('dialog', (d) => { asked = true; d.dismiss().catch(() => {}) }) // a confirm before Delete is fine; dismissing keeps the sample data
   page.on('pageerror', (e) => errors.push(`JS error: ${e.message.split('\n')[0].slice(0, 140)}`))
-  page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|favicon/.test(m.text())) errors.push(`console error: ${m.text().slice(0, 140)}`) })
+  page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|favicon|GSI_LOGGER.*popup/.test(m.text())) errors.push(`console error: ${m.text().slice(0, 140)}`) })
   await page.evaluateOnNewDocument(() => {
     window.__opened = 0
     window.open = () => { window.__opened++; return null }
@@ -66,6 +67,7 @@ async function checkRoute(route) {
   if (errors.length) found.push(...errors.map((e) => `on load: ${e}`))
   for (const { i, label } of list.slice(0, MAX)) {
     errors = []
+    asked = false
     if (process.env.VERBOSE) console.error(route, i, label)
     try {
     await open(page, route)
@@ -87,7 +89,7 @@ async function checkRoute(route) {
       dialog: !!document.querySelector('[role=dialog], [role=menu], [role=listbox], .menu-pop, .view-menu-list'),
       raw: (document.body.innerText.match(new RegExp(rawSrc, 'g')) || []).join(', '),
     }), RAW.source)
-    const did = (await picker) || after.mut > 0 || after.hash !== before.hash || after.opened > 0 || (after.field && after.active !== before.active) || after.dialog
+    const did = (await picker) || asked || after.mut > 0 || after.hash !== before.hash || after.opened > 0 || (after.field && after.active !== before.active) || after.dialog
     for (const e of errors) found.push(`tap "${label}": ${e}`)
     if (after.raw) found.push(`tap "${label}": raw text on page (${after.raw})`)
     if (!did && !DEMO_NOOP.test(label)) found.push(`tap "${label}": nothing happens`)
